@@ -1,0 +1,10 @@
+-- ============================================================
+-- V3: Default Turkish income & expense categories
+-- These are created per-user at registration time via the app.
+-- This migration inserts a "template" set that gets copied for
+-- each new user. We use a placeholder UUID that the app ignores;
+-- actual per-user categories are created in AuthService.
+-- ============================================================
+-- NOTE: Default categories are created programmatically during
+-- user registration. This file is reserved for future shared
+-- category templates. No-op for now.

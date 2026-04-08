@@ -1,0 +1,35 @@
+#!/bin/sh
+# Maven Wrapper script
+# Simplified version - downloads Maven if needed
+
+set -e
+
+MAVEN_WRAPPER_JAR=".mvn/wrapper/maven-wrapper.jar"
+MAVEN_WRAPPER_PROPERTIES=".mvn/wrapper/maven-wrapper.properties"
+
+# Resolve project base dir
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
+if [ -f "$MAVEN_WRAPPER_PROPERTIES" ]; then
+    DIST_URL=$(grep "distributionUrl" "$MAVEN_WRAPPER_PROPERTIES" | cut -d'=' -f2-)
+fi
+
+MAVEN_HOME="${HOME}/.m2/wrapper/dists/apache-maven-3.9.6"
+MAVEN_CMD="${MAVEN_HOME}/bin/mvn"
+
+if [ ! -f "$MAVEN_CMD" ]; then
+    echo "Downloading Maven..."
+    mkdir -p "$MAVEN_HOME"
+    TMPFILE=$(mktemp)
+    curl -sL "$DIST_URL" -o "$TMPFILE"
+    unzip -qo "$TMPFILE" -d "${HOME}/.m2/wrapper/dists/"
+    rm "$TMPFILE"
+    # Maven extracts to apache-maven-3.9.6 directory
+    if [ -d "${HOME}/.m2/wrapper/dists/apache-maven-3.9.6" ]; then
+        MAVEN_HOME="${HOME}/.m2/wrapper/dists/apache-maven-3.9.6"
+    fi
+    MAVEN_CMD="${MAVEN_HOME}/bin/mvn"
+fi
+
+exec "$MAVEN_CMD" "$@"

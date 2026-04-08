@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="LOG_DIR" value="${LOG_DIR:-/var/log/fintrack}" />
+    <property name="MAX_FILE_SIZE" value="50MB" />
+    <property name="MAX_HISTORY_DAYS" value="90" />
+    <property name="TOTAL_SIZE_CAP" value="10GB" />
+
+    <!-- ========== Development profile: human-readable console ========== -->
+    <springProfile name="development">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <logger name="com.fintrack" level="DEBUG" />
+        <logger name="org.springframework.security" level="DEBUG" />
+        <logger name="org.hibernate.SQL" level="DEBUG" />
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" />
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+
+    <!-- ========== Production profile: JSON console + rolling files ========== -->
+    <springProfile name="production">
+        <!-- JSON console output for container log aggregation -->
+        <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                <pattern>{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}","level":"%level","logger":"%logger{36}","requestId":"%X{requestId:-}","userId":"%X{userId:-}","msg":"%replace(%msg){'\"','\\\"'}","thread":"%thread"}%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- Rolling file: all levels -->
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_DIR}/fintrack.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_DIR}/fintrack.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+                <maxHistory>${MAX_HISTORY_DAYS}</maxHistory>
+                <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- Separate error log -->
+        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_DIR}/fintrack-error.log</file>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_DIR}/fintrack-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+                <maxHistory>${MAX_HISTORY_DAYS}</maxHistory>
+                <totalSizeCap>2GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] - %msg%n%ex</pattern>
+            </encoder>
+        </appender>
+
+        <logger name="com.fintrack" level="INFO" />
+        <logger name="org.springframework.security" level="WARN" />
+        <logger name="org.hibernate.SQL" level="WARN" />
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON" />
+            <appender-ref ref="FILE" />
+            <appender-ref ref="ERROR_FILE" />
+        </root>
+    </springProfile>
+
+    <!-- ========== Fallback: no profile active ========== -->
+    <springProfile name="default">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <logger name="com.fintrack" level="DEBUG" />
+        <logger name="org.springframework.security" level="WARN" />
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+
+</configuration>

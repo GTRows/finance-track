@@ -1,0 +1,42 @@
+# Environment
+.env
+*.env.local
+
+# Java / Maven
+backend/target/
+*.class
+*.jar
+*.war
+!backend/.mvn/wrapper/maven-wrapper.jar
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# Backups
+backups/
+
+# Test coverage
+backend/target/site/
+frontend/coverage/

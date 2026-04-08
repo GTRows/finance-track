@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn --version)",
+      "Bash(curl -sL https://repo1.maven.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar -o D:/Workspace/Self/OpenSource/fintrack/backend/.mvn/wrapper/maven-wrapper.jar)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(cp .env.example .env)",
+      "Bash(sed -i 's/CHANGE_ME_generate_a_secure_256_bit_secret_key_here/dev-secret-change-in-production-must-be-256-bits-long/' .env)",
+      "Bash(sed -i 's/CHANGE_ME_strong_password_here/devpassword123/' .env)",
+      "Bash(sed -i 's/CHANGE_ME_redis_password/devredis123/' .env)",
+      "Bash(sed -i 's/APP_ENV=production/APP_ENV=development/' .env)",
+      "Bash(docker compose:*)",
+      "Bash(java -version)",
+      "Bash(./mvnw.cmd compile:*)",
+      "Bash(./mvnw.cmd help:effective-pom)",
+      "Bash(./mvnw.cmd test:*)",
+      "Bash(./mvnw.cmd package:*)"
+    ]
+  }
+}

@@ -1,0 +1,118 @@
+spring:
+  application:
+    name: fintrack
+
+  # Database
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/fintrack}
+    username: ${SPRING_DATASOURCE_USERNAME:fintrack}
+    password: ${SPRING_DATASOURCE_PASSWORD:fintrack}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # Flyway migrations
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Redis
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      timeout: 5000ms
+
+  # Mail (optional)
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+  # Cache
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000
+
+# Server
+server:
+  port: ${APP_PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,application/javascript,text/html,text/css
+  error:
+    include-message: on_param
+    include-stacktrace: never
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /api/actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET:dev-secret-change-in-production-must-be-256-bits-long}
+  access-expiry-minutes: ${JWT_ACCESS_EXPIRY_MINUTES:15}
+  refresh-expiry-days: ${JWT_REFRESH_EXPIRY_DAYS:30}
+
+# External APIs
+price-api:
+  coingecko:
+    base-url: https://api.coingecko.com/api/v3
+    api-key: ${COINGECKO_API_KEY:}
+    enabled: true
+  exchange-rate:
+    base-url: https://v6.exchangerate-api.com/v6
+    api-key: ${EXCHANGE_RATE_API_KEY:}
+    enabled: true
+  sync-interval-minutes: ${PRICE_SYNC_INTERVAL_MINUTES:5}
+
+# Claude AI integration
+claude:
+  api-key: ${CLAUDE_API_KEY:}
+  model: ${CLAUDE_MODEL:claude-sonnet-4-20250514}
+  enabled: ${CLAUDE_ENABLED:false}
+  base-url: https://api.anthropic.com/v1
+
+# Logging
+logging:
+  file:
+    path: ${LOG_DIR:/var/log/fintrack}
+
+---
+# Development profile
+spring:
+  config:
+    activate:
+      on-profile: development
+  jpa:
+    show-sql: true
+  flyway:
+    baseline-on-migrate: true
+
+logging:
+  file:
+    path: ${LOG_DIR:./logs}

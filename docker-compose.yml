@@ -1,0 +1,158 @@
+version: "3.9"
+
+# ============================================================
+# FinTrack Pro -- Docker Compose
+# All services restart automatically on system reboot
+# ============================================================
+
+networks:
+  fintrack-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  nginx-certs:
+  nginx-html:
+  app-logs:
+
+services:
+
+  # ----------------------------------------------------------
+  # Nginx -- Reverse proxy, SSL termination, rate limiting
+  # ----------------------------------------------------------
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: fintrack-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx-certs:/etc/letsencrypt
+      - nginx-html:/var/www/html
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # Frontend -- React + Vite (served as static files)
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api/v1}
+        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost/ws}
+        - VITE_APP_NAME=${VITE_APP_NAME:-FinTrack Pro}
+    container_name: fintrack-ui
+    restart: always
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # Backend -- Spring Boot API
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fintrack-api
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=${APP_ENV:-production}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-fintrack}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-fintrack}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_REDIS_HOST=${REDIS_HOST:-redis}
+      - SPRING_REDIS_PORT=${REDIS_PORT:-6379}
+      - SPRING_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRY_MINUTES=${JWT_ACCESS_EXPIRY_MINUTES:-15}
+      - JWT_REFRESH_EXPIRY_DAYS=${JWT_REFRESH_EXPIRY_DAYS:-30}
+      - COINGECKO_API_KEY=${COINGECKO_API_KEY:-}
+      - EXCHANGE_RATE_API_KEY=${EXCHANGE_RATE_API_KEY:-}
+      - PRICE_SYNC_INTERVAL_MINUTES=${PRICE_SYNC_INTERVAL_MINUTES:-5}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - CLAUDE_ENABLED=${CLAUDE_ENABLED:-false}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - LOG_DIR=/var/log/fintrack
+    volumes:
+      - app-logs:/var/log/fintrack
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ----------------------------------------------------------
+  # PostgreSQL -- Primary database
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: fintrack-postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-fintrack}
+      - POSTGRES_USER=${POSTGRES_USER:-fintrack}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fintrack} -d ${POSTGRES_DB:-fintrack}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------
+  # Redis -- Session cache, price cache, rate limiting
+  # ----------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: fintrack-redis
+    restart: always
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel warning
+    volumes:
+      - redis-data:/data
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
