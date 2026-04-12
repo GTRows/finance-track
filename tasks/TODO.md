@@ -134,7 +134,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `api/bills.api.ts` -- full API module
 - [x] `BillsPage.tsx` -- KPI strip (due/paid/pending), bill list with status dots, pay button, delete
 - [x] `components/bills/AddBillDialog.tsx` -- name, amount, due day, category
-- [ ] `components/bills/BillsCalendar.tsx` -- calendar view (deferred)
+- [x] `components/bills/BillsCalendar.tsx` -- month grid with due-day markers (paid/pending/urgent colors)
 
 ---
 

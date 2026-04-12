@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { AddBillDialog } from '@/components/bills/AddBillDialog';
+import { BillsCalendar } from '@/components/bills/BillsCalendar';
 import { useBills, useCreateBill, useDeleteBill, usePayBill } from '@/hooks/useBills';
 import { formatTRY } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
@@ -126,6 +127,14 @@ export function BillsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {bills.length > 0 && (
+        <Card>
+          <CardContent className="p-5">
+            <BillsCalendar bills={bills} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Bills list */}
       <Card>

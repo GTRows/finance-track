@@ -223,7 +223,8 @@
     "daysLeft_one": "{{count}} gün kaldı",
     "daysLeft_other": "{{count}} gün kaldı",
     "markPaid": "Öde",
-    "totalBills": "fatura"
+    "totalBills": "fatura",
+    "calendarHint": "Bu ayın vade tarihleri"
   },
   "settings": {
     "title": "Ayarlar",
