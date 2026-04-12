@@ -127,7 +127,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `BillService.java` -- list with current period status, pay/skip, history
 - [x] Repositories: BillRepository, BillPaymentRepository
 - [x] DTOs: CreateBillRequest, PayBillRequest, BillResponse, PaymentHistoryResponse
-- [ ] `BillReminderScheduler.java` -- morning check, send notifications (deferred)
+- [x] `BillReminderScheduler.java` -- daily 08:00 check, logs reminder line per unpaid bill within remind window
 
 ### Frontend
 - [x] `hooks/useBills.ts` -- useBills, useCreateBill, useDeleteBill, usePayBill
