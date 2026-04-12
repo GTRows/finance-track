@@ -23,6 +23,7 @@ import { useRefreshPrices } from '@/hooks/useRefreshPrices';
 import { getPortfolioTypeMeta } from '@/components/portfolio/portfolio-types';
 import { HoldingsTable } from '@/components/portfolio/HoldingsTable';
 import { AddHoldingDialog } from '@/components/portfolio/AddHoldingDialog';
+import { TransactionLog } from '@/components/portfolio/TransactionLog';
 import { AllocationChart } from '@/components/portfolio/AllocationChart';
 import { PortfolioHistoryChart } from '@/components/portfolio/PortfolioHistoryChart';
 import { formatTRY, formatPercent } from '@/utils/formatters';
@@ -261,6 +262,8 @@ export function PortfolioDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <TransactionLog portfolioId={portfolio.id} />
 
       <AddHoldingDialog
         open={dialogOpen}

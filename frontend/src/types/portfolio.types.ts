@@ -118,3 +118,31 @@ export interface PortfolioSnapshot {
   pnlTry: number;
   pnlPercent: number | null;
 }
+
+/** Investment transaction returned by the log endpoint. */
+export interface Transaction {
+  id: string;
+  portfolioId: string;
+  assetId: string;
+  assetSymbol: string | null;
+  assetName: string | null;
+  txnType: InvestmentTxnType;
+  quantity: number;
+  priceTry: number;
+  amountTry: number;
+  feeTry: number;
+  notes: string | null;
+  txnDate: string;
+  createdAt: string;
+}
+
+/** Request body for recording a new transaction. */
+export interface RecordTransactionRequest {
+  assetId: string;
+  txnType: InvestmentTxnType;
+  quantity: number;
+  priceTry: number;
+  feeTry?: number;
+  txnDate: string;
+  notes?: string;
+}

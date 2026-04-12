@@ -259,5 +259,44 @@
   "reports": {
     "downloadPdf": "PDF raporu indir",
     "downloadCsv": "CSV dışa aktarımı indir"
+  },
+  "transactions": {
+    "title": "İşlem geçmişi",
+    "description": "Bu portföy için tüm alım, satım, yatırma ve dengeleme kayıtları.",
+    "record": "İşlem kaydet",
+    "recording": "Kaydediliyor...",
+    "dialogTitle": "İşlem kaydet",
+    "dialogDescription": "Bir yatırım hareketi kaydedin. Alım ve satımlar ilgili pozisyonu otomatik günceller.",
+    "typeLabel": "İşlem tipi",
+    "assetLabel": "Varlık",
+    "quantityLabel": "Adet",
+    "priceLabel": "Birim fiyat (TRY)",
+    "feeLabel": "Komisyon (TRY)",
+    "dateLabel": "İşlem tarihi",
+    "notesLabel": "Notlar",
+    "selectAssetError": "Lütfen bir varlık seçin.",
+    "quantityError": "Adet pozitif bir sayı olmalı.",
+    "priceError": "Birim fiyat sıfır veya daha büyük olmalı.",
+    "feeError": "Komisyon sıfır veya daha büyük olmalı.",
+    "failedToRecord": "İşlem kaydedilemedi.",
+    "failedToLoad": "İşlemler yüklenemedi.",
+    "emptyTitle": "Henüz işlem yok",
+    "emptyDesc": "İlk alım, satım veya yatırmanızı kaydederek geçmişinizi oluşturun.",
+    "confirmDelete": "Bu işlem silinsin mi? İlgili pozisyon otomatik düzeltilmeyecek.",
+    "colDate": "Tarih",
+    "colType": "Tip",
+    "colAsset": "Varlık",
+    "colQty": "Adet",
+    "colPrice": "Fiyat",
+    "colAmount": "Tutar",
+    "colFee": "Komisyon",
+    "type": {
+      "BUY": "Alım",
+      "SELL": "Satım",
+      "DEPOSIT": "Yatırma",
+      "WITHDRAW": "Çekme",
+      "REBALANCE": "Dengeleme",
+      "BES_CONTRIBUTION": "BES katkı"
+    }
   }
 }

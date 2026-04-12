@@ -259,5 +259,44 @@
   "reports": {
     "downloadPdf": "Download PDF report",
     "downloadCsv": "Download CSV export"
+  },
+  "transactions": {
+    "title": "Transaction log",
+    "description": "Every buy, sell, deposit, and rebalance recorded for this portfolio.",
+    "record": "Record transaction",
+    "recording": "Recording...",
+    "dialogTitle": "Record transaction",
+    "dialogDescription": "Log an investment action. Buys and sells automatically update the related holding.",
+    "typeLabel": "Transaction type",
+    "assetLabel": "Asset",
+    "quantityLabel": "Quantity",
+    "priceLabel": "Unit price (TRY)",
+    "feeLabel": "Fee (TRY)",
+    "dateLabel": "Transaction date",
+    "notesLabel": "Notes",
+    "selectAssetError": "Please select an asset.",
+    "quantityError": "Quantity must be a positive number.",
+    "priceError": "Unit price must be zero or greater.",
+    "feeError": "Fee must be zero or greater.",
+    "failedToRecord": "Could not record transaction.",
+    "failedToLoad": "Failed to load transactions.",
+    "emptyTitle": "No transactions yet",
+    "emptyDesc": "Record your first buy, sell, or deposit to build your audit trail.",
+    "confirmDelete": "Delete this transaction? The related holding will not be adjusted.",
+    "colDate": "Date",
+    "colType": "Type",
+    "colAsset": "Asset",
+    "colQty": "Quantity",
+    "colPrice": "Price",
+    "colAmount": "Amount",
+    "colFee": "Fee",
+    "type": {
+      "BUY": "Buy",
+      "SELL": "Sell",
+      "DEPOSIT": "Deposit",
+      "WITHDRAW": "Withdraw",
+      "REBALANCE": "Rebalance",
+      "BES_CONTRIBUTION": "BES contribution"
+    }
   }
 }

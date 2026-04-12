@@ -95,7 +95,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] WebSocket live prices -- STOMP /topic/prices broadcast from PriceBroadcaster + useLivePrices hook invalidates React Query on message
 - [x] `components/portfolio/AllocationChart.tsx`
 - [x] `components/portfolio/PortfolioHistoryChart.tsx` + `hooks/useSnapshots.ts` + `api/snapshot.api.ts`
-- [ ] Transaction log (deferred)
+- [x] Transaction log (controller, service, repo, DTOs; UI list + record dialog; auto-applies BUY/SELL to holding)
 
 ### Cross-cutting
 - [x] i18n -- Turkish + English via react-i18next, LanguageSwitcher in AppShell + login, full coverage of nav/auth/portfolio/holdings/dashboard/budget/bills/settings
@@ -167,6 +167,17 @@ Update this file as you complete tasks. Mark done with [x].
 - [ ] `AiAnalysisController.java`
 - [ ] `ClaudeApiClient.java`
 - [ ] Frontend AI analysis panel
+
+---
+
+## Localization Hardening
+
+- [ ] Locale-aware number formatting (thousand/decimal separators per locale)
+- [ ] Locale-aware date formatting across all views (replace hardcoded en-US/tr-TR calls)
+- [ ] Currency selection in user_settings (currently hardcoded TRY) with formatter support
+- [ ] Audit all user-facing strings for missing i18n keys (error messages, toasts, empty states)
+- [ ] Backend validation messages via MessageSource (Accept-Language aware)
+- [ ] Timezone handling: store UTC, render in user's locale timezone
 
 ---
 

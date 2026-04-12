@@ -38,7 +38,7 @@ Cleaning up deferred items from Phases 2-5 and hardening for production:
 
 ## Backlog (prioritized)
 
-- [ ] Transaction log UI (show investment_transactions, allow BUY/SELL entries)
+- [x] Transaction log (UI + API; records update holding qty/avg cost automatically)
 - [ ] Monthly summary log table + snapshot button in BudgetPage
 - [ ] Bill reminder scheduler (notification pings N days before due)
 - [ ] BillsCalendar component (month grid)
@@ -46,6 +46,7 @@ Cleaning up deferred items from Phases 2-5 and hardening for production:
 - [ ] Mobile responsive audit (sidebar collapse, table scrolling)
 - [ ] AnalyticsPage (trends: savings rate, expense growth, portfolio CAGR)
 - [ ] AI analysis endpoint (Claude API) — optional, gated on CLAUDE_ENABLED
+- [ ] Localization hardening (locale-aware number/date formatting, currency selection, backend MessageSource, timezone)
 - [ ] Excel import (Yatirim_Takip_final_v2.xlsx)
 - [ ] Production SSL setup run-through on a real VPS
 - [ ] End-to-end smoke test: docker compose up -d, register, add holding, see price tick
