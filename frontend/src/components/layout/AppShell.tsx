@@ -16,6 +16,7 @@ import {
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { ThemeSwitcher } from './ThemeSwitcher';
 import { useLivePrices } from '@/hooks/useLivePrices';
 
 export function AppShell() {
@@ -130,6 +131,7 @@ export function AppShell() {
         <header className="h-14 border-b bg-card/50 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-20">
           <div />
           <div className="flex items-center gap-3">
+            <ThemeSwitcher />
             <LanguageSwitcher />
             <div className="w-px h-5 bg-border" />
             <div className="flex items-center gap-2">

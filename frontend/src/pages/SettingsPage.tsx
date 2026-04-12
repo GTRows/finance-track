@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuthStore } from '@/store/auth.store';
-import { User, Bell, Palette, Globe, Shield, Check } from 'lucide-react';
+import { useThemeStore, type Theme } from '@/store/theme.store';
+import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SettingsSectionProps {
@@ -34,9 +35,17 @@ function SettingsSection({ icon: Icon, title, description, children }: SettingsS
   );
 }
 
+const THEME_OPTIONS: Array<{ code: Theme; labelKey: string; icon: typeof Sun }> = [
+  { code: 'light', labelKey: 'settings.themeLight', icon: Sun },
+  { code: 'dark', labelKey: 'settings.themeDark', icon: Moon },
+  { code: 'system', labelKey: 'settings.themeSystem', icon: Monitor },
+];
+
 export function SettingsPage() {
   const { t, i18n } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
 
   const languages: Array<{ code: 'tr' | 'en'; label: string; flag: string }> = [
     { code: 'tr', label: t('settings.languageTurkish'), flag: 'TR' },
@@ -111,19 +120,28 @@ export function SettingsPage() {
         title={t('settings.appearance')}
         description={t('settings.appearanceDesc')}
       >
-        <div className="space-y-1.5">
-          <Label>{t('settings.theme')}</Label>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="cursor-pointer" disabled>
-              {t('settings.themeLight')}
-            </Button>
-            <Button variant="default" size="sm" className="cursor-pointer">
-              {t('settings.themeDark')}
-            </Button>
-            <Button variant="outline" size="sm" className="cursor-pointer" disabled>
-              {t('settings.themeSystem')}
-            </Button>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {THEME_OPTIONS.map((opt) => {
+            const active = opt.code === theme;
+            const Icon = opt.icon;
+            return (
+              <button
+                key={opt.code}
+                type="button"
+                onClick={() => setTheme(opt.code)}
+                className={cn(
+                  'flex items-center gap-2 h-9 px-3 rounded-md border text-sm font-medium transition-colors cursor-pointer',
+                  active
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input text-muted-foreground hover:text-foreground hover:bg-accent'
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{t(opt.labelKey)}</span>
+                {active && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+              </button>
+            );
+          })}
         </div>
       </SettingsSection>
 
