@@ -249,5 +249,9 @@
     "password": "Password",
     "passwordLastChanged": "Last changed: never",
     "changePassword": "Change Password"
+  },
+  "reports": {
+    "downloadPdf": "Download PDF report",
+    "downloadCsv": "Download CSV export"
   }
 }

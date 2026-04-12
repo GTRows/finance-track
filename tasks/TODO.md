@@ -155,11 +155,11 @@ Update this file as you complete tasks. Mark done with [x].
 
 ## Phase 6 -- Reports & Export
 
-- [ ] `ReportController.java`
-- [ ] `ReportService.java` -- PDF generation
-- [ ] PDF portfolio report
-- [ ] CSV transaction export
-- [ ] Frontend download buttons
+- [x] `ReportController.java` -- `/api/v1/reports/portfolio/{id}` + `/api/v1/reports/budget`
+- [x] `ReportService.java` -- OpenPDF-based PDF generation + CSV streaming
+- [x] PDF portfolio report (title, summary KPIs, holdings table with P&L)
+- [x] CSV transaction export (date range, includes categories + tags)
+- [x] Frontend download buttons -- `api/report.api.ts`, Download icon button in PortfolioDetailPage and BudgetPage
 
 ---
 

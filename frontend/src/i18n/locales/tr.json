@@ -249,5 +249,9 @@
     "password": "Şifre",
     "passwordLastChanged": "Son değişiklik: hiç",
     "changePassword": "Şifreyi Değiştir"
+  },
+  "reports": {
+    "downloadPdf": "PDF raporu indir",
+    "downloadCsv": "CSV dışa aktarımı indir"
   }
 }

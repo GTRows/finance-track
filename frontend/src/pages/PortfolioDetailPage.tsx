@@ -10,7 +10,9 @@ import {
   PieChart,
   Coins,
   RefreshCw,
+  Download,
 } from 'lucide-react';
+import { reportApi } from '@/api/report.api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { EmptyState } from '@/components/layout/EmptyState';
@@ -35,6 +37,17 @@ export function PortfolioDetailPage() {
   const holdingsQuery = useHoldings(id);
   const snapshotsQuery = useSnapshots(id);
   const refreshPrices = useRefreshPrices();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (!portfolioQuery.data) return;
+    try {
+      setDownloading(true);
+      await reportApi.downloadPortfolioPdf(portfolioQuery.data.id, portfolioQuery.data.name);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const stats = useMemo(() => {
     const holdings = holdingsQuery.data ?? [];
@@ -131,6 +144,19 @@ export function PortfolioDetailPage() {
               <RefreshCw
                 className={cn('w-4 h-4', refreshPrices.isPending && 'animate-spin')}
               />
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={downloading || holdings.length === 0}
+              title={t('reports.downloadPdf')}
+              className="w-9 h-9 rounded-md border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {downloading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
             </button>
             <Button className="cursor-pointer" onClick={() => setDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />

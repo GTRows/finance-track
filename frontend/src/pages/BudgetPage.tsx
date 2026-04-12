@@ -22,7 +22,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  Download,
+  Loader2,
 } from 'lucide-react';
+import { reportApi } from '@/api/report.api';
 
 function currentPeriod(): string {
   const now = new Date();
@@ -45,6 +48,20 @@ export function BudgetPage() {
   const catQuery = useCategories();
   const createTxn = useCreateTransaction(month);
   const deleteTxn = useDeleteTransaction(month);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadCsv = async () => {
+    const [y, m] = month.split('-').map(Number);
+    const from = `${month}-01`;
+    const lastDay = new Date(y, m, 0).getDate();
+    const to = `${month}-${String(lastDay).padStart(2, '0')}`;
+    try {
+      setDownloading(true);
+      await reportApi.downloadBudgetCsv(from, to);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const summary = summaryQuery.data;
   const transactions = txnQuery.data?.content ?? [];
@@ -65,12 +82,27 @@ export function BudgetPage() {
         title={t('budget.title')}
         description={t('budget.descriptionFor', { month: monthLabel })}
         actions={
-          <AddTransactionDialog
-            incomeCategories={incomeCategories}
-            expenseCategories={expenseCategories}
-            onSubmit={(req) => createTxn.mutate(req)}
-            isPending={createTxn.isPending}
-          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadCsv}
+              disabled={downloading || transactions.length === 0}
+              title={t('reports.downloadCsv')}
+              className="w-9 h-9 rounded-md border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {downloading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+            </button>
+            <AddTransactionDialog
+              incomeCategories={incomeCategories}
+              expenseCategories={expenseCategories}
+              onSubmit={(req) => createTxn.mutate(req)}
+              isPending={createTxn.isPending}
+            />
+          </div>
         }
       />
 
