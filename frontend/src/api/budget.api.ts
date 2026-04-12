@@ -1,0 +1,85 @@
+import client from './client';
+import type {
+  BudgetTransaction,
+  BudgetSummary,
+  MonthlySummary,
+  CategoriesData,
+  Category,
+  CreateTransactionRequest,
+  CreateCategoryRequest,
+  PageResponse,
+} from '@/types/budget.types';
+
+export const budgetApi = {
+  // -- Transactions --
+
+  listTransactions: async (
+    month: string,
+    type?: string,
+    page = 0,
+    size = 20
+  ): Promise<PageResponse<BudgetTransaction>> => {
+    const params: Record<string, string | number> = { month, page, size };
+    if (type) params.type = type;
+    const { data } = await client.get<PageResponse<BudgetTransaction>>('/budget/transactions', { params });
+    return data;
+  },
+
+  createTransaction: async (req: CreateTransactionRequest): Promise<BudgetTransaction> => {
+    const { data } = await client.post<BudgetTransaction>('/budget/transactions', req);
+    return data;
+  },
+
+  updateTransaction: async (id: string, req: CreateTransactionRequest): Promise<BudgetTransaction> => {
+    const { data } = await client.put<BudgetTransaction>(`/budget/transactions/${id}`, req);
+    return data;
+  },
+
+  deleteTransaction: async (id: string): Promise<void> => {
+    await client.delete(`/budget/transactions/${id}`);
+  },
+
+  // -- Summary --
+
+  summary: async (month: string): Promise<BudgetSummary> => {
+    const { data } = await client.get<BudgetSummary>('/budget/summary', { params: { month } });
+    return data;
+  },
+
+  // -- Monthly logs --
+
+  listSummaries: async (): Promise<MonthlySummary[]> => {
+    const { data } = await client.get<MonthlySummary[]>('/budget/summaries');
+    return data;
+  },
+
+  captureSnapshot: async (period: string): Promise<MonthlySummary> => {
+    const { data } = await client.post<MonthlySummary>(`/budget/summaries/${period}/snapshot`);
+    return data;
+  },
+
+  // -- Categories --
+
+  listCategories: async (): Promise<CategoriesData> => {
+    const { data } = await client.get<CategoriesData>('/budget/categories');
+    return data;
+  },
+
+  createIncomeCategory: async (req: CreateCategoryRequest): Promise<Category> => {
+    const { data } = await client.post<Category>('/budget/categories/income', req);
+    return data;
+  },
+
+  createExpenseCategory: async (req: CreateCategoryRequest): Promise<Category> => {
+    const { data } = await client.post<Category>('/budget/categories/expense', req);
+    return data;
+  },
+
+  deleteIncomeCategory: async (id: string): Promise<void> => {
+    await client.delete(`/budget/categories/income/${id}`);
+  },
+
+  deleteExpenseCategory: async (id: string): Promise<void> => {
+    await client.delete(`/budget/categories/expense/${id}`);
+  },
+};

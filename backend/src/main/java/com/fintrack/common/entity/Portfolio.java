@@ -32,7 +32,7 @@ public class Portfolio {
     @Column(name = "portfolio_type", nullable = false, length = 30)
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private PortfolioType portfolioType = PortfolioType.BIREYSEL;
+    private PortfolioType portfolioType = PortfolioType.INDIVIDUAL;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -46,6 +46,13 @@ public class Portfolio {
     private Instant createdAt;
 
     public enum PortfolioType {
-        BIREYSEL, BES
+        INDIVIDUAL,
+        BES,
+        RETIREMENT,
+        EMERGENCY,
+        STOCKS,
+        CRYPTO,
+        REAL_ESTATE,
+        OTHER
     }
 }

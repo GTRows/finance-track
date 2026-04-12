@@ -65,86 +65,91 @@ Update this file as you complete tasks. Mark done with [x].
 ## Phase 2 -- Portfolio Module
 
 ### Backend
-- [ ] `PortfolioController.java` -- CRUD + transactions
-- [ ] `PortfolioService.java` -- holding calculations
-- [ ] `HoldingService.java` -- update on transaction
-- [ ] `SnapshotService.java` -- daily snapshots
-- [ ] `PriceController.java` -- current prices endpoint
-- [ ] `PriceSyncScheduler.java` -- 5-min price sync
-- [ ] `CoinGeckoClient.java` -- BTC/ETH prices
-- [ ] `TefasClient.java` -- Turkish fund prices
-- [ ] `ExchangeRateClient.java` -- USD/TRY, EUR/TRY
-- [ ] `WebSocketConfig.java` -- STOMP setup
-- [ ] `PriceBroadcaster.java` -- push prices to clients
-- [ ] Portfolio DTOs
+- [x] `PortfolioController.java` -- CRUD
+- [x] `PortfolioService.java` -- list/get/create/update/delete with ownership
+- [x] `AssetController.java` -- GET /api/v1/assets with type filter
+- [x] `HoldingController.java` / `HoldingService.java` -- CRUD holdings under /api/v1/portfolios/{id}/holdings
+- [x] Portfolio + holding DTOs (records)
+- [x] SecurityConfig -- 401 entry point so frontend auto-refresh triggers
+- [x] `SnapshotService.java` / `SnapshotScheduler.java` / `SnapshotController.java` -- daily snapshots + history endpoint
+- [x] `PriceController.java` -- manual refresh endpoint
+- [x] `PriceScheduler.java` -- 30-sec price sync with startup event
+- [x] `CoinGeckoClient.java` -- BTC/ETH prices (batch /simple/price)
+- [x] `TefasClient.java` -- Turkish fund prices (YAT + EMK via /api/DB/BindHistoryInfo) + V7 migration + hourly scheduler
+- [x] `ExchangeRateClient.java` -- USD/TRY, EUR/TRY
+- [x] `WebSocketConfig.java` -- STOMP /ws endpoint + /topic broker
+- [x] `PriceBroadcaster.java` -- push prices to clients after each sync cycle
+- [ ] Transactions module (deferred -- using direct holding edits for now)
 
 ### Frontend
-- [ ] `store/prices.store.ts` -- live price state
-- [ ] `hooks/useLivePrices.ts` -- WebSocket subscription
-- [ ] `hooks/usePortfolio.ts` -- React Query hooks
-- [ ] `api/portfolio.api.ts` -- API calls
-- [ ] `PortfolioPage.tsx` -- full portfolio view
-- [ ] `components/portfolio/HoldingsTable.tsx`
-- [ ] `components/portfolio/AllocationChart.tsx`
-- [ ] `components/portfolio/PortfolioHistoryChart.tsx`
-- [ ] `components/portfolio/AddTransactionDialog.tsx`
-- [ ] `components/portfolio/TransactionLog.tsx`
+- [x] `api/portfolio.api.ts` + `api/asset.api.ts` + `api/holding.api.ts`
+- [x] `hooks/usePortfolios.ts` + `hooks/useAssets.ts` + `hooks/useHoldings.ts`
+- [x] `PortfolioPage.tsx` -- list with create dialog and empty state
+- [x] `PortfolioDetailPage.tsx` -- stats, holdings table, add/delete
+- [x] `components/portfolio/PortfolioListItem.tsx` -- clickable link row
+- [x] `components/portfolio/AddPortfolioDialog.tsx` -- 8 type options
+- [x] `components/portfolio/HoldingsTable.tsx`
+- [x] `components/portfolio/AddHoldingDialog.tsx` -- asset picker with search
+- [x] `hooks/useRefreshPrices.ts` + `api/price.api.ts` -- manual refresh
+- [x] React Query polling every 15s + flash animation on price change
+- [x] WebSocket live prices -- STOMP /topic/prices broadcast from PriceBroadcaster + useLivePrices hook invalidates React Query on message
+- [x] `components/portfolio/AllocationChart.tsx`
+- [x] `components/portfolio/PortfolioHistoryChart.tsx` + `hooks/useSnapshots.ts` + `api/snapshot.api.ts`
+- [ ] Transaction log (deferred)
+
+### Cross-cutting
+- [x] i18n -- Turkish + English via react-i18next, LanguageSwitcher in AppShell + login, full coverage of nav/auth/portfolio/holdings/dashboard/budget/bills/settings
 
 ---
 
 ## Phase 3 -- Budget Module
 
 ### Backend
-- [ ] `TransactionController.java`
-- [ ] `TransactionService.java`
-- [ ] `BudgetSummaryService.java`
-- [ ] `CategoryService.java`
-- [ ] Budget DTOs
+- [x] `BudgetController.java` -- transactions CRUD, summary, monthly snapshot
+- [x] `BudgetService.java` -- transaction list/create/update/delete, summary computation, monthly snapshot capture
+- [x] `CategoryController.java` + `CategoryService.java` -- income/expense CRUD
+- [x] Repositories: TransactionRepository, IncomeCategoryRepository, ExpenseCategoryRepository, MonthlySummaryRepository
+- [x] DTOs: CreateTransactionRequest, UpdateTransactionRequest, TransactionResponse, BudgetSummaryResponse, CategoryResponse, etc.
 
 ### Frontend
-- [ ] `hooks/useBudget.ts`
-- [ ] `api/budget.api.ts`
-- [ ] `BudgetPage.tsx`
-- [ ] `components/budget/BudgetSummaryBar.tsx`
-- [ ] `components/budget/CategoryBreakdown.tsx`
-- [ ] `components/budget/TransactionList.tsx`
-- [ ] `components/budget/AddTransactionDialog.tsx`
-- [ ] `components/budget/MonthlyLogSection.tsx` -- historical log table
-- [ ] `components/budget/SnapshotButton.tsx` -- capture month-end
+- [x] `hooks/useBudget.ts` -- useTransactions, useBudgetSummary, useCategories, useCreateTransaction, useDeleteTransaction, useCaptureSnapshot
+- [x] `api/budget.api.ts` -- full API module
+- [x] `BudgetPage.tsx` -- month navigator, KPI cards (income/expense/net/savings rate), transaction list with category dots, category breakdown bars
+- [x] `components/budget/AddTransactionDialog.tsx` -- type toggle (income/expense), amount, category pill picker, description, date
+- [ ] `components/budget/MonthlyLogSection.tsx` -- historical log table (deferred)
+- [ ] `components/budget/SnapshotButton.tsx` -- capture month-end (deferred)
 
 ---
 
 ## Phase 4 -- Bills Module
 
 ### Backend
-- [ ] `BillController.java`
-- [ ] `BillService.java`
-- [ ] `BillReminderScheduler.java` -- morning check, send notifications
+- [x] `BillController.java` -- CRUD, pay, history
+- [x] `BillService.java` -- list with current period status, pay/skip, history
+- [x] Repositories: BillRepository, BillPaymentRepository
+- [x] DTOs: CreateBillRequest, PayBillRequest, BillResponse, PaymentHistoryResponse
+- [ ] `BillReminderScheduler.java` -- morning check, send notifications (deferred)
 
 ### Frontend
-- [ ] `hooks/useBills.ts`
-- [ ] `api/bills.api.ts`
-- [ ] `BillsPage.tsx`
-- [ ] `components/bills/BillsList.tsx`
-- [ ] `components/bills/BillCard.tsx`
-- [ ] `components/bills/BillsCalendar.tsx`
-- [ ] `components/bills/AddBillDialog.tsx`
+- [x] `hooks/useBills.ts` -- useBills, useCreateBill, useDeleteBill, usePayBill
+- [x] `api/bills.api.ts` -- full API module
+- [x] `BillsPage.tsx` -- KPI strip (due/paid/pending), bill list with status dots, pay button, delete
+- [x] `components/bills/AddBillDialog.tsx` -- name, amount, due day, category
+- [ ] `components/bills/BillsCalendar.tsx` -- calendar view (deferred)
 
 ---
 
 ## Phase 5 -- Dashboard + Polish
 
-- [ ] `GET /api/v1/dashboard` endpoint
-- [ ] `DashboardPage.tsx` -- all widgets
-- [ ] `components/dashboard/KpiCards.tsx`
-- [ ] `components/dashboard/UpcomingBillsWidget.tsx`
-- [ ] `components/dashboard/RecentTransactionsList.tsx`
-- [ ] `AppShell.tsx` -- sidebar + topbar + mobile nav
-- [ ] `components/layout/LivePriceTicker.tsx`
-- [ ] `SettingsPage.tsx`
-- [ ] `AnalyticsPage.tsx`
-- [ ] Dark/light mode toggle
-- [ ] Mobile responsive layout
+- [x] `GET /api/v1/dashboard` -- DashboardController + DashboardService (aggregates portfolios, budget, upcoming bills)
+- [x] `DashboardPage.tsx` -- live KPI cards (net worth, income, expense, savings rate), portfolio cards with P&L, upcoming bills list
+- [x] `api/dashboard.api.ts` + `hooks/useDashboard.ts`
+- [x] `AppShell.tsx` -- sidebar + topbar + mobile nav (completed in Phase 1/2)
+- [ ] `components/layout/LivePriceTicker.tsx` (deferred)
+- [x] `SettingsPage.tsx` -- language selector (completed in Phase 2)
+- [ ] `AnalyticsPage.tsx` (deferred)
+- [ ] Dark/light mode toggle (deferred)
+- [ ] Mobile responsive layout (deferred)
 
 ---
 

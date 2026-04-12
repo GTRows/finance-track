@@ -1,0 +1,21 @@
+package com.fintrack.asset;
+
+import com.fintrack.common.entity.Asset;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * JPA repository for {@link Asset} master data.
+ */
+@Repository
+public interface AssetRepository extends JpaRepository<Asset, UUID> {
+
+    /** Returns all assets ordered by symbol. */
+    List<Asset> findAllByOrderBySymbolAsc();
+
+    /** Filters assets by type. */
+    List<Asset> findByAssetTypeOrderBySymbolAsc(Asset.AssetType type);
+}

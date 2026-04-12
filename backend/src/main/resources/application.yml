@@ -88,7 +88,10 @@ price-api:
     base-url: https://v6.exchangerate-api.com/v6
     api-key: ${EXCHANGE_RATE_API_KEY:}
     enabled: true
-  sync-interval-minutes: ${PRICE_SYNC_INTERVAL_MINUTES:5}
+  tefas:
+    base-url: https://www.tefas.gov.tr
+    enabled: true
+  sync-interval-seconds: ${PRICE_SYNC_INTERVAL_SECONDS:30}
 
 # Claude AI integration
 claude:

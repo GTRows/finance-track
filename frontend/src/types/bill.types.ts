@@ -21,4 +21,23 @@ export interface BillPayment {
   amount: number | null;
   status: PaymentStatus;
   paidAt: string | null;
+  notes: string | null;
+}
+
+/** Request body for creating/updating a bill. */
+export interface CreateBillRequest {
+  name: string;
+  amount: number;
+  dueDay: number;
+  category?: string;
+  remindDaysBefore: number;
+  autoPay: boolean;
+  notes?: string;
+}
+
+/** Request body for marking a bill as paid. */
+export interface PayBillRequest {
+  period: string;
+  amount?: number;
+  notes?: string;
 }
