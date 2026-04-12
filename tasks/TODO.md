@@ -116,8 +116,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `api/budget.api.ts` -- full API module
 - [x] `BudgetPage.tsx` -- month navigator, KPI cards (income/expense/net/savings rate), transaction list with category dots, category breakdown bars
 - [x] `components/budget/AddTransactionDialog.tsx` -- type toggle (income/expense), amount, category pill picker, description, date
-- [ ] `components/budget/MonthlyLogSection.tsx` -- historical log table (deferred)
-- [ ] `components/budget/SnapshotButton.tsx` -- capture month-end (deferred)
+- [x] `components/budget/MonthlyLogSection.tsx` -- historical log table with capture snapshot button
 
 ---
 

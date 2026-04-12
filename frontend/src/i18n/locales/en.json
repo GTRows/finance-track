@@ -193,7 +193,12 @@
     "descriptionPlaceholder": "What was this for?",
     "date": "Date",
     "noCategories": "No categories yet. You can add them in Settings.",
-    "uncategorized": "Uncategorized"
+    "uncategorized": "Uncategorized",
+    "monthlyLog": "Monthly Log",
+    "monthlyLogHint": "Historical record of captured month-end snapshots",
+    "captureSnapshot": "Capture Snapshot",
+    "noSnapshots": "No snapshots yet. Capture the current month to start your log.",
+    "period": "Period"
   },
   "bills": {
     "title": "Bills",

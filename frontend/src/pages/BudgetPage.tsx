@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { AddTransactionDialog } from '@/components/budget/AddTransactionDialog';
+import { MonthlyLogSection } from '@/components/budget/MonthlyLogSection';
 import {
   useTransactions,
   useBudgetSummary,
@@ -292,6 +293,8 @@ export function BudgetPage() {
           </CardContent>
         </Card>
       </div>
+
+      <MonthlyLogSection currentMonth={month} />
     </div>
   );
 }

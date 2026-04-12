@@ -193,7 +193,12 @@
     "descriptionPlaceholder": "Bu ne içindi?",
     "date": "Tarih",
     "noCategories": "Henüz kategori yok. Ayarlardan ekleyebilirsiniz.",
-    "uncategorized": "Kategorisiz"
+    "uncategorized": "Kategorisiz",
+    "monthlyLog": "Aylık Kayıt",
+    "monthlyLogHint": "Ay sonu alınan anlık görüntülerin geçmiş kaydı",
+    "captureSnapshot": "Anlık Görüntü Al",
+    "noSnapshots": "Henüz anlık görüntü yok. Kaydınıza başlamak için mevcut ayı alın.",
+    "period": "Dönem"
   },
   "bills": {
     "title": "Faturalar",
