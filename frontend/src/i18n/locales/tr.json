@@ -26,6 +26,7 @@
     "portfolio": "Portföy",
     "budget": "Bütçe",
     "bills": "Faturalar",
+    "analytics": "Analiz",
     "settings": "Ayarlar",
     "signOut": "Çıkış Yap"
   },
@@ -262,6 +263,35 @@
   },
   "ticker": {
     "label": "Canlı fiyatlar"
+  },
+  "analytics": {
+    "title": "Analiz",
+    "description": "Kaydedilmiş anlık görüntülerden hesaplanan bütçe ve yatırım trendleri.",
+    "avgSavingsRate": "Ort. tasarruf oranı",
+    "avgSavingsRateHint": "{{count}} aylık görüntü üzerinden",
+    "expenseGrowth": "Gider artışı",
+    "expenseGrowthHint": "{{from}} - {{to}} arası",
+    "expenseGrowthEmpty": "En az iki aylık kayıt gerekli",
+    "portfolioCagr": "Portföy CAGR",
+    "portfolioCagrHint": "{{from}} - {{to}} arası",
+    "portfolioCagrEmpty": "En az iki portföy anlık görüntüsü gerekli",
+    "monthsTracked": "Takip edilen ay",
+    "portfoliosCount": "{{count}} portföy",
+    "savingsRateTrend": "Tasarruf oranı trendi",
+    "savingsRateTrendHint": "Kaydedilmiş aylık logdan aydan aya tasarruf oranı.",
+    "savingsRate": "Tasarruf oranı",
+    "incomeExpense": "Gelir - gider",
+    "incomeExpenseHint": "Her çubuk bir aylık kayıttır.",
+    "income": "Gelir",
+    "expense": "Gider",
+    "netWorthTrend": "Portföy değer trendi",
+    "netWorthTrendHint": "Tüm portföylerdeki toplam değer ve maliyet.",
+    "value": "Değer",
+    "cost": "Maliyet",
+    "emptyBudgetTitle": "Henüz aylık kayıt yok",
+    "emptyBudgetDesc": "Trendleri görmek için Bütçe sayfasından en az iki ayı kaydedin.",
+    "emptyPortfolioTitle": "Henüz portföy kaydı yok",
+    "emptyPortfolioDesc": "Portföy kayıtları günlük alınır. Trendleri görmek için yarın tekrar bakın."
   },
   "transactions": {
     "title": "İşlem geçmişi",

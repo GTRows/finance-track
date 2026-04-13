@@ -146,7 +146,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `AppShell.tsx` -- sidebar + topbar + mobile nav (completed in Phase 1/2)
 - [x] `components/dashboard/LivePriceTicker.tsx` (STOMP-driven, shown on DashboardPage)
 - [x] `SettingsPage.tsx` -- language selector (completed in Phase 2)
-- [ ] `AnalyticsPage.tsx` (deferred)
+- [x] `AnalyticsPage.tsx` (savings rate area, income/expense bars, aggregated portfolio value line, CAGR + growth KPIs)
 - [ ] Dark/light mode toggle (deferred)
 - [ ] Mobile responsive layout (deferred)
 

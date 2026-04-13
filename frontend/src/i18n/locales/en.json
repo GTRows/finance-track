@@ -26,6 +26,7 @@
     "portfolio": "Portfolio",
     "budget": "Budget",
     "bills": "Bills",
+    "analytics": "Analytics",
     "settings": "Settings",
     "signOut": "Sign Out"
   },
@@ -262,6 +263,35 @@
   },
   "ticker": {
     "label": "Live prices"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "description": "Trends across your budget and investments, computed from captured snapshots.",
+    "avgSavingsRate": "Avg. savings rate",
+    "avgSavingsRateHint": "Across {{count}} monthly snapshots",
+    "expenseGrowth": "Expense growth",
+    "expenseGrowthHint": "From {{from}} to {{to}}",
+    "expenseGrowthEmpty": "Needs at least two captured months",
+    "portfolioCagr": "Portfolio CAGR",
+    "portfolioCagrHint": "From {{from}} to {{to}}",
+    "portfolioCagrEmpty": "Needs at least two portfolio snapshots",
+    "monthsTracked": "Months tracked",
+    "portfoliosCount": "{{count}} portfolio(s)",
+    "savingsRateTrend": "Savings rate trend",
+    "savingsRateTrendHint": "Month-over-month savings rate from captured monthly logs.",
+    "savingsRate": "Savings rate",
+    "incomeExpense": "Income vs expense",
+    "incomeExpenseHint": "Each bar is a captured monthly snapshot.",
+    "income": "Income",
+    "expense": "Expense",
+    "netWorthTrend": "Portfolio value trend",
+    "netWorthTrendHint": "Aggregated value and cost basis across every portfolio.",
+    "value": "Value",
+    "cost": "Cost basis",
+    "emptyBudgetTitle": "No captured months yet",
+    "emptyBudgetDesc": "Capture at least two monthly snapshots from the Budget page to see trends.",
+    "emptyPortfolioTitle": "No portfolio snapshots yet",
+    "emptyPortfolioDesc": "Portfolio snapshots are captured daily. Come back tomorrow to see trends."
   },
   "transactions": {
     "title": "Transaction log",

@@ -8,6 +8,7 @@ import {
   Wallet,
   Receipt,
   TrendingUp,
+  BarChart3,
   LogOut,
   Settings,
   ChevronLeft,
@@ -32,6 +33,7 @@ export function AppShell() {
     { path: '/portfolio', label: t('nav.portfolio'), icon: Briefcase },
     { path: '/budget', label: t('nav.budget'), icon: Wallet },
     { path: '/bills', label: t('nav.bills'), icon: Receipt },
+    { path: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
   ];
 
   const handleLogout = async () => {
