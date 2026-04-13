@@ -148,7 +148,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `SettingsPage.tsx` -- language selector (completed in Phase 2)
 - [x] `AnalyticsPage.tsx` (savings rate area, income/expense bars, aggregated portfolio value line, CAGR + growth KPIs)
 - [ ] Dark/light mode toggle (deferred)
-- [ ] Mobile responsive layout (deferred)
+- [x] Mobile responsive layout (sidebar becomes off-canvas drawer below md, hamburger in topbar, backdrop overlay, page padding responsive)
 
 ---
 

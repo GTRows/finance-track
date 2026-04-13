@@ -13,8 +13,10 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeSwitcher } from './ThemeSwitcher';
@@ -27,6 +29,11 @@ export function AppShell() {
   const location = useLocation();
   const { user, refreshToken, clearAuth } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   const navItems = [
     { path: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
@@ -50,11 +57,22 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 bottom-0 z-30 flex flex-col bg-card border-r transition-[width] duration-200',
-          collapsed ? 'w-16' : 'w-56'
+          'fixed left-0 top-0 bottom-0 z-30 flex flex-col bg-card border-r transition-[width,transform] duration-200',
+          collapsed ? 'md:w-16' : 'md:w-56',
+          'w-64',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
         {/* Logo */}
@@ -62,11 +80,22 @@ export function AppShell() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
             <TrendingUp className="w-4 h-4 text-primary-foreground" />
           </div>
-          {!collapsed && (
-            <span className="font-semibold text-sm tracking-tight whitespace-nowrap">
-              {t('app.name')}
-            </span>
-          )}
+          <span
+            className={cn(
+              'font-semibold text-sm tracking-tight whitespace-nowrap',
+              collapsed && 'md:hidden'
+            )}
+          >
+            {t('app.name')}
+          </span>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="ml-auto md:hidden w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+            aria-label="Close menu"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -86,7 +115,9 @@ export function AppShell() {
                 title={collapsed ? item.label : undefined}
               >
                 <item.icon className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                <span className={cn('whitespace-nowrap', collapsed && 'md:hidden')}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
@@ -105,7 +136,7 @@ export function AppShell() {
             title={collapsed ? t('nav.settings') : undefined}
           >
             <Settings className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>{t('nav.settings')}</span>}
+            <span className={cn(collapsed && 'md:hidden')}>{t('nav.settings')}</span>
           </Link>
 
           <button
@@ -114,28 +145,40 @@ export function AppShell() {
             title={collapsed ? t('nav.signOut') : undefined}
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>{t('nav.signOut')}</span>}
+            <span className={cn(collapsed && 'md:hidden')}>{t('nav.signOut')}</span>
           </button>
         </div>
 
-        {/* Collapse toggle */}
+        {/* Collapse toggle (desktop only) */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-[4.25rem] w-6 h-6 rounded-full border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="hidden md:flex absolute -right-3 top-[4.25rem] w-6 h-6 rounded-full border bg-card items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
         </button>
       </aside>
 
       {/* Main content */}
-      <div className={cn('flex-1 flex flex-col transition-[margin] duration-200', collapsed ? 'ml-16' : 'ml-56')}>
+      <div
+        className={cn(
+          'flex-1 flex flex-col min-w-0 transition-[margin] duration-200',
+          collapsed ? 'md:ml-16' : 'md:ml-56'
+        )}
+      >
         {/* Top bar */}
-        <header className="h-14 border-b bg-card/50 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-20">
-          <div />
-          <div className="flex items-center gap-3">
+        <header className="h-14 border-b bg-card/50 backdrop-blur-sm flex items-center justify-between gap-3 px-4 sm:px-6 sticky top-0 z-20">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="md:hidden w-9 h-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+            aria-label="Open menu"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
             <ThemeSwitcher />
             <LanguageSwitcher />
-            <div className="w-px h-5 bg-border" />
+            <div className="w-px h-5 bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-xs font-medium text-primary">
@@ -148,7 +191,7 @@ export function AppShell() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

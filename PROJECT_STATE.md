@@ -43,7 +43,7 @@ Cleaning up deferred items from Phases 2-5 and hardening for production:
 - [ ] Bill reminder scheduler (notification pings N days before due)
 - [ ] BillsCalendar component (month grid)
 - [ ] Theme toggle (dark/light) wired to user_settings
-- [ ] Mobile responsive audit (sidebar collapse, table scrolling)
+- [x] Mobile responsive audit (sidebar drawer, hamburger, responsive padding; tables already use overflow-x-auto)
 - [x] LivePriceTicker (STOMP subscription drives zustand store, dashboard shows ticker strip)
 - [x] AnalyticsPage (savings rate, income/expense, portfolio value; avg savings, expense growth, CAGR KPIs)
 - [ ] AI analysis endpoint (Claude API) — optional, gated on CLAUDE_ENABLED
