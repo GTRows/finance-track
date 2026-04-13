@@ -172,8 +172,8 @@ Update this file as you complete tasks. Mark done with [x].
 
 ## Localization Hardening
 
-- [ ] Locale-aware number formatting (thousand/decimal separators per locale)
-- [ ] Locale-aware date formatting across all views (replace hardcoded en-US/tr-TR calls)
+- [x] Locale-aware number formatting (formatters.ts reads i18n.resolvedLanguage)
+- [x] Locale-aware date formatting across all views (formatters.ts reads i18n.resolvedLanguage)
 - [ ] Currency selection in user_settings (currently hardcoded TRY) with formatter support
 - [ ] Audit all user-facing strings for missing i18n keys (error messages, toasts, empty states)
 - [ ] Backend validation messages via MessageSource (Accept-Language aware)
