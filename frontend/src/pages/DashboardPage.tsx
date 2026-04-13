@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
 import { useDashboard } from '@/hooks/useDashboard';
+import { LivePriceTicker } from '@/components/dashboard/LivePriceTicker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatTRY, formatPercent } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
@@ -36,6 +37,8 @@ export function DashboardPage() {
           {t('dashboard.overviewSubtitle')}
         </p>
       </div>
+
+      <LivePriceTicker />
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

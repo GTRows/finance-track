@@ -144,7 +144,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `DashboardPage.tsx` -- live KPI cards (net worth, income, expense, savings rate), portfolio cards with P&L, upcoming bills list
 - [x] `api/dashboard.api.ts` + `hooks/useDashboard.ts`
 - [x] `AppShell.tsx` -- sidebar + topbar + mobile nav (completed in Phase 1/2)
-- [ ] `components/layout/LivePriceTicker.tsx` (deferred)
+- [x] `components/dashboard/LivePriceTicker.tsx` (STOMP-driven, shown on DashboardPage)
 - [x] `SettingsPage.tsx` -- language selector (completed in Phase 2)
 - [ ] `AnalyticsPage.tsx` (deferred)
 - [ ] Dark/light mode toggle (deferred)

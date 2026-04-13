@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLivePricesStore } from '@/store/livePrices.store';
 
 const PRICES_TOPIC = '/topic/prices';
 
@@ -28,7 +29,35 @@ export function useLivePrices() {
     });
 
     stompClient.onConnect = () => {
-      stompClient.subscribe(PRICES_TOPIC, () => {
+      stompClient.subscribe(PRICES_TOPIC, (frame) => {
+        try {
+          const batch = JSON.parse(frame.body);
+          if (batch && Array.isArray(batch.prices)) {
+            useLivePricesStore.getState().applyBatch({
+              publishedAt: batch.publishedAt,
+              prices: batch.prices.map((p: {
+                symbol: string;
+                assetType: string;
+                price: string | number;
+                priceUsd: string | number | null;
+                updatedAt: string;
+              }) => ({
+                symbol: p.symbol,
+                assetType: p.assetType,
+                price: typeof p.price === 'string' ? Number(p.price) : p.price,
+                priceUsd:
+                  p.priceUsd == null
+                    ? null
+                    : typeof p.priceUsd === 'string'
+                      ? Number(p.priceUsd)
+                      : p.priceUsd,
+                updatedAt: p.updatedAt,
+              })),
+            });
+          }
+        } catch {
+          // Ignore malformed frames; holdings will still refetch below.
+        }
         queryClient.invalidateQueries({ queryKey: ['portfolios'] });
       });
     };

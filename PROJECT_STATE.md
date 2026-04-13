@@ -44,6 +44,7 @@ Cleaning up deferred items from Phases 2-5 and hardening for production:
 - [ ] BillsCalendar component (month grid)
 - [ ] Theme toggle (dark/light) wired to user_settings
 - [ ] Mobile responsive audit (sidebar collapse, table scrolling)
+- [x] LivePriceTicker (STOMP subscription drives zustand store, dashboard shows ticker strip)
 - [ ] AnalyticsPage (trends: savings rate, expense growth, portfolio CAGR)
 - [ ] AI analysis endpoint (Claude API) — optional, gated on CLAUDE_ENABLED
 - [ ] Localization hardening (locale-aware number/date formatting, currency selection, backend MessageSource, timezone)

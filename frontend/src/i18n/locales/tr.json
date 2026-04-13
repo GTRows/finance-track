@@ -260,6 +260,9 @@
     "downloadPdf": "PDF raporu indir",
     "downloadCsv": "CSV dışa aktarımı indir"
   },
+  "ticker": {
+    "label": "Canlı fiyatlar"
+  },
   "transactions": {
     "title": "İşlem geçmişi",
     "description": "Bu portföy için tüm alım, satım, yatırma ve dengeleme kayıtları.",

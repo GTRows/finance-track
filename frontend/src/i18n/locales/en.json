@@ -260,6 +260,9 @@
     "downloadPdf": "Download PDF report",
     "downloadCsv": "Download CSV export"
   },
+  "ticker": {
+    "label": "Live prices"
+  },
   "transactions": {
     "title": "Transaction log",
     "description": "Every buy, sell, deposit, and rebalance recorded for this portfolio.",
