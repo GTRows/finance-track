@@ -8,7 +8,8 @@ import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, type Theme } from '@/store/theme.store';
 import { useSettingsStore } from '@/store/settings.store';
 import { useUpdateSettings } from '@/hooks/useSettings';
-import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor } from 'lucide-react';
+import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet } from 'lucide-react';
+import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
 import { cn } from '@/lib/utils';
 
 const CURRENCY_OPTIONS = ['TRY', 'USD', 'EUR', 'GBP'];
@@ -191,6 +192,14 @@ export function SettingsPage() {
         description={t('settings.notificationsDesc')}
       >
         <p className="text-sm text-muted-foreground">{t('settings.notificationsSoon')}</p>
+      </SettingsSection>
+
+      <SettingsSection
+        icon={FileSpreadsheet}
+        title={t('settings.importTitle')}
+        description={t('settings.importDescription')}
+      >
+        <ImportExcelSection />
       </SettingsSection>
 
       <SettingsSection

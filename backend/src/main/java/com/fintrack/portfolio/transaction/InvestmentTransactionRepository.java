@@ -14,4 +14,6 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
     List<InvestmentTransaction> findByPortfolioIdOrderByTxnDateDescCreatedAtDesc(UUID portfolioId);
 
     Optional<InvestmentTransaction> findByIdAndPortfolioId(UUID id, UUID portfolioId);
+
+    List<InvestmentTransaction> findByPortfolioIdInAndNotesStartingWith(List<UUID> portfolioIds, String notesPrefix);
 }
