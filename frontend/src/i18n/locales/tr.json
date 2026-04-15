@@ -16,7 +16,10 @@
     "thisMonth": "Bu ay",
     "confirmAgain": "Onaylamak için tekrar tıklayın",
     "somethingWentWrong": "Bir sorun oluştu",
-    "backendUnreachable": "Sunucuya ulaşılamıyor. Bağlantı yeniden kurulana kadar değişiklikler kaydedilmeyecek."
+    "backendUnreachable": "Sunucuya ulaşılamıyor. Bağlantı yeniden kurulana kadar değişiklikler kaydedilmeyecek.",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat",
+    "actions": "İşlemler"
   },
   "app": {
     "name": "FinTrack Pro",
@@ -278,7 +281,10 @@
     "importColType": "Tür",
     "importColAsset": "Varlık",
     "importColAmount": "Tutar",
-    "importColStatus": "Durum"
+    "importColStatus": "Durum",
+    "importNoFile": "Önce bir dosya seç.",
+    "importPreviewFailed": "Önizleme başarısız.",
+    "importFailed": "İçe aktarma başarısız."
   },
   "reports": {
     "downloadPdf": "PDF raporu indir",

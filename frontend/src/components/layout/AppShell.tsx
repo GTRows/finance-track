@@ -100,7 +100,7 @@ export function AppShell() {
             type="button"
             onClick={() => setMobileOpen(false)}
             className="ml-auto md:hidden w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-            aria-label="Close menu"
+            aria-label={t('common.closeMenu')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -179,7 +179,7 @@ export function AppShell() {
             type="button"
             onClick={() => setMobileOpen(true)}
             className="md:hidden w-9 h-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-            aria-label="Open menu"
+            aria-label={t('common.openMenu')}
           >
             <Menu className="w-4 h-4" />
           </button>

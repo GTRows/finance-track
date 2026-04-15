@@ -93,7 +93,7 @@ export function TransactionLog({ portfolioId }: TransactionLogProps) {
                   <th className="text-right font-medium px-4 py-2.5">{t('transactions.colPrice')}</th>
                   <th className="text-right font-medium px-4 py-2.5">{t('transactions.colAmount')}</th>
                   <th className="text-right font-medium px-4 py-2.5">{t('transactions.colFee')}</th>
-                  <th className="px-4 py-2.5" aria-label="actions" />
+                  <th className="px-4 py-2.5" aria-label={t('common.actions')} />
                 </tr>
               </thead>
               <tbody>

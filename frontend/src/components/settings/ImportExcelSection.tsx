@@ -45,7 +45,7 @@ export function ImportExcelSection() {
   };
 
   const upload = async (path: string): Promise<ImportSummary> => {
-    if (!file) throw new Error('No file');
+    if (!file) throw new Error(t('settings.importNoFile'));
     const fd = new FormData();
     fd.append('file', file);
     const { data } = await client.post<ImportSummary>(path, fd, {
@@ -60,7 +60,7 @@ export function ImportExcelSection() {
     try {
       setSummary(await upload('/import/excel/preview'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Preview failed');
+      setError(e instanceof Error ? e.message : t('settings.importPreviewFailed'));
     } finally {
       setBusy(false);
     }
@@ -77,7 +77,7 @@ export function ImportExcelSection() {
       qc.invalidateQueries({ queryKey: ['transactions'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Import failed');
+      setError(e instanceof Error ? e.message : t('settings.importFailed'));
     } finally {
       setBusy(false);
     }

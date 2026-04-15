@@ -16,7 +16,10 @@
     "thisMonth": "This month",
     "confirmAgain": "Click again to confirm",
     "somethingWentWrong": "Something went wrong",
-    "backendUnreachable": "Backend is unreachable. Changes will not save until the connection is restored."
+    "backendUnreachable": "Backend is unreachable. Changes will not save until the connection is restored.",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "actions": "Actions"
   },
   "app": {
     "name": "FinTrack Pro",
@@ -278,7 +281,10 @@
     "importColType": "Type",
     "importColAsset": "Asset",
     "importColAmount": "Amount",
-    "importColStatus": "Status"
+    "importColStatus": "Status",
+    "importNoFile": "Choose a file first.",
+    "importPreviewFailed": "Preview failed.",
+    "importFailed": "Import failed."
   },
   "reports": {
     "downloadPdf": "Download PDF report",
