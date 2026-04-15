@@ -1,104 +1,155 @@
-# 💰 FinTrack Pro
+# FinTrack Pro
 
-Personal finance & investment tracking system. Self-hosted, open-source, production-ready.
+Self-hosted personal finance and investment tracking. Java 21 + Spring Boot
+backend, React + Vite frontend, PostgreSQL, Redis, Nginx. Runs on a single
+Docker Compose stack. Designed for one owner with optional external HTTPS
+access.
 
 ## Features
 
-- **Investment Portfolio** — track stocks, crypto, gold, BES; live prices via API
-- **Income & Expenses** — monthly budget tracking with full log history
-- **Bill Tracker** — recurring bills with due-date reminders
-- **Live Dashboard** — real-time charts, P&L, allocation breakdowns
-- **External Access** — JWT auth + HTTPS via Nginx, safe to expose publicly
-- **Auto-start** — runs on boot via Docker `restart: always`
-- **Claude Integration** — AI-powered analysis endpoint (optional)
+- **Portfolio tracking** — stocks, crypto, TEFAS funds, pension (BES) funds,
+  currencies, gold. Live prices from CoinGecko, TEFAS, and an exchange-rate
+  provider (with a keyless fallback for FX).
+- **On-demand TEFAS catalog** — full Turkish fund universe is searchable by
+  code or name; import any fund with one click and its prices refresh
+  automatically.
+- **Per-asset detail pages** — history charts pulled directly from the
+  upstream providers (TEFAS `BindHistoryInfo`, CoinGecko `market_chart`) with
+  7D / 30D / 90D windows. Locally recorded series is used as fallback for
+  assets without an upstream history endpoint.
+- **Transaction log** — every buy, sell, deposit, withdraw, rebalance, and
+  BES contribution recorded as an immutable audit trail. BUY/SELL
+  transactions automatically update the related holding.
+- **Budget** — monthly income and expense entries with categories, per-month
+  summary, and snapshot history. Trends feed the Analytics page.
+- **Bills** — recurring bills with due-day tracking, payment history, and a
+  monthly calendar view.
+- **Analytics** — savings rate trend, income vs expense bars, portfolio
+  value trend, CAGR, expense growth — all computed from captured monthly and
+  daily snapshots.
+- **Live dashboard** — KPI cards, portfolio performance charts, a STOMP
+  price ticker that refreshes every ~30 seconds.
+- **Internationalization** — Turkish and English across the entire UI.
+  Locale-aware number, currency, and date formatting. Backend validation
+  messages are resolved through Spring `MessageSource` bundles.
+- **User settings** — currency, language, theme (light/dark/system), and
+  timezone persisted per user and reflected in all formatters.
+- **Reports** — per-portfolio PDF summary and per-month CSV transaction
+  export.
+- **Auth** — JWT access (15 min) + refresh (30 days) with rotation. Spring
+  Security 6 with a DB-backed refresh token store.
+- **Reverse proxy and TLS** — Nginx with HTTP to HTTPS redirect, security
+  headers, and a certbot sidecar for Let's Encrypt certificates.
+- **Auto-start** — Docker Compose `restart: always` plus an optional systemd
+  unit that brings the stack up on boot.
+- **Backups** — nightly `pg_dump` via a dedicated container or a systemd
+  timer; `scripts/restore.sh` handles the inverse.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Java 21, Spring Boot 3.2, Spring Security 6 |
-| Frontend | React 18, Vite, Tailwind CSS, shadcn/ui, Recharts |
-| Database | PostgreSQL 16 |
-| Cache | Redis 7 |
-| Proxy | Nginx (SSL termination, rate limiting) |
-| Container | Docker & Docker Compose |
-| Auth | JWT (access + refresh tokens) |
-| Realtime | WebSocket (live price updates) |
-| Price APIs | CoinGecko (crypto), ExchangeRate-API (FX), Yahoo Finance (stocks) |
+| Layer       | Technology                                        |
+|-------------|---------------------------------------------------|
+| Backend     | Java 21, Spring Boot 3.2, Spring Security 6, JPA  |
+| Migrations  | Flyway                                            |
+| Frontend    | React 18, TypeScript, Vite, Tailwind, shadcn/ui   |
+| Charts      | Recharts                                          |
+| State       | Zustand (client) + React Query (server)           |
+| Database    | PostgreSQL 16                                     |
+| Cache       | Redis 7                                           |
+| Proxy       | Nginx (TLS, rate limiting, security headers)      |
+| Realtime    | STOMP over WebSocket                              |
+| i18n        | react-i18next + Spring MessageSource              |
+| Price APIs  | CoinGecko, TEFAS, ExchangeRate-API (keyless fallback) |
 
-## Quick Start
+## Quick Start (local)
 
 ```bash
-# 1. Clone & configure
-git clone https://github.com/yourname/fintrack.git
-cd fintrack
+git clone https://github.com/GTRows/finance-track.git
+cd finance-track
 cp .env.example .env
-# Edit .env with your settings
+# Edit .env and at minimum set JWT_SECRET and POSTGRES_PASSWORD.
 
-# 2. Start everything
 docker compose up -d
 
-# 3. Open browser
-open http://localhost  # or https://yourdomain.com
+# Open the app
+# http://localhost
 ```
 
-## Project Structure
+First run applies all Flyway migrations and seeds the default asset catalog.
 
-```
-fintrack/
-├── backend/              # Spring Boot API
-│   └── src/main/java/com/fintrack/
-│       ├── config/       # Security, CORS, WebSocket config
-│       ├── controller/   # REST endpoints
-│       ├── dto/          # Request/Response DTOs
-│       ├── entity/       # JPA entities
-│       ├── repository/   # Spring Data repositories
-│       ├── service/      # Business logic
-│       ├── security/     # JWT filter, UserDetailsService
-│       └── scheduler/    # Price sync, bill reminders
-├── frontend/             # React + Vite app
-│   └── src/
-│       ├── api/          # Axios client + endpoints
-│       ├── components/   # UI components by feature
-│       ├── pages/        # Route-level pages
-│       ├── store/        # Zustand state
-│       └── types/        # TypeScript types
-├── nginx/                # Reverse proxy config
-├── scripts/              # Setup & maintenance scripts
-├── docker-compose.yml    # Full stack orchestration
-├── docker-compose.prod.yml # Production overrides
-└── .env.example          # Environment template
-```
+## Configuration
 
-## Environment Variables
-
-See `.env.example` for all required variables. Key ones:
+All secrets live in `.env` (never committed). See `.env.example` for the full
+list. The most important variables:
 
 ```env
-JWT_SECRET=your-256-bit-secret
-POSTGRES_PASSWORD=strongpassword
-COINGECKO_API_KEY=your-key        # optional, free tier works
-EXCHANGE_RATE_API_KEY=your-key    # optional
+JWT_SECRET=...                 # openssl rand -base64 64
+POSTGRES_PASSWORD=...
+REDIS_PASSWORD=...
+COINGECKO_API_KEY=             # optional; free public endpoint works
+EXCHANGE_RATE_API_KEY=         # optional; keyless open.er-api.com fallback is used if blank
+DOMAIN=your.domain             # only used by the TLS setup
+SSL_EMAIL=you@example.com
 ```
+
+## HTTPS and External Access
+
+1. Point your domain at the host.
+2. Set `DOMAIN` and `SSL_EMAIL` in `.env`.
+3. Run `scripts/ssl-setup.sh` to issue the first certificate. Staging mode
+   is available via the `STAGING=1` flag for dry-runs.
+4. Open TCP 443 on the firewall / router. `nginx` auto-reloads as certbot
+   renews.
+
+Detailed instructions live in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Auto-start on Boot
 
-Docker Compose is configured with `restart: always` — containers restart automatically after system reboot.
+`docker compose up -d` with `restart: always` is usually enough. For full
+systemd control:
 
-For systemd management:
 ```bash
 sudo cp scripts/fintrack.service /etc/systemd/system/
-sudo systemctl enable fintrack
-sudo systemctl start fintrack
+sudo systemctl enable --now fintrack
 ```
 
-## External Access (HTTPS)
+Nightly backups via systemd:
 
-1. Point your domain's DNS to your server IP
-2. Edit `nginx/nginx.conf` with your domain
-3. Run `scripts/ssl-setup.sh` to get a Let's Encrypt certificate
-4. Open port 443 on your router/firewall
+```bash
+sudo cp scripts/fintrack-backup.service scripts/fintrack-backup.timer /etc/systemd/system/
+sudo systemctl enable --now fintrack-backup.timer
+```
+
+## Smoke Test
+
+```bash
+./scripts/smoke-test.sh http://localhost
+# or on Windows
+pwsh ./scripts/smoke-test.ps1 -BaseUrl http://localhost
+```
+
+The script registers a user, exercises the core endpoints, and reports any
+non-2xx responses. The matching manual UI checklist lives in
+[`docs/SMOKE_TEST.md`](docs/SMOKE_TEST.md).
+
+## Project Layout
+
+```
+fintrack/
+  backend/                   Spring Boot app (feature-based packages)
+  frontend/                  React + Vite app
+  nginx/                     Reverse proxy config + TLS snippets
+  scripts/                   Setup, backup, restore, SSL, smoke tests
+  docs/                      Architecture, database, API, deployment
+  docker-compose.yml         Full stack (Postgres, Redis, API, UI, Nginx)
+  .env.example               Environment template
+```
+
+## Status and Roadmap
+
+Core phases 1 to 6 are shipped. See [`tasks/TODO.md`](tasks/TODO.md) for the
+current state and backlog.
 
 ## License
 
-MIT — free to use, fork, and modify.
+[MIT](LICENSE) — free to use, fork, and modify.

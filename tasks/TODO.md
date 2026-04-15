@@ -79,7 +79,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `ExchangeRateClient.java` -- USD/TRY, EUR/TRY
 - [x] `WebSocketConfig.java` -- STOMP /ws endpoint + /topic broker
 - [x] `PriceBroadcaster.java` -- push prices to clients after each sync cycle
-- [ ] Transactions module (deferred -- using direct holding edits for now)
+- [x] Transactions module (`InvestmentTransactionController/Service/Repository` + DTOs; BUY/SELL auto-applies to the related holding)
 
 ### Frontend
 - [x] `api/portfolio.api.ts` + `api/asset.api.ts` + `api/holding.api.ts`
@@ -210,6 +210,6 @@ Skipped: no Anthropic API key available for this deployment.
 - [ ] Price alerts (notify when BTC hits X)
 - [ ] React Native mobile app
 - [ ] TimescaleDB for price history (if performance needed)
-- [ ] GitHub Actions CI/CD
+- [x] GitHub Actions CI (backend mvn test + frontend typecheck/build + Docker build)
 - [ ] Grafana monitoring
 - [ ] Multi-user / family sharing
