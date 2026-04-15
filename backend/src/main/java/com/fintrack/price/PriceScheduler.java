@@ -1,5 +1,6 @@
 package com.fintrack.price;
 
+import com.fintrack.alert.PriceAlertService;
 import com.fintrack.websocket.PriceBroadcaster;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,15 @@ public class PriceScheduler {
 
     private final PriceSyncService priceSyncService;
     private final PriceBroadcaster priceBroadcaster;
+    private final PriceAlertService priceAlertService;
+
+    private void evaluateAlertsSafely() {
+        try {
+            priceAlertService.evaluateAll();
+        } catch (Exception e) {
+            log.warn("Price alert evaluation failed: {}", e.getMessage());
+        }
+    }
 
     /** Kick off an initial refresh once the application has finished starting. */
     @EventListener(ApplicationReadyEvent.class)
@@ -30,6 +40,7 @@ public class PriceScheduler {
             log.info("Initial price sync complete: crypto={} currency={} fund={}",
                     result.cryptoUpdated(), result.currencyUpdated(), result.fundUpdated());
             priceBroadcaster.broadcastAll();
+            evaluateAlertsSafely();
         } catch (Exception e) {
             log.warn("Initial price sync failed: {}", e.getMessage());
         }
@@ -44,6 +55,7 @@ public class PriceScheduler {
                     result.cryptoUpdated(), result.currencyUpdated());
             if (result.cryptoUpdated() + result.currencyUpdated() > 0) {
                 priceBroadcaster.broadcastAll();
+                evaluateAlertsSafely();
             }
         } catch (Exception e) {
             log.warn("Scheduled price sync failed: {}", e.getMessage());
@@ -62,6 +74,7 @@ public class PriceScheduler {
             log.debug("Scheduled fund sync: updated={}", updated);
             if (updated > 0) {
                 priceBroadcaster.broadcastAll();
+                evaluateAlertsSafely();
             }
         } catch (Exception e) {
             log.warn("Scheduled fund sync failed: {}", e.getMessage());

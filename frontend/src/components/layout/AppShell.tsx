@@ -10,6 +10,7 @@ import {
   TrendingUp,
   BarChart3,
   LineChart,
+  Bell,
   LogOut,
   Settings,
   ChevronLeft,
@@ -21,6 +22,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { NotificationBell } from './NotificationBell';
 import { useLivePrices } from '@/hooks/useLivePrices';
 import { useSettings } from '@/hooks/useSettings';
 import { BackendStatusBanner } from './BackendStatusBanner';
@@ -46,6 +48,7 @@ export function AppShell() {
     { path: '/bills', label: t('nav.bills'), icon: Receipt },
     { path: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
     { path: '/prices', label: t('nav.prices'), icon: LineChart },
+    { path: '/alerts', label: t('nav.alerts'), icon: Bell },
   ];
 
   const handleLogout = async () => {
@@ -181,6 +184,7 @@ export function AppShell() {
             <Menu className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+            <NotificationBell />
             <ThemeSwitcher />
             <LanguageSwitcher />
             <div className="w-px h-5 bg-border hidden sm:block" />

@@ -29,6 +29,7 @@
     "bills": "Faturalar",
     "analytics": "Analiz",
     "prices": "Fiyatlar",
+    "alerts": "Uyarılar",
     "settings": "Ayarlar",
     "signOut": "Çıkış Yap"
   },
@@ -371,6 +372,31 @@
       "WITHDRAW": "Çekme",
       "REBALANCE": "Dengeleme",
       "BES_CONTRIBUTION": "BES katkı"
+    }
+  },
+  "alerts": {
+    "title": "Fiyat Uyarıları",
+    "description": "Bir varlık eşik değeri geçtiğinde haberdar olun.",
+    "add": "Yeni uyarı",
+    "asset": "Varlık",
+    "threshold": "Eşik",
+    "current": "şu an",
+    "empty": "Henüz uyarı yok",
+    "emptyDescription": "Bir eşik belirleyin, varlık o seviyeyi geçer geçmez size haber verelim.",
+    "confirmDelete": "Silmek için tekrar tıklayın",
+    "notifications": "Bildirimler",
+    "noNotifications": "Bildirim yok",
+    "markAllRead": "Tümünü okundu say",
+    "manageAll": "Tüm uyarıları yönet",
+    "direction": {
+      "label": "Yön",
+      "above": "Üstünde",
+      "below": "Altında"
+    },
+    "status": {
+      "active": "Aktif",
+      "triggered": "Tetiklendi",
+      "disabled": "Devre dışı"
     }
   }
 }

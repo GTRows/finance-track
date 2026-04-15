@@ -8,6 +8,7 @@ import { BillsPage } from '@/pages/BillsPage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import { PricesPage } from '@/pages/PricesPage';
 import { AssetDetailPage } from '@/pages/AssetDetailPage';
+import { AlertsPage } from '@/pages/AlertsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { AppShell } from '@/components/layout/AppShell';
@@ -31,6 +32,7 @@ export function App() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/prices" element={<PricesPage />} />
         <Route path="/prices/:id" element={<AssetDetailPage />} />
+        <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

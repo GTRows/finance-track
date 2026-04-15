@@ -29,6 +29,7 @@
     "bills": "Bills",
     "analytics": "Analytics",
     "prices": "Prices",
+    "alerts": "Alerts",
     "settings": "Settings",
     "signOut": "Sign Out"
   },
@@ -371,6 +372,31 @@
       "WITHDRAW": "Withdraw",
       "REBALANCE": "Rebalance",
       "BES_CONTRIBUTION": "BES contribution"
+    }
+  },
+  "alerts": {
+    "title": "Price Alerts",
+    "description": "Get notified when an asset crosses a price threshold.",
+    "add": "New alert",
+    "asset": "Asset",
+    "threshold": "Threshold",
+    "current": "current",
+    "empty": "No alerts yet",
+    "emptyDescription": "Set a threshold and we will let you know the moment an asset crosses it.",
+    "confirmDelete": "Click again to delete",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "markAllRead": "Mark all read",
+    "manageAll": "Manage all alerts",
+    "direction": {
+      "label": "Direction",
+      "above": "Above",
+      "below": "Below"
+    },
+    "status": {
+      "active": "Active",
+      "triggered": "Triggered",
+      "disabled": "Disabled"
     }
   }
 }
