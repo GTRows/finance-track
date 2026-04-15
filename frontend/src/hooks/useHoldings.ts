@@ -23,6 +23,7 @@ export function useAddHolding(portfolioId: string) {
     mutationFn: (request: AddHoldingRequest) => holdingApi.add(portfolioId, request),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -34,6 +35,7 @@ export function useDeleteHolding(portfolioId: string) {
     mutationFn: (holdingId: string) => holdingApi.delete(portfolioId, holdingId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

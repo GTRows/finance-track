@@ -15,7 +15,10 @@ export function useCreateBill() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (req: CreateBillRequest) => billsApi.create(req),
-    onSuccess: () => qc.invalidateQueries({ queryKey: billsKey() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: billsKey() });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 }
 
@@ -23,7 +26,10 @@ export function useDeleteBill() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => billsApi.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: billsKey() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: billsKey() });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 }
 
@@ -31,6 +37,9 @@ export function usePayBill() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, req }: { id: string; req: PayBillRequest }) => billsApi.pay(id, req),
-    onSuccess: () => qc.invalidateQueries({ queryKey: billsKey() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: billsKey() });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 }

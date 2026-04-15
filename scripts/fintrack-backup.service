@@ -1,0 +1,10 @@
+[Unit]
+Description=FinTrack Pro daily database backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/fintrack
+ExecStart=/opt/fintrack/scripts/backup.sh
+User=root

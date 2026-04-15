@@ -147,7 +147,7 @@ Update this file as you complete tasks. Mark done with [x].
 - [x] `components/dashboard/LivePriceTicker.tsx` (STOMP-driven, shown on DashboardPage)
 - [x] `SettingsPage.tsx` -- language selector (completed in Phase 2)
 - [x] `AnalyticsPage.tsx` (savings rate area, income/expense bars, aggregated portfolio value line, CAGR + growth KPIs)
-- [ ] Dark/light mode toggle (deferred)
+- [x] Dark/light/system mode toggle wired to user_settings via /api/v1/settings
 - [x] Mobile responsive layout (sidebar becomes off-canvas drawer below md, hamburger in topbar, backdrop overlay, page padding responsive)
 
 ---
@@ -164,9 +164,11 @@ Update this file as you complete tasks. Mark done with [x].
 
 ## Phase 7 -- AI Analysis (optional)
 
-- [ ] `AiAnalysisController.java`
-- [ ] `ClaudeApiClient.java`
-- [ ] Frontend AI analysis panel
+Skipped: no Anthropic API key available for this deployment.
+
+- [ ] `AiAnalysisController.java` (skipped)
+- [ ] `ClaudeApiClient.java` (skipped)
+- [ ] Frontend AI analysis panel (skipped)
 
 ---
 
@@ -174,12 +176,31 @@ Update this file as you complete tasks. Mark done with [x].
 
 - [x] Locale-aware number formatting (formatters.ts reads i18n.resolvedLanguage)
 - [x] Locale-aware date formatting across all views (formatters.ts reads i18n.resolvedLanguage)
-- [ ] Currency selection in user_settings (currently hardcoded TRY) with formatter support
+- [x] Currency selection in user_settings (settings API + store-driven formatCurrency, TRY/USD/EUR/GBP selector)
 - [ ] Audit all user-facing strings for missing i18n keys (error messages, toasts, empty states)
-- [ ] Backend validation messages via MessageSource (Accept-Language aware)
-- [ ] Timezone handling: store UTC, render in user's locale timezone
+- [x] Backend MessageSource + AcceptHeaderLocaleResolver + validation bundles (en/tr)
+- [x] Timezone stored in user_settings; formatters pass `timeZone` to Intl.DateTimeFormat
 
 ---
+
+---
+
+## Deployment
+
+- [x] `nginx/nginx.conf` -- HTTP to HTTPS redirect + TLS server for fatihaciroglu.dev + locations/security snippets
+- [x] `docker-compose.yml` -- certbot service with webroot auto-renew loop
+- [x] `scripts/ssl-setup.sh` -- webroot-based issuance for fatihaciroglu.dev (STAGING mode supported)
+- [x] `scripts/smoke-test.sh` -- automated end-to-end API check
+- [x] `scripts/restore.sh` -- pg_restore counterpart to backup.sh
+- [x] `scripts/fintrack-backup.service` + `.timer` -- daily backups via systemd
+- [x] `docs/DEPLOYMENT.md` -- self-hosted install + SSL + auto-start guide
+- [x] `docs/SMOKE_TEST.md` -- automated + manual UI checklist
+
+---
+
+## Bugs
+
+- [x] Login: wrong password shows error then page auto-refreshes and clears the message; keep the error visible and prevent the reload
 
 ## Future Ideas (backlog)
 

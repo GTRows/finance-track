@@ -19,16 +19,16 @@ public record RecordTransactionRequest(
 
         @NotNull(message = "Quantity is required")
         @DecimalMin(value = "0.00000001", message = "Quantity must be greater than zero")
-        @Digits(integer = 12, fraction = 8)
+        @Digits(integer = 12, fraction = 8, message = "Quantity must have at most 12 integer and 8 fractional digits")
         BigDecimal quantity,
 
         @NotNull(message = "Unit price is required")
         @DecimalMin(value = "0.0", inclusive = true, message = "Unit price cannot be negative")
-        @Digits(integer = 16, fraction = 4)
+        @Digits(integer = 16, fraction = 4, message = "Unit price must have at most 16 integer and 4 fractional digits")
         BigDecimal priceTry,
 
         @DecimalMin(value = "0.0", inclusive = true, message = "Fee cannot be negative")
-        @Digits(integer = 16, fraction = 4)
+        @Digits(integer = 16, fraction = 4, message = "Fee must have at most 16 integer and 4 fractional digits")
         BigDecimal feeTry,
 
         @NotNull(message = "Transaction date is required")

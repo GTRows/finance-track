@@ -39,18 +39,19 @@ Cleaning up deferred items from Phases 2-5 and hardening for production:
 ## Backlog (prioritized)
 
 - [x] Transaction log (UI + API; records update holding qty/avg cost automatically)
-- [ ] Monthly summary log table + snapshot button in BudgetPage
-- [ ] Bill reminder scheduler (notification pings N days before due)
-- [ ] BillsCalendar component (month grid)
-- [ ] Theme toggle (dark/light) wired to user_settings
+- [x] Monthly summary log table + snapshot button in BudgetPage
+- [x] Bill reminder scheduler (daily 08:00 check, logs unpaid bills within remind window)
+- [x] BillsCalendar component (month grid)
+- [x] Theme toggle (dark/light/system) wired to user_settings via settings API
 - [x] Mobile responsive audit (sidebar drawer, hamburger, responsive padding; tables already use overflow-x-auto)
 - [x] LivePriceTicker (STOMP subscription drives zustand store, dashboard shows ticker strip)
 - [x] AnalyticsPage (savings rate, income/expense, portfolio value; avg savings, expense growth, CAGR KPIs)
-- [ ] AI analysis endpoint (Claude API) — optional, gated on CLAUDE_ENABLED
-- [ ] Localization hardening (locale-aware number/date formatting, currency selection, backend MessageSource, timezone)
+- [ ] AI analysis endpoint (Claude API) — skipped (no API key available)
+- [x] Localization hardening (locale-aware formatters, currency selector, MessageSource + validation bundles, timezone in settings)
 - [ ] Excel import (Yatirim_Takip_final_v2.xlsx)
-- [ ] Production SSL setup run-through on a real VPS
-- [ ] End-to-end smoke test: docker compose up -d, register, add holding, see price tick
+- [x] SSL setup wired for self-hosted deployment (fatihaciroglu.dev, certbot service + webroot renewals)
+- [x] Automated smoke test (scripts/smoke-test.sh) + manual UI checklist (docs/SMOKE_TEST.md)
+- [x] Self-hosted deployment guide (docs/DEPLOYMENT.md) + daily backup systemd timer + restore script
 
 ## Architectural Decisions
 
@@ -72,4 +73,13 @@ Cleaning up deferred items from Phases 2-5 and hardening for production:
 
 ## Next Action
 
-Move to deferred Phase 3 item: Monthly log section + snapshot button in BudgetPage (small, self-contained).
+This Windows 11 host is now the production target. Remaining runbook:
+1. Fill `.env`, then `docker compose up -d --build`.
+2. `powershell -ExecutionPolicy Bypass -File scripts\smoke-test.ps1` — must be green.
+3. Router port-forward 80/443 to this host; firewall allow 80/443 inbound.
+4. DNS A records for `fatihaciroglu.dev` + `www` to the public IP.
+5. `bash scripts/ssl-setup.sh` once DNS propagates; certbot service handles renewal.
+6. Run manual UI checklist in `docs/SMOKE_TEST.md`.
+
+Backups run inside the compose stack via the `backup` service — no Windows
+Task Scheduler / systemd needed. Optional follow-up: Excel import.

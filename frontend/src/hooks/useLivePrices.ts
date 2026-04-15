@@ -59,6 +59,7 @@ export function useLivePrices() {
           // Ignore malformed frames; holdings will still refetch below.
         }
         queryClient.invalidateQueries({ queryKey: ['portfolios'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       });
     };
 

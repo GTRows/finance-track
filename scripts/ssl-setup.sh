@@ -1,7 +1,11 @@
 #!/bin/bash
 # ============================================================
-# FinTrack Pro -- SSL Certificate Setup (Let's Encrypt)
-# Prerequisites: domain DNS A record pointing to this server
+# FinTrack Pro -- SSL Certificate Issuance (Let's Encrypt)
+#
+# Self-hosted (no VPS) usage: your DOMAIN A/AAAA records must
+# point to this host's public IP, and ports 80/443 must be
+# reachable from the internet.
+#
 # Usage: ./scripts/ssl-setup.sh
 # ============================================================
 
@@ -12,39 +16,52 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 if [ -f "${PROJECT_DIR}/.env" ]; then
     set -a
+    # shellcheck disable=SC1091
     source "${PROJECT_DIR}/.env"
     set +a
 fi
 
-DOMAIN="${DOMAIN:-}"
-SSL_EMAIL="${SSL_EMAIL:-}"
+DOMAIN="${DOMAIN:-fatihaciroglu.dev}"
+SSL_EMAIL="${SSL_EMAIL:-aciroglu.fatih@gmail.com}"
+STAGING="${STAGING:-0}"
 
-if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "localhost" ]; then
-    echo "ERROR: Set DOMAIN in .env to your domain name (not localhost)"
+if [ "$DOMAIN" = "localhost" ] || [ -z "$DOMAIN" ]; then
+    echo "ERROR: DOMAIN must be a real public hostname (got '$DOMAIN')."
     exit 1
 fi
-
 if [ -z "$SSL_EMAIL" ]; then
-    echo "ERROR: Set SSL_EMAIL in .env for Let's Encrypt registration"
+    echo "ERROR: SSL_EMAIL is required for Let's Encrypt registration."
     exit 1
 fi
 
-echo "Installing certbot..."
-apt-get update -qq && apt-get install -y -qq certbot
+cd "$PROJECT_DIR"
 
-echo "Obtaining certificate for ${DOMAIN}..."
-certbot certonly --standalone \
-    -d "$DOMAIN" \
-    --email "$SSL_EMAIL" \
-    --agree-tos \
-    --non-interactive
+echo "==> Ensuring nginx is running so the ACME HTTP-01 challenge can be served"
+docker compose up -d nginx
 
-echo "Certificate obtained successfully."
+STAGING_FLAG=""
+if [ "$STAGING" = "1" ]; then
+    STAGING_FLAG="--staging"
+    echo "==> STAGING mode enabled (certs will not be trusted)"
+fi
+
+echo "==> Issuing certificate for ${DOMAIN} (and www.${DOMAIN})"
+docker compose run --rm --entrypoint "" certbot \
+    certbot certonly \
+        --webroot -w /var/www/certbot \
+        -d "${DOMAIN}" -d "www.${DOMAIN}" \
+        --email "${SSL_EMAIL}" \
+        --agree-tos --no-eff-email \
+        --non-interactive \
+        --keep-until-expiring \
+        ${STAGING_FLAG}
+
+echo "==> Enabling the TLS server block (nginx/conf.d/tls.conf)"
+cp "${PROJECT_DIR}/nginx/tls.conf.template" "${PROJECT_DIR}/nginx/conf.d/tls.conf"
+
+echo "==> Reloading nginx to pick up the new certificate"
+docker compose exec nginx nginx -s reload || docker compose restart nginx
+
 echo ""
-echo "Next steps:"
-echo "1. Update nginx/nginx.conf: uncomment the HTTPS server block"
-echo "2. Replace YOUR_DOMAIN with ${DOMAIN}"
-echo "3. Restart: docker compose restart nginx"
-echo ""
-echo "Auto-renewal is configured via certbot systemd timer."
-certbot renew --dry-run
+echo "Done. Visit https://${DOMAIN}/ to verify."
+echo "Renewals run automatically in the 'certbot' service (every 12h)."

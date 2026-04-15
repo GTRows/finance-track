@@ -16,9 +16,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/portfolios/{portfolioId}/transactions")
 @RequiredArgsConstructor
-public class TransactionController {
+public class InvestmentTransactionController {
 
-    private final TransactionService transactionService;
+    private final InvestmentTransactionService transactionService;
 
     @GetMapping
     public ResponseEntity<List<TransactionResponse>> list(

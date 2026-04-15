@@ -9,6 +9,7 @@ import {
   Receipt,
   TrendingUp,
   BarChart3,
+  LineChart,
   LogOut,
   Settings,
   ChevronLeft,
@@ -21,9 +22,12 @@ import { cn } from '@/lib/utils';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { useLivePrices } from '@/hooks/useLivePrices';
+import { useSettings } from '@/hooks/useSettings';
+import { BackendStatusBanner } from './BackendStatusBanner';
 
 export function AppShell() {
   useLivePrices();
+  useSettings();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,6 +45,7 @@ export function AppShell() {
     { path: '/budget', label: t('nav.budget'), icon: Wallet },
     { path: '/bills', label: t('nav.bills'), icon: Receipt },
     { path: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
+    { path: '/prices', label: t('nav.prices'), icon: LineChart },
   ];
 
   const handleLogout = async () => {
@@ -189,6 +194,8 @@ export function AppShell() {
             </div>
           </div>
         </header>
+
+        <BackendStatusBanner />
 
         {/* Page content */}
         <main className="flex-1 p-4 sm:p-6">

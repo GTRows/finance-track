@@ -12,6 +12,7 @@ export function useRefreshPrices() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['assets'] });
       qc.invalidateQueries({ queryKey: ['portfolios'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

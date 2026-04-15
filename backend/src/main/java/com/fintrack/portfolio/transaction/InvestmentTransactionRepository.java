@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface TransactionRepository extends JpaRepository<InvestmentTransaction, UUID> {
+public interface InvestmentTransactionRepository extends JpaRepository<InvestmentTransaction, UUID> {
 
     List<InvestmentTransaction> findByPortfolioIdOrderByTxnDateDescCreatedAtDesc(UUID portfolioId);
 

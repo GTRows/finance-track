@@ -15,7 +15,8 @@
     "noData": "Henüz veri yok",
     "thisMonth": "Bu ay",
     "confirmAgain": "Onaylamak için tekrar tıklayın",
-    "somethingWentWrong": "Bir sorun oluştu"
+    "somethingWentWrong": "Bir sorun oluştu",
+    "backendUnreachable": "Sunucuya ulaşılamıyor. Bağlantı yeniden kurulana kadar değişiklikler kaydedilmeyecek."
   },
   "app": {
     "name": "FinTrack Pro",
@@ -27,6 +28,7 @@
     "budget": "Bütçe",
     "bills": "Faturalar",
     "analytics": "Analiz",
+    "prices": "Fiyatlar",
     "settings": "Ayarlar",
     "signOut": "Çıkış Yap"
   },
@@ -78,7 +80,11 @@
     "upcomingBills": "Yaklaşan Faturalar",
     "upcomingBillsDesc": "Son ödeme tarihlerini ve ödemeleri takip etmek için fatura ekleyin",
     "topHoldings": "En Çok Kazandıran Varlıklar",
-    "topHoldingsDesc": "En iyi performans gösteren varlıklarınız burada görünecek"
+    "topHoldingsDesc": "En iyi performans gösteren varlıklarınız burada görünecek",
+    "netWorthTrend": "Portföy Değer Trendi",
+    "netWorthTrendEmpty": "Günlük anlık görüntüler zamanla birikiyor; yarın tekrar bak, trend çizgisi oluşacak.",
+    "incomeExpenseTrend": "Gelir / Gider",
+    "incomeExpenseTrendEmpty": "Bütçe sayfasından aylık anlık görüntü yakala, grafik burada oluşsun."
   },
   "portfolio": {
     "title": "Portföy",
@@ -263,6 +269,41 @@
   },
   "ticker": {
     "label": "Canlı fiyatlar"
+  },
+  "prices": {
+    "title": "Varlık Fiyatları",
+    "description": "Sistemin portföy değerlemesinde kullandığı anlık birim fiyatlar. Tek tek veya toplu olarak yenileyebilirsin.",
+    "allAssets": "Tüm Varlıklar",
+    "refreshAll": "Tümünü Yenile",
+    "refreshOne": "Bu varlığı yenile",
+    "addFund": "Fon ekle",
+    "addFundTitle": "TEFAS'tan fon ekle",
+    "addFundDescription": "Tüm TEFAS kataloğunda koda veya ada göre arama yapın ve istediğiniz fonları sisteme ekleyin.",
+    "addFundSearchPlaceholder": "Kod veya isim ile ara (örn. AFT, garanti)",
+    "addFundMinChars": "Aramak için en az 2 karakter yazın.",
+    "addFundNoMatch": "Eşleşen fon yok.",
+    "addFundAdd": "Ekle",
+    "addFundImported": "Zaten ekli",
+    "searchPlaceholder": "Sembol veya isim ara",
+    "colSymbol": "Sembol",
+    "colName": "İsim",
+    "colType": "Tür",
+    "colPriceTry": "Fiyat (TRY)",
+    "colPriceUsd": "Fiyat (USD)",
+    "colUpdated": "Son Güncelleme",
+    "never": "hiç",
+    "filter": {
+      "ALL": "Hepsi",
+      "CRYPTO": "Kripto",
+      "FUND": "Fon",
+      "CURRENCY": "Döviz",
+      "GOLD": "Altın",
+      "STOCK": "Hisse"
+    }
+  },
+  "assetDetail": {
+    "priceHistory": "Fiyat geçmişi",
+    "historyEmpty": "Henüz kayıtlı fiyat noktası yok. Güncellemelerle birlikte geçmiş birikir."
   },
   "analytics": {
     "title": "Analiz",

@@ -1,6 +1,22 @@
 # Environment
 .env
+.env.*
+!.env.example
 *.env.local
+
+# Personal data
+Yatirim_Takip*.xlsx
+*.xlsx
+
+# Local Claude / IDE settings
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/skills/ui-ux-pro-max/
+
+# TypeScript / Vite build artifacts
+frontend/tsconfig*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # Java / Maven
 backend/target/

@@ -45,6 +45,7 @@ export function useCreateTransaction(month: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
       qc.invalidateQueries({ queryKey: summaryKey(month) });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -56,6 +57,7 @@ export function useDeleteTransaction(month: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
       qc.invalidateQueries({ queryKey: summaryKey(month) });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

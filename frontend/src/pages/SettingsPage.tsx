@@ -6,8 +6,12 @@ import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, type Theme } from '@/store/theme.store';
+import { useSettingsStore } from '@/store/settings.store';
+import { useUpdateSettings } from '@/hooks/useSettings';
 import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const CURRENCY_OPTIONS = ['TRY', 'USD', 'EUR', 'GBP'];
 
 interface SettingsSectionProps {
   icon: React.ElementType;
@@ -46,6 +50,22 @@ export function SettingsPage() {
   const user = useAuthStore((s) => s.user);
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
+  const settings = useSettingsStore((s) => s.settings);
+  const updateSettings = useUpdateSettings();
+
+  const handleLanguageChange = (code: 'tr' | 'en') => {
+    i18n.changeLanguage(code);
+    updateSettings.mutate({ language: code });
+  };
+
+  const handleThemeChange = (code: Theme) => {
+    setTheme(code);
+    updateSettings.mutate({ theme: code });
+  };
+
+  const handleCurrencyChange = (code: string) => {
+    updateSettings.mutate({ currency: code });
+  };
 
   const languages: Array<{ code: 'tr' | 'en'; label: string; flag: string }> = [
     { code: 'tr', label: t('settings.languageTurkish'), flag: 'TR' },
@@ -84,8 +104,28 @@ export function SettingsPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="currency">{t('settings.currency')}</Label>
-            <Input id="currency" value={t('settings.currencyValue')} disabled />
+            <Label>{t('settings.currency')}</Label>
+            <div className="flex flex-wrap gap-2">
+              {CURRENCY_OPTIONS.map((code) => {
+                const active = settings.currency === code;
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleCurrencyChange(code)}
+                    className={cn(
+                      'flex items-center gap-2 h-9 px-3 rounded-md border text-sm font-medium transition-colors cursor-pointer',
+                      active
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-input text-muted-foreground hover:text-foreground hover:bg-accent'
+                    )}
+                  >
+                    <span>{code}</span>
+                    {active && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label>{t('settings.language')}</Label>
@@ -96,7 +136,7 @@ export function SettingsPage() {
                   <button
                     key={lang.code}
                     type="button"
-                    onClick={() => i18n.changeLanguage(lang.code)}
+                    onClick={() => handleLanguageChange(lang.code)}
                     className={cn(
                       'flex items-center gap-2 h-9 px-3 rounded-md border text-sm font-medium transition-colors cursor-pointer',
                       active
@@ -128,7 +168,7 @@ export function SettingsPage() {
               <button
                 key={opt.code}
                 type="button"
-                onClick={() => setTheme(opt.code)}
+                onClick={() => handleThemeChange(opt.code)}
                 className={cn(
                   'flex items-center gap-2 h-9 px-3 rounded-md border text-sm font-medium transition-colors cursor-pointer',
                   active

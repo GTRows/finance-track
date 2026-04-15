@@ -4,6 +4,7 @@ import com.fintrack.auth.dto.*;
 import com.fintrack.common.entity.RefreshToken;
 import com.fintrack.common.entity.User;
 import com.fintrack.common.entity.UserSettings;
+import com.fintrack.settings.UserSettingsRepository;
 import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;

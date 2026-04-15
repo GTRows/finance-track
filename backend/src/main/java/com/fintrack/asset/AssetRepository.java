@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -18,4 +19,7 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
 
     /** Filters assets by type. */
     List<Asset> findByAssetTypeOrderBySymbolAsc(Asset.AssetType type);
+
+    /** Lookup an asset by symbol within a type (unique pair). */
+    Optional<Asset> findBySymbolAndAssetType(String symbol, Asset.AssetType assetType);
 }

@@ -28,6 +28,7 @@ export function useCreatePortfolio() {
     mutationFn: (request: CreatePortfolioRequest) => portfolioApi.create(request),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PORTFOLIOS_KEY });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -40,6 +41,7 @@ export function useUpdatePortfolio() {
       portfolioApi.update(id, request),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PORTFOLIOS_KEY });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -51,6 +53,7 @@ export function useDeletePortfolio() {
     mutationFn: (id: string) => portfolioApi.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PORTFOLIOS_KEY });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

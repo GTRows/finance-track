@@ -20,6 +20,7 @@ export function useRecordTransaction(portfolioId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: transactionsKey(portfolioId) });
       qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -31,6 +32,7 @@ export function useDeleteTransaction(portfolioId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: transactionsKey(portfolioId) });
       qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

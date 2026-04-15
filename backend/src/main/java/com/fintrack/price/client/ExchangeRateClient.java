@@ -38,8 +38,7 @@ public class ExchangeRateClient {
     public Map<String, BigDecimal> fetchTryRates(Iterable<String> bases) {
         String apiKey = props.exchangeRate().apiKey();
         if (apiKey == null || apiKey.isBlank()) {
-            log.debug("Exchange rate API key missing -- skipping fetch");
-            return Map.of();
+            return fetchKeyless(bases);
         }
 
         try {
@@ -51,24 +50,53 @@ public class ExchangeRateClient {
                     .block();
 
             if (response == null || !"success".equals(response.path("result").asText())) {
-                log.warn("Exchange rate API returned non-success response");
-                return Map.of();
+                log.warn("Exchange rate API returned non-success response, falling back to keyless endpoint");
+                return fetchKeyless(bases);
             }
 
             JsonNode rates = response.path("conversion_rates");
-            Map<String, BigDecimal> result = new HashMap<>();
-            for (String base : bases) {
-                JsonNode rate = rates.path(base);
-                if (rate.isNumber() && rate.decimalValue().signum() > 0) {
-                    // Returned rate is TRY -> base, we want the inverse (price of 1 base in TRY).
-                    BigDecimal tryPerBase = BigDecimal.ONE.divide(rate.decimalValue(), 6, RoundingMode.HALF_UP);
-                    result.put(base, tryPerBase);
-                }
-            }
-            return result;
+            return extractInverse(rates, bases);
         } catch (Exception e) {
-            log.warn("Exchange rate fetch failed: {}", e.getMessage());
+            log.warn("Exchange rate fetch failed ({}), falling back to keyless endpoint", e.getMessage());
+            return fetchKeyless(bases);
+        }
+    }
+
+    /**
+     * Keyless fallback using open.er-api.com (free, no auth). Returns TRY price
+     * of 1 unit of each requested base currency.
+     */
+    private Map<String, BigDecimal> fetchKeyless(Iterable<String> bases) {
+        try {
+            JsonNode response = WebClient.create("https://open.er-api.com")
+                    .get()
+                    .uri("/v6/latest/TRY")
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .timeout(Duration.ofSeconds(10))
+                    .block();
+
+            if (response == null || !"success".equals(response.path("result").asText())) {
+                log.warn("Keyless exchange rate endpoint returned non-success response");
+                return Map.of();
+            }
+
+            return extractInverse(response.path("rates"), bases);
+        } catch (Exception e) {
+            log.warn("Keyless exchange rate fetch failed: {}", e.getMessage());
             return Map.of();
         }
+    }
+
+    private Map<String, BigDecimal> extractInverse(JsonNode rates, Iterable<String> bases) {
+        Map<String, BigDecimal> result = new HashMap<>();
+        for (String base : bases) {
+            JsonNode rate = rates.path(base);
+            if (rate.isNumber() && rate.decimalValue().signum() > 0) {
+                BigDecimal tryPerBase = BigDecimal.ONE.divide(rate.decimalValue(), 6, RoundingMode.HALF_UP);
+                result.put(base, tryPerBase);
+            }
+        }
+        return result;
     }
 }

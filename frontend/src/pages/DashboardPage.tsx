@@ -1,10 +1,26 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useAuthStore } from '@/store/auth.store';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useMonthlySummaries } from '@/hooks/useBudget';
+import { usePortfolios } from '@/hooks/usePortfolios';
+import { usePortfolioSnapshotsAggregate } from '@/hooks/useAnalytics';
 import { LivePriceTicker } from '@/components/dashboard/LivePriceTicker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatTRY, formatPercent } from '@/utils/formatters';
+import { formatTRY, formatPercent, formatMonth, formatShortDate } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 import { getPortfolioTypeMeta } from '@/components/portfolio/portfolio-types';
 import type { PortfolioType } from '@/types/portfolio.types';
@@ -19,10 +35,45 @@ import {
   Receipt,
 } from 'lucide-react';
 
+function compactTRY(value: number): string {
+  if (value === 0) return '0';
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+  return `${value.toFixed(0)}`;
+}
+
 export function DashboardPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const { data } = useDashboard();
+  const portfoliosQuery = usePortfolios();
+  const snapshots = usePortfolioSnapshotsAggregate(portfoliosQuery.data);
+  const summariesQuery = useMonthlySummaries();
+
+  const portfolioSeries = useMemo(() => {
+    return snapshots.data.map((p) => ({
+      ...p,
+      dateLabel: formatShortDate(p.date),
+    }));
+  }, [snapshots.data]);
+
+  const budgetSeries = useMemo(() => {
+    return (summariesQuery.data ?? [])
+      .slice()
+      .sort((a, b) => a.period.localeCompare(b.period))
+      .slice(-6)
+      .map((s) => ({
+        period: s.period,
+        periodLabel: formatMonth(s.period),
+        income: s.totalIncome,
+        expense: s.totalExpense,
+      }));
+  }, [summariesQuery.data]);
+
+  const hasPortfolioHistory = portfolioSeries.length >= 2;
+  const hasBudgetHistory = budgetSeries.length >= 1;
 
   const greeting = getGreeting(t);
 
@@ -74,6 +125,93 @@ export function DashboardPage() {
             ? `+${formatTRY(data.budget.net)} ${t('budget.netHint')}`
             : undefined}
         />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <Card className="lg:col-span-3">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">{t('dashboard.netWorthTrend')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!hasPortfolioHistory ? (
+              <EmptyBlock icon={TrendingUp} text={t('dashboard.netWorthTrendEmpty')} />
+            ) : (
+              <div className="h-[220px] w-full -ml-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={portfolioSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="dashNetWorth" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(172 70% 50%)" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="hsl(172 70% 50%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" vertical={false} opacity={0.4} />
+                    <XAxis dataKey="dateLabel" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} minTickGap={40} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} width={56} tickFormatter={compactTRY} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                      }}
+                      formatter={(v: number) => [formatTRY(v), t('analytics.value')]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="totalValueTry"
+                      stroke="hsl(172 70% 50%)"
+                      strokeWidth={2}
+                      fill="url(#dashNetWorth)"
+                      isAnimationActive
+                      animationDuration={500}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">{t('dashboard.incomeExpenseTrend')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!hasBudgetHistory ? (
+              <EmptyBlock icon={PiggyBank} text={t('dashboard.incomeExpenseTrendEmpty')} />
+            ) : (
+              <div className="h-[220px] w-full -ml-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={budgetSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                    <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" vertical={false} opacity={0.4} />
+                    <XAxis dataKey="periodLabel" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} minTickGap={24} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} width={56} tickFormatter={compactTRY} />
+                    <Tooltip
+                      cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                      }}
+                      formatter={(v: number) => formatTRY(v)}
+                    />
+                    <Legend
+                      verticalAlign="top"
+                      height={24}
+                      iconType="circle"
+                      iconSize={7}
+                      wrapperStyle={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Bar dataKey="income" name={t('analytics.income')} fill="hsl(172 70% 50%)" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="expense" name={t('analytics.expense')} fill="hsl(0 75% 60%)" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

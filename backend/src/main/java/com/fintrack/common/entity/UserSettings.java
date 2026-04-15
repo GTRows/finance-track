@@ -39,6 +39,10 @@ public class UserSettings {
     @Builder.Default
     private String theme = "dark";
 
+    @Column(nullable = false, length = 64)
+    @Builder.Default
+    private String timezone = "Europe/Istanbul";
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "dashboard_layout", columnDefinition = "jsonb")
     private Map<String, Object> dashboardLayout;

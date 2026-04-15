@@ -2,6 +2,7 @@ package com.fintrack.price;
 
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
+import com.fintrack.common.entity.PriceHistory;
 import com.fintrack.price.client.CoinGeckoClient;
 import com.fintrack.price.client.ExchangeRateClient;
 import com.fintrack.price.client.TefasClient;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Orchestrates price refreshes across all configured providers. Each provider
@@ -31,6 +33,7 @@ import java.util.Set;
 public class PriceSyncService {
 
     private final AssetRepository assetRepository;
+    private final PriceHistoryRepository priceHistoryRepository;
     private final CoinGeckoClient coinGeckoClient;
     private final ExchangeRateClient exchangeRateClient;
     private final TefasClient tefasClient;
@@ -95,6 +98,7 @@ public class PriceSyncService {
                 asset.setPriceUsd(pair.priceUsd());
             }
             asset.setPriceUpdatedAt(now);
+            recordHistory(asset, now);
             updated++;
         }
         log.info("Crypto price refresh updated {}/{} assets", updated, byCoingeckoId.size());
@@ -130,6 +134,7 @@ public class PriceSyncService {
             if (asset == null) continue;
             asset.setPrice(entry.getValue());
             asset.setPriceUpdatedAt(now);
+            recordHistory(asset, now);
             updated++;
         }
         log.info("Currency price refresh updated {}/{} assets", updated, bases.size());
@@ -165,6 +170,7 @@ public class PriceSyncService {
             if (price != null && price.signum() > 0) {
                 asset.setPrice(price);
                 asset.setPriceUpdatedAt(now);
+                recordHistory(asset, now);
                 updated++;
             }
 
@@ -180,6 +186,68 @@ public class PriceSyncService {
             log.info("Fund price refresh updated {}/{} assets", updated, total);
         }
         return updated;
+    }
+
+    /** Refreshes a single asset by id and returns true if a new price was written. */
+    @Transactional
+    public boolean refreshAsset(UUID assetId) {
+        Asset asset = assetRepository.findById(assetId).orElse(null);
+        if (asset == null) return false;
+
+        Instant now = Instant.now();
+        switch (asset.getAssetType()) {
+            case CRYPTO -> {
+                String id = readMetadataString(asset, "coingeckoId");
+                if (id == null) return false;
+                Map<String, CoinGeckoClient.PricePair> prices = coinGeckoClient.fetchPrices(List.of(id));
+                CoinGeckoClient.PricePair pair = prices.get(id);
+                if (pair == null) return false;
+                if (pair.priceTry() != null) asset.setPrice(pair.priceTry());
+                if (pair.priceUsd() != null) asset.setPriceUsd(pair.priceUsd());
+                asset.setPriceUpdatedAt(now);
+                recordHistory(asset, now);
+                return true;
+            }
+            case CURRENCY -> {
+                String code = readMetadataString(asset, "exchangeCode");
+                if (code == null) return false;
+                Map<String, BigDecimal> rates = exchangeRateClient.fetchTryRates(Set.of(code));
+                BigDecimal rate = rates.get(code);
+                if (rate == null) return false;
+                asset.setPrice(rate);
+                asset.setPriceUpdatedAt(now);
+                recordHistory(asset, now);
+                return true;
+            }
+            case FUND, GOLD -> {
+                String code = readMetadataString(asset, "tefasCode");
+                if (code == null) return false;
+                String typeCode = readMetadataString(asset, "tefasType");
+                TefasClient.FundType type = "EMK".equalsIgnoreCase(typeCode)
+                        ? TefasClient.FundType.EMK
+                        : TefasClient.FundType.YAT;
+                BigDecimal price = tefasClient.fetchPrice(code, type);
+                if (price == null || price.signum() <= 0) return false;
+                asset.setPrice(price);
+                asset.setPriceUpdatedAt(now);
+                recordHistory(asset, now);
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    /** Appends a history row capturing the current price of an asset. */
+    private void recordHistory(Asset asset, Instant at) {
+        if (asset.getPrice() == null) return;
+        priceHistoryRepository.save(PriceHistory.builder()
+                .assetId(asset.getId())
+                .price(asset.getPrice())
+                .priceUsd(asset.getPriceUsd())
+                .recordedAt(at)
+                .build());
     }
 
     /** Reads a string field from an asset's metadata JSON, or null if missing. */

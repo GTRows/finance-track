@@ -8,8 +8,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +31,46 @@ public class CoinGeckoClient {
 
     /** Returned price pair per asset: TRY first, USD second. Null values are possible. */
     public record PricePair(BigDecimal priceTry, BigDecimal priceUsd) {
+    }
+
+    /** Single price point in a historical series. */
+    public record PricePoint(Instant at, BigDecimal price) {
+    }
+
+    /**
+     * Fetches daily TRY price history for a CoinGecko id over the last {@code days}.
+     * Uses the market_chart endpoint (daily granularity when days > 1).
+     */
+    public List<PricePoint> fetchHistory(String coingeckoId, int days) {
+        if (coingeckoId == null || coingeckoId.isBlank()) return List.of();
+        int window = Math.max(1, Math.min(days, 365));
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uri -> uri.path("/coins/{id}/market_chart")
+                            .queryParam("vs_currency", "try")
+                            .queryParam("days", window)
+                            .build(coingeckoId))
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .timeout(Duration.ofSeconds(15))
+                    .block();
+
+            if (response == null || !response.has("prices") || !response.get("prices").isArray()) {
+                return List.of();
+            }
+
+            List<PricePoint> result = new ArrayList<>();
+            for (JsonNode row : response.get("prices")) {
+                if (!row.isArray() || row.size() < 2) continue;
+                long ts = row.get(0).asLong();
+                BigDecimal price = row.get(1).decimalValue();
+                result.add(new PricePoint(Instant.ofEpochMilli(ts), price));
+            }
+            return result;
+        } catch (Exception e) {
+            log.warn("CoinGecko history fetch failed for id={}: {}", coingeckoId, e.getMessage());
+            return List.of();
+        }
     }
 
     /**

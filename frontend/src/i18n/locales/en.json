@@ -15,7 +15,8 @@
     "noData": "No data yet",
     "thisMonth": "This month",
     "confirmAgain": "Click again to confirm",
-    "somethingWentWrong": "Something went wrong"
+    "somethingWentWrong": "Something went wrong",
+    "backendUnreachable": "Backend is unreachable. Changes will not save until the connection is restored."
   },
   "app": {
     "name": "FinTrack Pro",
@@ -27,6 +28,7 @@
     "budget": "Budget",
     "bills": "Bills",
     "analytics": "Analytics",
+    "prices": "Prices",
     "settings": "Settings",
     "signOut": "Sign Out"
   },
@@ -78,7 +80,11 @@
     "upcomingBills": "Upcoming Bills",
     "upcomingBillsDesc": "Add recurring bills to track due dates and payments",
     "topHoldings": "Top Holdings",
-    "topHoldingsDesc": "Your best performing assets will appear here"
+    "topHoldingsDesc": "Your best performing assets will appear here",
+    "netWorthTrend": "Portfolio Value Trend",
+    "netWorthTrendEmpty": "Snapshots build up daily; come back tomorrow to see the trend line.",
+    "incomeExpenseTrend": "Income vs Expense",
+    "incomeExpenseTrendEmpty": "Capture monthly snapshots from the Budget page to fill this chart."
   },
   "portfolio": {
     "title": "Portfolio",
@@ -263,6 +269,41 @@
   },
   "ticker": {
     "label": "Live prices"
+  },
+  "prices": {
+    "title": "Asset Prices",
+    "description": "Live unit prices the system uses when valuing your holdings. Refresh individually or all at once.",
+    "allAssets": "All Assets",
+    "refreshAll": "Refresh All",
+    "refreshOne": "Refresh this asset",
+    "addFund": "Add fund",
+    "addFundTitle": "Add fund from TEFAS",
+    "addFundDescription": "Search the full TEFAS catalog by code or name and import funds on demand.",
+    "addFundSearchPlaceholder": "Search by code or name (e.g. AFT, garanti)",
+    "addFundMinChars": "Type at least 2 characters to search.",
+    "addFundNoMatch": "No matching funds.",
+    "addFundAdd": "Add",
+    "addFundImported": "Already added",
+    "searchPlaceholder": "Search symbol or name",
+    "colSymbol": "Symbol",
+    "colName": "Name",
+    "colType": "Type",
+    "colPriceTry": "Price (TRY)",
+    "colPriceUsd": "Price (USD)",
+    "colUpdated": "Last Updated",
+    "never": "never",
+    "filter": {
+      "ALL": "All",
+      "CRYPTO": "Crypto",
+      "FUND": "Fund",
+      "CURRENCY": "Currency",
+      "GOLD": "Gold",
+      "STOCK": "Stock"
+    }
+  },
+  "assetDetail": {
+    "priceHistory": "Price history",
+    "historyEmpty": "No recorded price points yet. History builds up as prices refresh."
   },
   "analytics": {
     "title": "Analytics",

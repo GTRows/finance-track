@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TransactionService {
+public class InvestmentTransactionService {
 
-    private final TransactionRepository transactionRepository;
+    private final InvestmentTransactionRepository transactionRepository;
     private final PortfolioRepository portfolioRepository;
     private final HoldingRepository holdingRepository;
     private final AssetRepository assetRepository;
