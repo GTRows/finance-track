@@ -177,7 +177,7 @@ Skipped: no Anthropic API key available for this deployment.
 - [x] Locale-aware number formatting (formatters.ts reads i18n.resolvedLanguage)
 - [x] Locale-aware date formatting across all views (formatters.ts reads i18n.resolvedLanguage)
 - [x] Currency selection in user_settings (settings API + store-driven formatCurrency, TRY/USD/EUR/GBP selector)
-- [ ] Audit all user-facing strings for missing i18n keys (error messages, toasts, empty states)
+- [x] Audit all user-facing strings for missing i18n keys (error messages, toasts, empty states)
 - [x] Backend MessageSource + AcceptHeaderLocaleResolver + validation bundles (en/tr)
 - [x] Timezone stored in user_settings; formatters pass `timeZone` to Intl.DateTimeFormat
 
@@ -204,10 +204,10 @@ Skipped: no Anthropic API key available for this deployment.
 
 ## Future Ideas (backlog)
 
-- [ ] Import from existing Excel (`Yatirim_Takip_final_v2.xlsx`)
+- [x] Import from existing Excel (`Yatirim_Takip_final_v2.xlsx`)
 - [ ] 2FA / TOTP
-- [ ] Budget rules engine (alerts when over budget)
-- [ ] Price alerts (notify when BTC hits X)
+- [x] Budget rules engine (alerts when over budget)
+- [x] Price alerts (notify when BTC hits X)
 - [ ] React Native mobile app
 - [ ] TimescaleDB for price history (if performance needed)
 - [x] GitHub Actions CI (backend mvn test + frontend typecheck/build + Docker build)
