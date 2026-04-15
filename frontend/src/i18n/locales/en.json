@@ -374,6 +374,14 @@
       "BES_CONTRIBUTION": "BES contribution"
     }
   },
+  "budgetRules": {
+    "title": "Spending limits",
+    "description": "Get an alert when a category exceeds its monthly cap.",
+    "add": "New limit",
+    "category": "Category",
+    "monthlyLimit": "Monthly limit",
+    "empty": "No spending limits set."
+  },
   "alerts": {
     "title": "Price Alerts",
     "description": "Get notified when an asset crosses a price threshold.",

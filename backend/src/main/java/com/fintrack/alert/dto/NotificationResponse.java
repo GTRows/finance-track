@@ -9,6 +9,8 @@ public record NotificationResponse(
         UUID id,
         UUID alertId,
         UUID assetId,
+        AlertNotification.SourceType sourceType,
+        UUID sourceId,
         String message,
         Instant readAt,
         Instant createdAt
@@ -19,6 +21,8 @@ public record NotificationResponse(
                 n.getId(),
                 n.getAlertId(),
                 n.getAssetId(),
+                n.getSourceType(),
+                n.getSourceId(),
                 n.getMessage(),
                 n.getReadAt(),
                 n.getCreatedAt()

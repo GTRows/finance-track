@@ -23,10 +23,14 @@ export interface CreateAlertRequest {
   thresholdTry: number;
 }
 
+export type NotificationSourceType = 'PRICE_ALERT' | 'BUDGET_RULE';
+
 export interface AlertNotification {
   id: string;
-  alertId: string;
-  assetId: string;
+  alertId: string | null;
+  assetId: string | null;
+  sourceType: NotificationSourceType;
+  sourceId: string | null;
   message: string;
   readAt: string | null;
   createdAt: string;

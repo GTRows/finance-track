@@ -33,6 +33,7 @@ public class BudgetService {
     private final IncomeCategoryRepository incomeRepo;
     private final ExpenseCategoryRepository expenseRepo;
     private final MonthlySummaryRepository summaryRepo;
+    private final BudgetRuleService budgetRuleService;
 
     // -- Transactions --
 
@@ -73,6 +74,12 @@ public class BudgetService {
         txn = txnRepo.save(txn);
         log.info("Transaction created: id={} type={} amount={}", txn.getId(), txn.getTxnType(), txn.getAmount());
 
+        try {
+            budgetRuleService.evaluateForTransaction(userId, txn);
+        } catch (Exception e) {
+            log.warn("Budget rule evaluation failed: {}", e.getMessage());
+        }
+
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
         String[] catInfo = catLookup.getOrDefault(txn.getCategoryId(), new String[]{null, null});
         return TransactionResponse.from(txn, catInfo[0], catInfo[1]);
@@ -89,6 +96,12 @@ public class BudgetService {
         txn.setTxnDate(req.txnDate());
         txn.setRecurring(req.isRecurring());
         txn.setTags(req.tags());
+
+        try {
+            budgetRuleService.evaluateForTransaction(userId, txn);
+        } catch (Exception e) {
+            log.warn("Budget rule evaluation failed: {}", e.getMessage());
+        }
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
         String[] catInfo = catLookup.getOrDefault(txn.getCategoryId(), new String[]{null, null});

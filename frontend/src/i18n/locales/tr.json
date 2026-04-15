@@ -374,6 +374,14 @@
       "BES_CONTRIBUTION": "BES katkı"
     }
   },
+  "budgetRules": {
+    "title": "Harcama limitleri",
+    "description": "Bir kategori aylık üst sınırı aştığında uyarı alın.",
+    "add": "Yeni limit",
+    "category": "Kategori",
+    "monthlyLimit": "Aylık limit",
+    "empty": "Henüz harcama limiti yok."
+  },
   "alerts": {
     "title": "Fiyat Uyarıları",
     "description": "Bir varlık eşik değeri geçtiğinde haberdar olun.",
