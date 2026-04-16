@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -68,6 +69,12 @@ public class RefreshTokenService {
     public String rotate(String oldToken, UUID userId) {
         refreshTokenRepository.deleteByToken(oldToken);
         return createRefreshToken(userId);
+    }
+
+    /** Returns the userId for a token if it exists, without validating expiry. */
+    @Transactional(readOnly = true)
+    public Optional<UUID> peekUserId(String token) {
+        return refreshTokenRepository.findByToken(token).map(RefreshToken::getUserId);
     }
 
     /** Revokes a single refresh token (logout). */

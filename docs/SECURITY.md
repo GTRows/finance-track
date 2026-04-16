@@ -127,11 +127,29 @@ stored secret is wiped.
 **Secret handling:** Secrets live in `users.totp_secret` (VARCHAR 64). They never leave
 the backend after enrollment except during the one-time provisioning response.
 
+## Audit Logging
+
+Security-relevant events are persisted to `audit_log` (Flyway V12). Each entry
+captures `action`, `status` (SUCCESS/FAILURE), `userId` (nullable), `username`,
+`ipAddress`, `userAgent`, optional `detail`, and `createdAt`.
+
+Currently audited events (all in `AuthService`):
+- `REGISTER`, `LOGIN` (success + failure), `LOGOUT`, `TOKEN_REFRESH`
+- `TOTP_CHALLENGE_ISSUED`, `TOTP_VERIFY`, `TOTP_SETUP`, `TOTP_ENABLE`, `TOTP_DISABLE`
+
+Entries are written in a `REQUIRES_NEW` transaction so that audit failures never
+abort the main request, and an audit write failure is logged but swallowed.
+
+**Reading:** `GET /api/v1/admin/audit` returns paginated results
+(`?page=0&size=50&userId=<uuid>&action=LOGIN`). Admin role required.
+
+Other modules can extend the log by injecting `AuditService` and calling
+`success(...)` / `failure(...)` with a constant from `AuditAction`.
+
 ## What's NOT in Scope (yet)
 
 - OAuth2 (Google/GitHub login) — future
 - IP allowlist — can be added in Nginx if needed
-- Audit logging (who changed what) — future
 - End-to-end encryption of DB fields — not needed for single-user
 
 ## Secrets Management

@@ -162,13 +162,11 @@ Update this file as you complete tasks. Mark done with [x].
 
 ---
 
-## Phase 7 -- AI Analysis (optional)
+## Phase 7 -- AI Analysis
 
-Skipped: no Anthropic API key available for this deployment.
-
-- [ ] `AiAnalysisController.java` (skipped)
-- [ ] `ClaudeApiClient.java` (skipped)
-- [ ] Frontend AI analysis panel (skipped)
+Cancelled. No Anthropic API key is provisioned for this deployment and the feature
+is not going to be built. The `ai/` backend package, `CLAUDE_API_KEY` / `CLAUDE_ENABLED`
+env vars, and related frontend panels are intentionally absent.
 
 ---
 

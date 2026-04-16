@@ -1,5 +1,7 @@
 package com.fintrack.auth;
 
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.auth.dto.*;
 import com.fintrack.common.entity.RefreshToken;
 import com.fintrack.common.entity.User;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TotpService totpService;
+    private final AuditService auditService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -56,13 +60,19 @@ public class AuthService {
         userSettingsRepository.save(settings);
 
         log.info("User registered: {}", user.getUsername());
+        auditService.success(AuditAction.REGISTER, user.getId(), user.getUsername());
         return buildAuthResponse(user);
     }
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        } catch (AuthenticationException ex) {
+            auditService.failure(AuditAction.LOGIN, request.username(), "invalid credentials");
+            throw ex;
+        }
 
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -70,10 +80,12 @@ public class AuthService {
         if (user.isTotpEnabled()) {
             String challenge = jwtUtil.generateTotpChallengeToken(user.getId().toString());
             log.info("TOTP challenge issued for user: {}", user.getUsername());
+            auditService.success(AuditAction.TOTP_CHALLENGE_ISSUED, user.getId(), user.getUsername());
             return AuthResponse.challenge(challenge);
         }
 
         log.info("User logged in: {}", user.getUsername());
+        auditService.success(AuditAction.LOGIN, user.getId(), user.getUsername());
         return buildAuthResponse(user);
     }
 
@@ -81,20 +93,25 @@ public class AuthService {
     public AuthResponse verifyTotp(TotpVerifyRequest request) {
         String userId = jwtUtil.validateTotpChallenge(request.challengeToken());
         if (userId == null) {
+            auditService.failure(AuditAction.TOTP_VERIFY, null, "invalid challenge token");
             throw new BusinessRuleException("Invalid or expired challenge", "TOTP_CHALLENGE_INVALID");
         }
         User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!user.isTotpEnabled() || user.getTotpSecret() == null) {
+            auditService.failure(AuditAction.TOTP_VERIFY, user.getId(), user.getUsername(), "TOTP not enabled");
             throw new BusinessRuleException("TOTP not enabled for this user", "TOTP_NOT_ENABLED");
         }
 
         if (!totpService.verify(user.getTotpSecret(), request.code())) {
+            auditService.failure(AuditAction.TOTP_VERIFY, user.getId(), user.getUsername(), "invalid code");
             throw new BusinessRuleException("Invalid verification code", "TOTP_INVALID");
         }
 
         log.info("TOTP verified and user logged in: {}", user.getUsername());
+        auditService.success(AuditAction.TOTP_VERIFY, user.getId(), user.getUsername());
+        auditService.success(AuditAction.LOGIN, user.getId(), user.getUsername(), "with TOTP");
         return buildAuthResponse(user);
     }
 
@@ -116,6 +133,7 @@ public class AuthService {
         user.setTotpSecret(secret);
         userRepository.save(user);
         String otpauthUrl = totpService.buildOtpauthUrl(secret, user.getEmail());
+        auditService.success(AuditAction.TOTP_SETUP, user.getId(), user.getUsername());
         return new TotpSetupResponse(secret, otpauthUrl);
     }
 
@@ -127,11 +145,13 @@ public class AuthService {
             throw new BusinessRuleException("TOTP setup not initiated", "TOTP_NOT_STARTED");
         }
         if (!totpService.verify(user.getTotpSecret(), request.code())) {
+            auditService.failure(AuditAction.TOTP_ENABLE, user.getId(), user.getUsername(), "invalid code");
             throw new BusinessRuleException("Invalid verification code", "TOTP_INVALID");
         }
         user.setTotpEnabled(true);
         userRepository.save(user);
         log.info("TOTP enabled for user: {}", user.getUsername());
+        auditService.success(AuditAction.TOTP_ENABLE, user.getId(), user.getUsername());
     }
 
     @Transactional
@@ -139,12 +159,14 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            auditService.failure(AuditAction.TOTP_DISABLE, user.getId(), user.getUsername(), "wrong password");
             throw new BusinessRuleException("Incorrect password", "PASSWORD_INVALID");
         }
         user.setTotpEnabled(false);
         user.setTotpSecret(null);
         userRepository.save(user);
         log.info("TOTP disabled for user: {}", user.getUsername());
+        auditService.success(AuditAction.TOTP_DISABLE, user.getId(), user.getUsername());
     }
 
     @Transactional
@@ -158,13 +180,19 @@ public class AuthService {
                 user.getId().toString(), user.getUsername(), user.getRole().name());
 
         log.debug("Token refreshed for user: {}", user.getUsername());
+        auditService.success(AuditAction.TOKEN_REFRESH, user.getId(), user.getUsername());
         return AuthResponse.of(accessToken, newRefreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
     }
 
     @Transactional
     public void logout(String refreshToken) {
+        UUID userId = refreshTokenService.peekUserId(refreshToken).orElse(null);
+        String username = userId == null
+                ? null
+                : userRepository.findById(userId).map(User::getUsername).orElse(null);
         refreshTokenService.revoke(refreshToken);
         log.debug("User logged out");
+        auditService.success(AuditAction.LOGOUT, userId, username);
     }
 
     @Transactional(readOnly = true)
