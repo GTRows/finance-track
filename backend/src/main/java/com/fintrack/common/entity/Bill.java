@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
@@ -57,6 +58,9 @@ public class Bill {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "last_reminded_on")
+    private LocalDate lastRemindedOn;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

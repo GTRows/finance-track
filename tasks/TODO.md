@@ -252,7 +252,7 @@ email-reminder work in later phases.
 
 ## Phase 11 -- Bills Polish
 
-- [ ] 11.1 Email reminders (uses Phase 8 SMTP)
+- [x] 11.1 Email reminders (uses Phase 8 SMTP)
 - [ ] 11.2 Push reminders (uses Phase 16 Web Push)
 - [ ] 11.3 Bill amount variance tracking (month-over-month delta flag)
 - [ ] 11.4 Subscription audit (unused-in-N-months detector, manual mark-as-used)
