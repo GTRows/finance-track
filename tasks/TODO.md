@@ -205,11 +205,14 @@ Skipped: no Anthropic API key available for this deployment.
 ## Future Ideas (backlog)
 
 - [x] Import from existing Excel (`Yatirim_Takip_final_v2.xlsx`)
-- [ ] 2FA / TOTP
+- [x] 2FA / TOTP (RFC 6238 via authenticator apps, challenge-token login flow)
 - [x] Budget rules engine (alerts when over budget)
 - [x] Price alerts (notify when BTC hits X)
-- [ ] React Native mobile app
-- [ ] TimescaleDB for price history (if performance needed)
 - [x] GitHub Actions CI (backend mvn test + frontend typecheck/build + Docker build)
-- [ ] Grafana monitoring
-- [ ] Multi-user / family sharing
+- [x] Grafana monitoring (Prometheus scraping + provisioned overview dashboard)
+
+### Deferred (intentionally out of scope)
+
+- [ ] React Native mobile app -- separate codebase; current PWA + responsive layout covers mobile usage
+- [ ] TimescaleDB for price history -- premature optimization; snapshots on plain PostgreSQL are fine at single-user scale
+- [ ] Multi-user / family sharing -- conflicts with single-owner scope defined in `CLAUDE.md`; would require re-auditing every ownership check
