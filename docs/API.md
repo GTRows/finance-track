@@ -544,6 +544,29 @@ Replace all allocation targets for the portfolio. Sum must equal 100% (tolerance
 }
 ```
 
+### GET /api/v1/portfolios/{id}/risk?riskFreeRate=0.15
+Risk/return summary derived from the portfolio's daily value snapshots. Returns
+`sufficientData: false` until at least 20 daily returns have been captured. All
+percentage-style values are decimals (0.12 = 12%). `riskFreeRate` is the annual
+risk-free rate used in Sharpe ratio; defaults to 0 when omitted.
+```json
+// Response 200
+{
+  "snapshotCount": 142,
+  "periodStart": "2025-11-24",
+  "periodEnd": "2026-04-16",
+  "totalReturn": 0.1834,
+  "annualVolatility": 0.2217,
+  "sharpeRatio": 1.08,
+  "maxDrawdown": -0.0842,
+  "bestDay": 0.0361,
+  "worstDay": -0.0414,
+  "averageDailyReturn": 0.0015,
+  "riskFreeRate": 0.15,
+  "sufficientData": true
+}
+```
+
 ---
 
 ## Watchlist

@@ -227,6 +227,23 @@
     "overweightHint": "{{type}} fazla ağırlıkta: {{amount}} indirmek için aday.",
     "underweightHint": "{{type}} eksik ağırlıkta: {{amount}} artırmak için aday."
   },
+  "risk": {
+    "title": "Risk profili",
+    "waiting_one": "Günlük anlık görüntüler toplanıyor -- anlamlı risk metriği için {{count}} gün daha gerek.",
+    "waiting_other": "Günlük anlık görüntüler toplanıyor -- anlamlı risk metriği için {{count}} gün daha gerek.",
+    "daysSample_one": "{{count}} günlük örnek",
+    "daysSample_other": "{{count}} günlük örnek",
+    "riskFreeRate": "rf",
+    "sharpe": "Sharpe oranı",
+    "sharpeGood": "Risk ayarlı güçlü getiri",
+    "sharpeOk": "Getiri riski ancak karşılıyor",
+    "sharpeBad": "Risksiz orana göre geride"
+    ,
+    "totalReturn": "Toplam getiri",
+    "volatility": "Yıllık volatilite",
+    "maxDrawdown": "Maks. düşüş",
+    "bestWorst": "En iyi / en kötü gün"
+  },
   "budget": {
     "title": "Bütçe",
     "descriptionFor": "{{month}} için gelir ve gider özeti",

@@ -227,6 +227,22 @@
     "overweightHint": "Overweight by {{amount}} in {{type}} — candidate to trim.",
     "underweightHint": "Underweight by {{amount}} in {{type}} — candidate to top up."
   },
+  "risk": {
+    "title": "Risk profile",
+    "waiting_one": "Collecting daily snapshots -- {{count}} more day needed before risk metrics become meaningful.",
+    "waiting_other": "Collecting daily snapshots -- {{count}} more days needed before risk metrics become meaningful.",
+    "daysSample_one": "{{count}} daily sample",
+    "daysSample_other": "{{count}} daily samples",
+    "riskFreeRate": "rf",
+    "sharpe": "Sharpe ratio",
+    "sharpeGood": "Strong risk-adjusted return",
+    "sharpeOk": "Reward barely compensates risk",
+    "sharpeBad": "Losing ground versus the risk-free rate",
+    "totalReturn": "Total return",
+    "volatility": "Annual volatility",
+    "maxDrawdown": "Max drawdown",
+    "bestWorst": "Best / worst day"
+  },
   "budget": {
     "title": "Budget",
     "descriptionFor": "Income and expense overview for {{month}}",

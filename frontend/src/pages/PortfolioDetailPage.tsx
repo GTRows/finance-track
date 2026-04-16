@@ -27,6 +27,7 @@ import { TransactionLog } from '@/components/portfolio/TransactionLog';
 import { AllocationChart } from '@/components/portfolio/AllocationChart';
 import { AllocationTargets } from '@/components/portfolio/AllocationTargets';
 import { PortfolioHistoryChart } from '@/components/portfolio/PortfolioHistoryChart';
+import { PortfolioRiskMetrics } from '@/components/portfolio/PortfolioRiskMetrics';
 import { formatTRY, formatPercent } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 
@@ -265,6 +266,8 @@ export function PortfolioDetailPage() {
       </Card>
 
       {holdings.length > 0 && <AllocationTargets portfolioId={portfolio.id} />}
+
+      {holdings.length > 0 && <PortfolioRiskMetrics portfolioId={portfolio.id} />}
 
       <TransactionLog portfolioId={portfolio.id} />
 

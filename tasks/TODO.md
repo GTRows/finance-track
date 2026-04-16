@@ -233,7 +233,7 @@ email-reminder work in later phases.
 
 - [x] 9.1  Watchlist (assets tracked without owning)
 - [x] 9.2  Target allocation + rebalance drift view
-- [ ] 9.3  Risk metrics -- Sharpe, volatility, beta (computed from snapshots)
+- [x] 9.3  Risk metrics -- Sharpe, volatility, max drawdown (computed from snapshots)
 - [ ] 9.4  Precious metals spot (goldapi.io free tier if available, otherwise compute from exchange APIs)
 - [ ] 9.5  BIST equities via Alpha Vantage or Finnhub free tier (e.g. `THYAO.IS`)
 
