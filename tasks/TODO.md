@@ -214,3 +214,91 @@ env vars, and related frontend panels are intentionally absent.
 - [ ] React Native mobile app -- separate codebase; current PWA + responsive layout covers mobile usage
 - [ ] TimescaleDB for price history -- premature optimization; snapshots on plain PostgreSQL are fine at single-user scale
 - [ ] Multi-user / family sharing -- conflicts with single-owner scope defined in `CLAUDE.md`; would require re-auditing every ownership check
+
+---
+
+## Phase 8 -- Account & Auth Hardening
+
+Goal: finish the account lifecycle and get email flows live. Prerequisite for any
+email-reminder work in later phases.
+
+- [ ] 8.1  SMTP integration -- wire JavaMailSender, template engine, test endpoint
+- [ ] 8.2  Password change flow -- `POST /auth/password` + settings form (replace the disabled button)
+- [ ] 8.3  Active sessions view -- list refresh tokens, revoke one or all-but-current
+- [ ] 8.4  Login rate limit -- Redis token-bucket, N failures per IP and per username
+- [ ] 8.5  Email verification on register -- `email_verifications` table, confirm link, resend
+- [ ] 8.6  Password reset via email -- request + confirm endpoints, single-use token, short TTL
+
+## Phase 9 -- Portfolio Expansion
+
+- [ ] 9.1  Watchlist (assets tracked without owning)
+- [ ] 9.2  Target allocation + rebalance drift view
+- [ ] 9.3  Risk metrics -- Sharpe, volatility, beta (computed from snapshots)
+- [ ] 9.4  Precious metals spot (goldapi.io free tier if available, otherwise compute from exchange APIs)
+- [ ] 9.5  BIST equities via Alpha Vantage or Finnhub free tier (e.g. `THYAO.IS`)
+
+## Phase 10 -- Budget & Expenses Deepening
+
+- [ ] 10.1 Recurring transaction templates (salary, rent, subscriptions outside Bills)
+- [ ] 10.2 Multi-currency transactions (foreign expense auto-converted to preferred currency)
+- [ ] 10.3 Category rollover (unused monthly budget carried forward)
+- [ ] 10.4 Receipt photo upload (filesystem storage, OCR marked as follow-up)
+- [ ] 10.5 Transaction tags (many-to-many `transaction_tags` table)
+- [ ] 10.6 Rule-based auto-categorization (merchant -> category learned from history)
+- [ ] 10.7 Cash flow allocator -- new feature. Inputs: income, obligatory outflows
+        (credit card minimums, HOA dues, fixed debts) and optional buckets
+        (savings, investments, cash buffer). Output: suggested distribution with
+        a default based on user's settings, editable step-by-step before committing.
+
+## Phase 11 -- Bills Polish
+
+- [ ] 11.1 Email reminders (uses Phase 8 SMTP)
+- [ ] 11.2 Push reminders (uses Phase 16 Web Push)
+- [ ] 11.3 Bill amount variance tracking (month-over-month delta flag)
+- [ ] 11.4 Subscription audit (unused-in-N-months detector, manual mark-as-used)
+
+## Phase 12 -- Dashboard & Analytics
+
+- [ ] 12.1 Net worth history with annotations (big purchases, income events)
+- [ ] 12.2 Savings goal tracker (target, current, projected completion)
+- [ ] 12.3 Debt tracker with amortization projection
+- [ ] 12.4 FIRE calculator (savings rate, withdrawal rate, time-to-independence)
+- [ ] 12.5 Custom date range picker across all analytics views
+
+## Phase 13 -- Reporting & Portability
+
+- [ ] 13.1 Monthly PDF email report (scheduler + email attachment)
+- [ ] 13.2 xlsx export (in addition to existing CSV)
+- [ ] 13.3 Full JSON backup + restore (user-initiated download and upload)
+
+## Phase 14 -- UX
+
+- [ ] 14.1 Global command palette (Cmd/Ctrl+K over holdings, bills, transactions)
+- [ ] 14.2 Bulk operations (multi-select delete / edit / tag)
+- [ ] 14.3 Pinned holdings (favourites at top of list)
+- [ ] 14.4 First-run onboarding wizard
+- [ ] 14.5 PWA manifest + installable + offline shell
+
+## Phase 15 -- Infrastructure Integration
+
+The target deployment is a unified homelab: Portainer + Traefik + Authelia +
+WireGuard + CrowdSec + ModSecurity + Trivy + Wazuh + Prometheus/Grafana/Loki +
+Alertmanager + Homarr + Restic + Syncthing. FinTrack integrates as one of the
+applications behind this stack.
+
+- [ ] 15.1 Restic-based encrypted backups replacing raw `pg_dump` loop (S3/B2 target configurable)
+- [ ] 15.2 Trivy image + filesystem scan step in GitHub Actions
+- [ ] 15.3 Grafana business dashboard (portfolio total value, tx/day, savings rate, alerts fired)
+- [ ] 15.4 Dependabot auto-merge on green CI
+- [ ] 15.5 PostgreSQL index audit (Flyway migration for missing indexes)
+- [ ] 15.6 Traefik labels on every service; drop bundled Nginx to a fallback `nginx` profile
+- [ ] 15.7 Authelia ForwardAuth pass-through -- trust `Remote-User` header when enabled
+- [ ] 15.8 CrowdSec feed -- expose auth-failure and TOTP-failure events via audit_log format
+        consumable by CrowdSec scenarios
+- [ ] 15.9 Loki log shipping via Promtail sidecar (structured JSON already emitted)
+- [ ] 15.10 Wazuh agent compatibility -- document log paths and action field set
+- [ ] 15.11 Homarr tile snippet (icon, URL, health endpoint) in `docs/`
+
+## Phase 16 -- Notifications
+
+- [ ] 16.1 Web Push API (VAPID keys, service worker subscription, notification payload)
