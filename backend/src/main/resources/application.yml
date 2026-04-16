@@ -44,6 +44,17 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+# Application-specific mail settings
+fintrack:
+  mail:
+    enabled: ${SMTP_HOST:}
+    from-address: ${SMTP_FROM:${SMTP_USER:noreply@fintrack.local}}
+    from-name: ${SMTP_FROM_NAME:FinTrack Pro}
+    base-url: ${APP_BASE_URL:http://localhost}
 
   # Cache
   cache:
