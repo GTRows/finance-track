@@ -66,11 +66,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
       base-path: /api/actuator
   endpoint:
     health:
       show-details: when-authorized
+  metrics:
+    tags:
+      application: fintrack
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 # JWT
 jwt:

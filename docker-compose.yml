@@ -14,6 +14,8 @@ volumes:
   nginx-html:
   certbot-www:
   app-logs:
+  prometheus-data:
+  grafana-data:
 
 services:
 
@@ -189,6 +191,66 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ----------------------------------------------------------
+  # Prometheus -- metrics scraping
+  # Scrapes backend /api/actuator/prometheus every 30s.
+  # Only reachable inside fintrack-net (no published ports);
+  # Grafana reads from it.
+  # ----------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: fintrack-prometheus
+    restart: always
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - backend
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # Grafana -- dashboards
+  # Published on host port 3001 so the owner can reach it
+  # locally (e.g. http://localhost:3001). Default login is
+  # admin / GRAFANA_ADMIN_PASSWORD from .env.
+  # ----------------------------------------------------------
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: fintrack-grafana
+    restart: always
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ----------------------------------------------------------
   # Redis -- Session cache, price cache, rate limiting

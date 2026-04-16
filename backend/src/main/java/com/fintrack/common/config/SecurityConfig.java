@@ -46,6 +46,7 @@ public class SecurityConfig {
             "/api/v1/health",
             "/api/v1/health/**",
             "/api/actuator/health",
+            "/api/actuator/prometheus",
             "/ws/**"
     };
 

@@ -117,6 +117,12 @@
       <version>5.2.5</version>
     </dependency>
 
+    <!-- Prometheus metrics (exposed via actuator) -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+
     <!-- Utilities -->
     <dependency>
       <groupId>org.projectlombok</groupId>
