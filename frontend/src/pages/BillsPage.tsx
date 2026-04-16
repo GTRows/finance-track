@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Trash2,
   CreditCard,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 
 function currentPeriod(): string {
@@ -190,10 +192,36 @@ export function BillsPage() {
                       </p>
                     </div>
 
-                    {/* Amount */}
-                    <span className="text-sm font-mono tabular-nums font-medium">
-                      {formatTRY(bill.amount)}
-                    </span>
+                    {/* Amount + variance */}
+                    <div className="flex items-center gap-2">
+                      {bill.variance && (
+                        <span
+                          title={t('bills.varianceVs', {
+                            previous: formatTRY(bill.variance.previousAmount),
+                            period: bill.variance.previousPeriod,
+                          })}
+                          className={cn(
+                            'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono tabular-nums',
+                            bill.variance.flagged
+                              ? bill.variance.delta > 0
+                                ? 'bg-red-500/15 text-red-400'
+                                : 'bg-emerald-500/15 text-emerald-400'
+                              : 'bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {bill.variance.delta > 0 ? (
+                            <TrendingUp className="w-3 h-3" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3" />
+                          )}
+                          {bill.variance.deltaPercent > 0 ? '+' : ''}
+                          {bill.variance.deltaPercent.toFixed(1)}%
+                        </span>
+                      )}
+                      <span className="text-sm font-mono tabular-nums font-medium">
+                        {formatTRY(bill.amount)}
+                      </span>
+                    </div>
 
                     {/* Pay button */}
                     {!isPaid && (

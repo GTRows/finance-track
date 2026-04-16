@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -29,7 +31,7 @@ public class BillService {
                 .map(bill -> {
                     BillPayment payment = paymentRepo.findByBillIdAndPeriod(bill.getId(), currentPeriod)
                             .orElse(null);
-                    return BillResponse.from(bill, payment);
+                    return BillResponse.from(bill, payment, computeVariance(bill.getId()));
                 })
                 .toList();
     }
@@ -92,7 +94,7 @@ public class BillService {
         }
         paymentRepo.save(payment);
         log.info("Bill paid: billId={} period={} amount={}", billId, req.period(), payment.getAmount());
-        return BillResponse.from(bill, payment);
+        return BillResponse.from(bill, payment, computeVariance(bill.getId()));
     }
 
     @Transactional(readOnly = true)
@@ -111,5 +113,36 @@ public class BillService {
     private String currentPeriod() {
         LocalDate today = LocalDate.now();
         return today.getYear() + "-" + String.format("%02d", today.getMonthValue());
+    }
+
+    /** Flag variance when the latest paid period differs from the prior one by more than 10%% or 25 units. */
+    private static final BigDecimal FLAG_PERCENT = BigDecimal.valueOf(10);
+    private static final BigDecimal FLAG_ABSOLUTE = BigDecimal.valueOf(25);
+
+    private BillVarianceDto computeVariance(UUID billId) {
+        List<BillPayment> latest = paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(
+                billId, BillPayment.PaymentStatus.PAID);
+        if (latest.size() < 2) return null;
+
+        BillPayment current = latest.get(0);
+        BillPayment previous = latest.get(1);
+        BigDecimal delta = current.getAmount().subtract(previous.getAmount());
+        BigDecimal deltaPercent = previous.getAmount().signum() == 0
+                ? BigDecimal.ZERO
+                : delta.multiply(BigDecimal.valueOf(100))
+                        .divide(previous.getAmount(), 2, RoundingMode.HALF_UP);
+
+        boolean flagged = delta.abs().compareTo(FLAG_ABSOLUTE) > 0
+                && deltaPercent.abs().compareTo(FLAG_PERCENT) > 0;
+
+        return new BillVarianceDto(
+                current.getPeriod(),
+                current.getAmount(),
+                previous.getPeriod(),
+                previous.getAmount(),
+                delta,
+                deltaPercent,
+                flagged
+        );
     }
 }

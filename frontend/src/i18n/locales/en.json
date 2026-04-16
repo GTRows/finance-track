@@ -262,7 +262,8 @@
     "daysLeft_other": "{{count}} days left",
     "markPaid": "Pay",
     "totalBills": "bills",
-    "calendarHint": "Due dates for this month"
+    "calendarHint": "Due dates for this month",
+    "varianceVs": "vs {{previous}} in {{period}}"
   },
   "settings": {
     "title": "Settings",

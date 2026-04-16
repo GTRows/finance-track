@@ -258,6 +258,7 @@
     "categoryPlaceholder": "ör. Abonelik, Fatura",
     "dueDayLabel": "Her ayın {{day}}'inde",
     "dueToday": "bugün vadeli",
+    "varianceVs": "{{period}} ayındaki {{previous}} tutarına göre",
     "daysLeft_one": "{{count}} gün kaldı",
     "daysLeft_other": "{{count}} gün kaldı",
     "markPaid": "Öde",

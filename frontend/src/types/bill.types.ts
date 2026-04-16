@@ -1,6 +1,17 @@
 /** Bill payment status. */
 export type PaymentStatus = 'PENDING' | 'PAID' | 'SKIPPED';
 
+/** Month-over-month variance between the two most recent paid periods. */
+export interface BillVariance {
+  currentPeriod: string;
+  currentAmount: number;
+  previousPeriod: string;
+  previousAmount: number;
+  delta: number;
+  deltaPercent: number;
+  flagged: boolean;
+}
+
 /** Recurring bill. */
 export interface Bill {
   id: string;
@@ -13,6 +24,7 @@ export interface Bill {
   currentPeriodStatus: PaymentStatus;
   currentPeriodDueDate: string;
   daysUntilDue: number;
+  variance: BillVariance | null;
 }
 
 /** Bill payment history entry. */

@@ -21,12 +21,16 @@ public record BillResponse(
         String notes,
         String currentPeriodStatus,
         LocalDate currentPeriodDueDate,
-        long daysUntilDue
+        long daysUntilDue,
+        BillVarianceDto variance
 ) {
 
     public static BillResponse from(Bill bill, BillPayment currentPayment) {
+        return from(bill, currentPayment, null);
+    }
+
+    public static BillResponse from(Bill bill, BillPayment currentPayment, BillVarianceDto variance) {
         LocalDate today = LocalDate.now();
-        String period = today.getYear() + "-" + String.format("%02d", today.getMonthValue());
 
         int dueDay = Math.min(bill.getDueDay(), today.lengthOfMonth());
         LocalDate dueDate = today.withDayOfMonth(dueDay);
@@ -53,7 +57,8 @@ public record BillResponse(
                 bill.getNotes(),
                 status,
                 dueDate,
-                daysUntil
+                daysUntil,
+                variance
         );
     }
 }

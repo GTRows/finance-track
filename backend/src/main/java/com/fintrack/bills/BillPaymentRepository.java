@@ -13,5 +13,7 @@ public interface BillPaymentRepository extends JpaRepository<BillPayment, UUID> 
 
     List<BillPayment> findByBillIdOrderByPeriodDesc(UUID billId);
 
+    List<BillPayment> findTop2ByBillIdAndStatusOrderByPeriodDesc(UUID billId, BillPayment.PaymentStatus status);
+
     Optional<BillPayment> findByBillIdAndPeriod(UUID billId, String period);
 }
