@@ -441,6 +441,28 @@ Manually trigger price sync (admin only).
 
 ---
 
+## Watchlist
+
+### GET /api/v1/watchlist
+Current user's starred assets, newest first.
+```json
+// Response 200
+[
+  { "assetId": "uuid", "note": null, "createdAt": "2026-04-16T10:00:00Z" }
+]
+```
+
+### POST /api/v1/watchlist
+Add or update a watchlist entry. Returns 404 if asset is unknown.
+```json
+{ "assetId": "uuid", "note": "DCA monthly" }
+```
+
+### DELETE /api/v1/watchlist/{assetId}
+Remove an asset from the watchlist. Always 204 (idempotent).
+
+---
+
 ## Dashboard
 
 ### GET /api/v1/dashboard

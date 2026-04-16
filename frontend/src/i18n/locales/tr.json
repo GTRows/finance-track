@@ -370,6 +370,10 @@
     "colPriceUsd": "Fiyat (USD)",
     "colUpdated": "Son Güncelleme",
     "never": "hiç",
+    "onlyFavorites": "Favoriler",
+    "noFavorites": "Henüz yıldızlı varlık yok. Bir satırdaki yıldıza dokunarak buraya ekleyebilirsin.",
+    "watchlistAdd": "İzleme listesine ekle",
+    "watchlistRemove": "İzleme listesinden çıkar",
     "filter": {
       "ALL": "Hepsi",
       "CRYPTO": "Kripto",

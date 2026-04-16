@@ -370,6 +370,10 @@
     "colPriceUsd": "Price (USD)",
     "colUpdated": "Last Updated",
     "never": "never",
+    "onlyFavorites": "Favorites",
+    "noFavorites": "No starred assets yet. Tap a star on any row to track it here.",
+    "watchlistAdd": "Add to watchlist",
+    "watchlistRemove": "Remove from watchlist",
     "filter": {
       "ALL": "All",
       "CRYPTO": "Crypto",

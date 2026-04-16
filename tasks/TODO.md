@@ -231,7 +231,7 @@ email-reminder work in later phases.
 
 ## Phase 9 -- Portfolio Expansion
 
-- [ ] 9.1  Watchlist (assets tracked without owning)
+- [x] 9.1  Watchlist (assets tracked without owning)
 - [ ] 9.2  Target allocation + rebalance drift view
 - [ ] 9.3  Risk metrics -- Sharpe, volatility, beta (computed from snapshots)
 - [ ] 9.4  Precious metals spot (goldapi.io free tier if available, otherwise compute from exchange APIs)
