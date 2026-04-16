@@ -37,6 +37,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final TotpService totpService;
     private final AuditService auditService;
+    private final LoginRateLimiter loginRateLimiter;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -67,16 +68,20 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
+        loginRateLimiter.enforce(request.username());
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.username(), request.password()));
         } catch (AuthenticationException ex) {
+            loginRateLimiter.recordFailure(request.username());
             auditService.failure(AuditAction.LOGIN, request.username(), "invalid credentials");
             throw ex;
         }
 
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        loginRateLimiter.recordSuccess(request.username());
 
         if (user.isTotpEnabled()) {
             String challenge = jwtUtil.generateTotpChallengeToken(user.getId().toString());

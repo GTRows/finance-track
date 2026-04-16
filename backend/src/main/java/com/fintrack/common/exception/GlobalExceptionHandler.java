@@ -1,5 +1,6 @@
 package com.fintrack.common.exception;
 
+import com.fintrack.auth.LoginRateLimitException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -47,6 +48,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
         log.warn("Authentication failed: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials", "INVALID_CREDENTIALS", request);
+    }
+
+    @ExceptionHandler(LoginRateLimitException.class)
+    public ResponseEntity<ErrorResponse> handleLoginRateLimit(LoginRateLimitException ex, HttpServletRequest request) {
+        log.warn("Login rate limit: {}", ex.getMessage());
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), "LOGIN_RATE_LIMITED", request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

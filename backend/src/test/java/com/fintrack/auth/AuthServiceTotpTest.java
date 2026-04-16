@@ -39,6 +39,7 @@ class AuthServiceTotpTest {
     @Mock AuthenticationManager authenticationManager;
     @Mock TotpService totpService;
     @Mock AuditService auditService;
+    @Mock LoginRateLimiter loginRateLimiter;
 
     @InjectMocks AuthService authService;
 

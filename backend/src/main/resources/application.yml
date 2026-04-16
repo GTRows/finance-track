@@ -55,6 +55,10 @@ fintrack:
     from-address: ${SMTP_FROM:${SMTP_USER:noreply@fintrack.local}}
     from-name: ${SMTP_FROM_NAME:FinTrack Pro}
     base-url: ${APP_BASE_URL:http://localhost}
+  auth:
+    login-rate-limit:
+      max-attempts: ${LOGIN_RATE_LIMIT_MAX:5}
+      window-seconds: ${LOGIN_RATE_LIMIT_WINDOW_SECONDS:300}
 
   # Cache
   cache:
