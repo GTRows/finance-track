@@ -19,7 +19,8 @@
     "backendUnreachable": "Backend is unreachable. Changes will not save until the connection is restored.",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "actions": "Actions"
+    "actions": "Actions",
+    "unknown": "Unknown"
   },
   "app": {
     "name": "FinTrack Pro",
@@ -279,6 +280,13 @@
     "passwordUnchanged": "New password must differ from the current one.",
     "passwordChangedSigningOut": "Password updated. Signing you out of other sessions.",
     "changePassword": "Change Password",
+    "sessionsTitle": "Active sessions",
+    "sessionsDescription": "Every device that is signed in. Revoke anything you do not recognise.",
+    "sessionsEmpty": "No active sessions.",
+    "sessionsCurrent": "This device",
+    "sessionsLastUsed": "last active",
+    "sessionsRevoke": "Revoke",
+    "sessionsRevokeOthers": "Sign out other devices",
     "importTitle": "Import from Excel",
     "importDescription": "Bring transactions from your legacy Yatirim_Takip spreadsheet.",
     "importDesc": "Pick a .xlsx export with the YATIRIM_LOG sheet. Preview validates rows; Run writes them to your portfolios. Duplicates are skipped automatically.",

@@ -96,6 +96,37 @@ Changes the authenticated user's password. All refresh tokens are revoked on suc
 // Response 400 — PASSWORD_INVALID (wrong current password) or PASSWORD_UNCHANGED
 ```
 
+### POST /api/v1/auth/sessions/list
+Returns every active refresh token for the caller. The optional `refreshToken` in the body flags the current device.
+```json
+// Request
+{ "refreshToken": "eyJ..." }
+// Response 200
+[
+  {
+    "id": "uuid",
+    "userAgent": "Mozilla/5.0 ...",
+    "ipAddress": "192.0.2.1",
+    "createdAt": "...",
+    "lastUsedAt": "...",
+    "expiresAt": "...",
+    "current": true
+  }
+]
+```
+
+### DELETE /api/v1/auth/sessions/{id}
+Revokes a single session. Response 204.
+
+### POST /api/v1/auth/sessions/revoke-others
+Revokes every session except the one identified by the supplied refresh token.
+```json
+// Request
+{ "refreshToken": "eyJ..." }
+// Response 200
+{ "revoked": 3 }
+```
+
 ### POST /api/v1/auth/refresh
 ```json
 // Request

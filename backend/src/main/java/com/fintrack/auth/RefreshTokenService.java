@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,15 +31,30 @@ public class RefreshTokenService {
      */
     @Transactional
     public String createRefreshToken(UUID userId) {
+        return createRefreshToken(userId, null, null);
+    }
+
+    /** Creates a refresh token and records the originating device metadata. */
+    @Transactional
+    public String createRefreshToken(UUID userId, String userAgent, String ipAddress) {
         String tokenValue = jwtUtil.generateRefreshToken(userId.toString());
+        Instant now = Instant.now();
         RefreshToken entity = RefreshToken.builder()
                 .userId(userId)
                 .token(tokenValue)
-                .expiresAt(Instant.now().plusMillis(jwtUtil.getRefreshExpiryMs()))
+                .userAgent(truncate(userAgent, 512))
+                .ipAddress(truncate(ipAddress, 45))
+                .lastUsedAt(now)
+                .expiresAt(now.plusMillis(jwtUtil.getRefreshExpiryMs()))
                 .build();
         refreshTokenRepository.save(entity);
         log.debug("Created refresh token for user {}", userId);
         return tokenValue;
+    }
+
+    private static String truncate(String value, int max) {
+        if (value == null) return null;
+        return value.length() > max ? value.substring(0, max) : value;
     }
 
     /**
@@ -67,8 +83,40 @@ public class RefreshTokenService {
      */
     @Transactional
     public String rotate(String oldToken, UUID userId) {
+        return rotate(oldToken, userId, null, null);
+    }
+
+    /** Rotates while carrying over device metadata from the inbound request. */
+    @Transactional
+    public String rotate(String oldToken, UUID userId, String userAgent, String ipAddress) {
+        RefreshToken existing = refreshTokenRepository.findByToken(oldToken).orElse(null);
+        String ua = userAgent != null ? userAgent : existing != null ? existing.getUserAgent() : null;
+        String ip = ipAddress != null ? ipAddress : existing != null ? existing.getIpAddress() : null;
         refreshTokenRepository.deleteByToken(oldToken);
-        return createRefreshToken(userId);
+        return createRefreshToken(userId, ua, ip);
+    }
+
+    /** Lists active (non-expired) refresh tokens for a user. */
+    @Transactional(readOnly = true)
+    public List<RefreshToken> listActive(UUID userId) {
+        return refreshTokenRepository.findByUserIdAndExpiresAtAfterOrderByLastUsedAtDesc(userId, Instant.now());
+    }
+
+    /** Revokes one session owned by the user. Returns true if it existed. */
+    @Transactional
+    public boolean revokeSession(UUID userId, UUID sessionId) {
+        return refreshTokenRepository.findByIdAndUserId(sessionId, userId)
+                .map(rt -> {
+                    refreshTokenRepository.delete(rt);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    /** Revokes every other session for the user, keeping the supplied one. Returns the count removed. */
+    @Transactional
+    public int revokeOthers(UUID userId, UUID keepSessionId) {
+        return refreshTokenRepository.deleteByUserIdExcept(userId, keepSessionId);
     }
 
     /** Returns the userId for a token if it exists, without validating expiry. */

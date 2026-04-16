@@ -6,6 +6,7 @@ import com.fintrack.auth.dto.*;
 import com.fintrack.common.entity.RefreshToken;
 import com.fintrack.common.entity.User;
 import com.fintrack.common.entity.UserSettings;
+import com.fintrack.common.web.RequestContext;
 import com.fintrack.settings.UserSettingsRepository;
 import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
@@ -193,7 +194,8 @@ public class AuthService {
         User user = userRepository.findById(existing.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        String newRefreshToken = refreshTokenService.rotate(request.refreshToken(), user.getId());
+        String newRefreshToken = refreshTokenService.rotate(
+                request.refreshToken(), user.getId(), RequestContext.userAgent(), RequestContext.clientIp());
         String accessToken = jwtUtil.generateAccessToken(
                 user.getId().toString(), user.getUsername(), user.getRole().name());
 
@@ -223,7 +225,8 @@ public class AuthService {
     private AuthResponse buildAuthResponse(User user) {
         String accessToken = jwtUtil.generateAccessToken(
                 user.getId().toString(), user.getUsername(), user.getRole().name());
-        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        String refreshToken = refreshTokenService.createRefreshToken(
+                user.getId(), RequestContext.userAgent(), RequestContext.clientIp());
         return AuthResponse.of(accessToken, refreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
     }
 

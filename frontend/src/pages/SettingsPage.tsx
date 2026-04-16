@@ -11,6 +11,7 @@ import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpre
 import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
 import { TotpSection } from '@/components/settings/TotpSection';
 import { PasswordSection } from '@/components/settings/PasswordSection';
+import { SessionsSection } from '@/components/settings/SessionsSection';
 import { AuditLogSection } from '@/components/settings/AuditLogSection';
 import { cn } from '@/lib/utils';
 
@@ -212,6 +213,7 @@ export function SettingsPage() {
         <div className="space-y-5">
           <TotpSection />
           <PasswordSection />
+          <SessionsSection />
         </div>
       </SettingsSection>
 
