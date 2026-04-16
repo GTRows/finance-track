@@ -260,7 +260,7 @@ email-reminder work in later phases.
 ## Phase 12 -- Dashboard & Analytics
 
 - [x] 12.1 Net worth history with annotations (big purchases, income events)
-- [ ] 12.2 Savings goal tracker (target, current, projected completion)
+- [x] 12.2 Savings goal tracker (target, current, projected completion)
 - [ ] 12.3 Debt tracker with amortization projection
 - [ ] 12.4 FIRE calculator (savings rate, withdrawal rate, time-to-independence)
 - [ ] 12.5 Custom date range picker across all analytics views

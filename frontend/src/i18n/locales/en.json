@@ -247,6 +247,30 @@
       "NOTE": "Note"
     }
   },
+  "savings": {
+    "title": "Savings goals",
+    "subtitle": "Named targets with rolling 90-day pace projection",
+    "newGoal": "New goal",
+    "editGoal": "Edit goal",
+    "empty": "Set a goal to start tracking progress -- link a portfolio for live valuation, or log contributions manually.",
+    "name": "Name",
+    "namePlaceholder": "e.g. Emergency fund, House down payment",
+    "targetAmount": "Target amount",
+    "targetDate": "Target date",
+    "linkedPortfolio": "Linked portfolio",
+    "linkedPortfolioNone": "None -- track via manual contributions",
+    "linkedPortfolioHint": "When linked, current value comes from live holdings. Otherwise it sums contributions.",
+    "notes": "Notes",
+    "notesPlaceholder": "Why this goal matters, or how you intend to fund it",
+    "contribute": "Contribute",
+    "amountPlaceholder": "Amount",
+    "notePlaceholder": "Note (optional)",
+    "archive": "Archive goal",
+    "remaining": "{{amount}} to go",
+    "targetBy": "by {{date}}",
+    "reached": "Goal reached",
+    "paceUnknown": "No pace yet"
+  },
   "risk": {
     "title": "Risk profile",
     "waiting_one": "Collecting daily snapshots -- {{count}} more day needed before risk metrics become meaningful.",

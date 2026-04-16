@@ -247,6 +247,30 @@
       "NOTE": "Not"
     }
   },
+  "savings": {
+    "title": "Tasarruf hedefleri",
+    "subtitle": "Son 90 günün hızına göre projeksiyon yapan adlandırılmış hedefler",
+    "newGoal": "Yeni hedef",
+    "editGoal": "Hedefi düzenle",
+    "empty": "Bir hedef tanımla -- canlı değerleme için bir portföy bağla ya da katkıları manuel olarak gir.",
+    "name": "Ad",
+    "namePlaceholder": "ör. Acil durum fonu, Ev peşinatı",
+    "targetAmount": "Hedef tutar",
+    "targetDate": "Hedef tarih",
+    "linkedPortfolio": "Bağlı portföy",
+    "linkedPortfolioNone": "Yok -- katkılarla takip et",
+    "linkedPortfolioHint": "Bağlandığında değer, canlı portföyden gelir. Yoksa katkılar toplanır.",
+    "notes": "Notlar",
+    "notesPlaceholder": "Bu hedefin önemi ve nasıl finanse edileceği",
+    "contribute": "Katkıda bulun",
+    "amountPlaceholder": "Tutar",
+    "notePlaceholder": "Not (opsiyonel)",
+    "archive": "Hedefi arşivle",
+    "remaining": "{{amount}} kaldı",
+    "targetBy": "{{date}} hedefli",
+    "reached": "Hedefe ulaşıldı",
+    "paceUnknown": "Henüz hız yok"
+  },
   "risk": {
     "title": "Risk profili",
     "waiting_one": "Günlük anlık görüntüler toplanıyor -- anlamlı risk metriği için {{count}} gün daha gerek.",

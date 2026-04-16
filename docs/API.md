@@ -668,6 +668,73 @@ Always 204.
 
 ---
 
+## Savings goals
+
+### GET /api/v1/savings/goals
+Active (non-archived) goals with computed progress.
+```json
+// Response 200
+[
+  {
+    "id": "uuid",
+    "name": "Emergency fund",
+    "targetAmount": 150000.00,
+    "targetDate": "2026-12-31",
+    "linkedPortfolioId": "uuid",
+    "linkedPortfolioName": "Emergency",
+    "notes": null,
+    "currentAmount": 84200.00,
+    "progressRatio": 0.5613,
+    "monthlyPace": 12500.00,
+    "projectedCompletion": "2026-09-08",
+    "status": "IN_PROGRESS"
+  }
+]
+```
+`status` is `IN_PROGRESS` or `REACHED`. When the goal is linked to a portfolio,
+`currentAmount` is the live valuation of its holdings; otherwise it is the sum
+of contributions. `monthlyPace` and `projectedCompletion` are derived from a
+rolling 90-day window and may be `null` when not enough data exists.
+
+### POST /api/v1/savings/goals
+```json
+// Request
+{
+  "name": "House down payment",
+  "targetAmount": 800000.00,
+  "targetDate": "2028-06-30",
+  "linkedPortfolioId": "uuid",
+  "notes": "Targeting 20% on a 4M TRY apartment"
+}
+```
+`linkedPortfolioId` is optional; when omitted the goal is tracked from manual
+contributions.
+
+### PUT /api/v1/savings/goals/{id}
+Body identical to POST. Returns the updated goal with recomputed progress.
+
+### DELETE /api/v1/savings/goals/{id}
+Soft-archives the goal (sets `archived_at`). Returns 204. Contributions remain
+in the database; the goal simply stops appearing in `GET /savings/goals`.
+
+### GET /api/v1/savings/goals/{id}/contributions
+Manual contributions, newest-first. Available for both linked and unlinked
+goals.
+
+### POST /api/v1/savings/goals/{id}/contributions
+```json
+{
+  "contributionDate": "2026-04-15",
+  "amount": 5000.00,
+  "note": "Monthly transfer"
+}
+```
+
+### DELETE /api/v1/savings/goals/{id}/contributions/{contributionId}
+Removes a single contribution. Returns 204.
+
+---
+
 ## Reports
 
 ### GET /api/v1/reports/portfolio/{id}?format=pdf&period=2026-04
