@@ -481,6 +481,24 @@
     "monthlyLimit": "Monthly limit",
     "empty": "No spending limits set."
   },
+  "recurring": {
+    "title": "Recurring transactions",
+    "description": "Auto-book predictable income and expenses (salary, rent, subscriptions) every month.",
+    "add": "New template",
+    "addTitle": "New recurring transaction",
+    "editTitle": "Edit recurring transaction",
+    "empty": "No recurring templates yet. Add one to automate monthly entries.",
+    "untitled": "Untitled template",
+    "dayOfMonth": "Day of month",
+    "dayOfMonthShort": "Every month on day {{day}}",
+    "dayOfMonthHint": "Values above the month length fall back to the last day (e.g. 31 becomes 28/29 in February).",
+    "nextOn": "Next: {{date}}",
+    "paused": "Paused",
+    "runNow": "Run now",
+    "pause": "Pause",
+    "resume": "Resume",
+    "saveError": "Could not save template."
+  },
   "alerts": {
     "title": "Price Alerts",
     "description": "Get notified when an asset crosses a price threshold.",

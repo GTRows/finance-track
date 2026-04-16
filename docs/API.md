@@ -362,6 +362,41 @@ Returns income and expense categories.
 ### PUT /api/v1/budget/categories/income/{id}
 ### DELETE /api/v1/budget/categories/income/{id}
 
+### GET /api/v1/budget/recurring
+Monthly recurring transaction templates. Server auto-materializes due ones daily at 06:00.
+```json
+// Response 200
+[
+  {
+    "id": "uuid",
+    "txnType": "EXPENSE",
+    "amount": 8500.00,
+    "categoryId": "uuid",
+    "categoryName": "Rent",
+    "description": "Monthly rent",
+    "dayOfMonth": 5,
+    "active": true,
+    "lastMaterializedOn": "2026-04-05",
+    "nextDueOn": "2026-05-05"
+  }
+]
+```
+
+### POST /api/v1/budget/recurring
+Create a template. `dayOfMonth` 1-31; values past month-length fall back to the last day.
+```json
+{ "txnType": "EXPENSE", "amount": 8500, "categoryId": "uuid", "description": "Rent", "dayOfMonth": 5, "active": true }
+```
+
+### PUT /api/v1/budget/recurring/{id}
+Replace template fields (same body as create).
+
+### DELETE /api/v1/budget/recurring/{id}
+Remove template. Past materialized transactions are untouched.
+
+### POST /api/v1/budget/recurring/{id}/run-now
+Immediately materialize one transaction dated today and advance `lastMaterializedOn`.
+
 ---
 
 ## Bills

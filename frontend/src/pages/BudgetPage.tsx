@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/layout/EmptyState';
 import { AddTransactionDialog } from '@/components/budget/AddTransactionDialog';
 import { MonthlyLogSection } from '@/components/budget/MonthlyLogSection';
 import { BudgetRulesSection } from '@/components/budget/BudgetRulesSection';
+import { RecurringTemplatesSection } from '@/components/budget/RecurringTemplatesSection';
 import {
   useTransactions,
   useBudgetSummary,
@@ -294,6 +295,8 @@ export function BudgetPage() {
           </CardContent>
         </Card>
       </div>
+
+      <RecurringTemplatesSection />
 
       <BudgetRulesSection />
 

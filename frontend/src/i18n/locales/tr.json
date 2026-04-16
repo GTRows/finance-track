@@ -481,6 +481,24 @@
     "monthlyLimit": "Aylık limit",
     "empty": "Henüz harcama limiti yok."
   },
+  "recurring": {
+    "title": "Tekrarlayan işlemler",
+    "description": "Maaş, kira, abonelik gibi düzenli gelir/giderleri her ay otomatik kaydet.",
+    "add": "Yeni şablon",
+    "addTitle": "Yeni tekrarlayan işlem",
+    "editTitle": "Tekrarlayan işlemi düzenle",
+    "empty": "Henüz tekrarlayan şablon yok. Aylık girişleri otomatikleştirmek için ekle.",
+    "untitled": "Adsız şablon",
+    "dayOfMonth": "Ayın günü",
+    "dayOfMonthShort": "Her ay {{day}}. günü",
+    "dayOfMonthHint": "Ay uzunluğundan büyük değerler ayın son gününe düşer (örn. 31 Şubat'ta 28/29 olur).",
+    "nextOn": "Sonraki: {{date}}",
+    "paused": "Duraklatıldı",
+    "runNow": "Şimdi çalıştır",
+    "pause": "Duraklat",
+    "resume": "Devam ettir",
+    "saveError": "Şablon kaydedilemedi."
+  },
   "alerts": {
     "title": "Fiyat Uyarıları",
     "description": "Bir varlık eşik değeri geçtiğinde haberdar olun.",

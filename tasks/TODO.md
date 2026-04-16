@@ -239,7 +239,7 @@ email-reminder work in later phases.
 
 ## Phase 10 -- Budget & Expenses Deepening
 
-- [ ] 10.1 Recurring transaction templates (salary, rent, subscriptions outside Bills)
+- [x] 10.1 Recurring transaction templates (salary, rent, subscriptions outside Bills)
 - [ ] 10.2 Multi-currency transactions (foreign expense auto-converted to preferred currency)
 - [ ] 10.3 Category rollover (unused monthly budget carried forward)
 - [ ] 10.4 Receipt photo upload (filesystem storage, OCR marked as follow-up)
