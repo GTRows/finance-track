@@ -13,4 +13,5 @@ public final class AuditAction {
     public static final String TOTP_SETUP = "TOTP_SETUP";
     public static final String TOTP_ENABLE = "TOTP_ENABLE";
     public static final String TOTP_DISABLE = "TOTP_DISABLE";
+    public static final String PASSWORD_CHANGE = "PASSWORD_CHANGE";
 }

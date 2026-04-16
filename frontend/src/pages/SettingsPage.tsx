@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -11,6 +10,7 @@ import { useUpdateSettings } from '@/hooks/useSettings';
 import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet, ScrollText } from 'lucide-react';
 import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
 import { TotpSection } from '@/components/settings/TotpSection';
+import { PasswordSection } from '@/components/settings/PasswordSection';
 import { AuditLogSection } from '@/components/settings/AuditLogSection';
 import { cn } from '@/lib/utils';
 
@@ -211,15 +211,7 @@ export function SettingsPage() {
       >
         <div className="space-y-5">
           <TotpSection />
-          <div className="border-t pt-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">{t('settings.password')}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('settings.passwordLastChanged')}</p>
-            </div>
-            <Button variant="outline" size="sm" className="cursor-pointer" disabled>
-              {t('settings.changePassword')}
-            </Button>
-          </div>
+          <PasswordSection />
         </div>
       </SettingsSection>
 

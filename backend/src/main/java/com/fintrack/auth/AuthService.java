@@ -170,6 +170,24 @@ public class AuthService {
     }
 
     @Transactional
+    public void changePassword(UUID userId, PasswordChangeRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            auditService.failure(AuditAction.PASSWORD_CHANGE, user.getId(), user.getUsername(), "wrong current password");
+            throw new BusinessRuleException("Incorrect password", "PASSWORD_INVALID");
+        }
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new BusinessRuleException("New password must differ from the current one", "PASSWORD_UNCHANGED");
+        }
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        refreshTokenService.revokeAllForUser(user.getId());
+        log.info("Password changed for user: {}", user.getUsername());
+        auditService.success(AuditAction.PASSWORD_CHANGE, user.getId(), user.getUsername());
+    }
+
+    @Transactional
     public AuthResponse refresh(RefreshRequest request) {
         RefreshToken existing = refreshTokenService.validate(request.refreshToken());
         User user = userRepository.findById(existing.getUserId())

@@ -87,6 +87,15 @@ Requires the current password.
 // Response 401 — wrong password
 ```
 
+### POST /api/v1/auth/password
+Changes the authenticated user's password. All refresh tokens are revoked on success, so every signed-in device must log in again.
+```json
+// Request
+{ "currentPassword": "old-secret", "newPassword": "new-strong-pass" }
+// Response 204 — password updated
+// Response 400 — PASSWORD_INVALID (wrong current password) or PASSWORD_UNCHANGED
+```
+
 ### POST /api/v1/auth/refresh
 ```json
 // Request

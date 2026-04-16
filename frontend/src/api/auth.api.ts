@@ -27,4 +27,7 @@ export const authApi = {
 
   totpDisable: (password: string) =>
     client.post('/auth/2fa/disable', { password }).then((r) => r.data),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    client.post('/auth/password', data).then((r) => r.data),
 };

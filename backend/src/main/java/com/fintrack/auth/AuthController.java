@@ -84,4 +84,13 @@ public class AuthController {
         authService.totpDisable(user.getId(), request);
         return ResponseEntity.noContent().build();
     }
+
+    /** Updates the authenticated user's password and revokes existing refresh tokens. */
+    @PostMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @Valid @RequestBody PasswordChangeRequest request) {
+        authService.changePassword(user.getId(), request);
+        return ResponseEntity.noContent().build();
+    }
 }
