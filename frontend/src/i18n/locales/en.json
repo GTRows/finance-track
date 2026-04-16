@@ -227,6 +227,26 @@
     "overweightHint": "Overweight by {{amount}} in {{type}} — candidate to trim.",
     "underweightHint": "Underweight by {{amount}} in {{type}} — candidate to top up."
   },
+  "networth": {
+    "title": "Net worth timeline",
+    "subtitle": "Combined portfolio value with event annotations",
+    "addEvent": "Add event",
+    "editEvent": "Edit event",
+    "needSnapshots": "At least two daily snapshots needed to draw a trend line.",
+    "label": "Label",
+    "labelPlaceholder": "e.g. Bought first apartment, bonus payout, savings milestone",
+    "eventDate": "Date",
+    "eventType": "Type",
+    "impact": "Impact",
+    "note": "Note",
+    "notePlaceholder": "Context you will want to remember later (optional)",
+    "type": {
+      "PURCHASE": "Purchase",
+      "INCOME": "Income",
+      "MILESTONE": "Milestone",
+      "NOTE": "Note"
+    }
+  },
   "risk": {
     "title": "Risk profile",
     "waiting_one": "Collecting daily snapshots -- {{count}} more day needed before risk metrics become meaningful.",

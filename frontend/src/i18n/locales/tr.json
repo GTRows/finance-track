@@ -227,6 +227,26 @@
     "overweightHint": "{{type}} fazla ağırlıkta: {{amount}} indirmek için aday.",
     "underweightHint": "{{type}} eksik ağırlıkta: {{amount}} artırmak için aday."
   },
+  "networth": {
+    "title": "Net servet zaman çizgisi",
+    "subtitle": "Birleşik portföy değeri ve olay notları",
+    "addEvent": "Olay ekle",
+    "editEvent": "Olayı düzenle",
+    "needSnapshots": "Trend çizgisi için en az iki günlük anlık görüntü gerekli.",
+    "label": "Etiket",
+    "labelPlaceholder": "ör. İlk ev alındı, ikramiye, tasarruf kilometre taşı",
+    "eventDate": "Tarih",
+    "eventType": "Tür",
+    "impact": "Etki",
+    "note": "Not",
+    "notePlaceholder": "Sonra hatırlamak isteyeceğin bağlam (opsiyonel)",
+    "type": {
+      "PURCHASE": "Alım",
+      "INCOME": "Gelir",
+      "MILESTONE": "Kilometre",
+      "NOTE": "Not"
+    }
+  },
   "risk": {
     "title": "Risk profili",
     "waiting_one": "Günlük anlık görüntüler toplanıyor -- anlamlı risk metriği için {{count}} gün daha gerek.",

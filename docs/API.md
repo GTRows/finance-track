@@ -619,6 +619,55 @@ Aggregated data for the main dashboard.
 
 ---
 
+## Net worth
+
+### GET /api/v1/net-worth
+Combined daily value series across all active portfolios plus user-authored
+annotations. Events are returned newest-first.
+```json
+// Response 200
+{
+  "series": [
+    { "date": "2026-03-10", "totalValueTry": 195400.00, "totalCostTry": 170000.00 },
+    { "date": "2026-03-11", "totalValueTry": 196810.00, "totalCostTry": 170000.00 }
+  ],
+  "events": [
+    {
+      "id": "uuid",
+      "eventDate": "2026-03-10",
+      "eventType": "MILESTONE",
+      "label": "Crossed 200K TRY",
+      "note": null,
+      "impactTry": null
+    }
+  ]
+}
+```
+
+### GET /api/v1/net-worth/events
+List events only.
+
+### POST /api/v1/net-worth/events
+Create a new annotation.
+```json
+{
+  "eventDate": "2026-04-05",
+  "eventType": "PURCHASE",
+  "label": "Car down-payment",
+  "note": "Used CURRENCY bucket",
+  "impactTry": -45000
+}
+```
+`eventType` accepts `PURCHASE`, `INCOME`, `MILESTONE`, `NOTE`.
+
+### PUT /api/v1/net-worth/events/{id}
+Update an existing annotation. Body identical to POST.
+
+### DELETE /api/v1/net-worth/events/{id}
+Always 204.
+
+---
+
 ## Reports
 
 ### GET /api/v1/reports/portfolio/{id}?format=pdf&period=2026-04
