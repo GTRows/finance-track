@@ -8,6 +8,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.time.Clock;
 
 @Service
 public class TotpService {
@@ -19,10 +20,16 @@ public class TotpService {
     private static final int DRIFT_WINDOW = 1;
 
     private final String issuer;
+    private final Clock clock;
     private final SecureRandom random = new SecureRandom();
 
     public TotpService(@Value("${fintrack.totp.issuer:FinTrack Pro}") String issuer) {
+        this(issuer, Clock.systemUTC());
+    }
+
+    TotpService(String issuer, Clock clock) {
         this.issuer = issuer;
+        this.clock = clock;
     }
 
     public String generateSecret() {
@@ -52,7 +59,7 @@ public class TotpService {
             return false;
         }
         byte[] key = base32Decode(secret);
-        long currentStep = System.currentTimeMillis() / 1000L / TIME_STEP_SECONDS;
+        long currentStep = clock.millis() / 1000L / TIME_STEP_SECONDS;
         for (int offset = -DRIFT_WINDOW; offset <= DRIFT_WINDOW; offset++) {
             if (generateCode(key, currentStep + offset) == target) {
                 return true;
