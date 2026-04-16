@@ -222,12 +222,12 @@ env vars, and related frontend panels are intentionally absent.
 Goal: finish the account lifecycle and get email flows live. Prerequisite for any
 email-reminder work in later phases.
 
-- [ ] 8.1  SMTP integration -- wire JavaMailSender, template engine, test endpoint
-- [ ] 8.2  Password change flow -- `POST /auth/password` + settings form (replace the disabled button)
-- [ ] 8.3  Active sessions view -- list refresh tokens, revoke one or all-but-current
-- [ ] 8.4  Login rate limit -- Redis token-bucket, N failures per IP and per username
-- [ ] 8.5  Email verification on register -- `email_verifications` table, confirm link, resend
-- [ ] 8.6  Password reset via email -- request + confirm endpoints, single-use token, short TTL
+- [x] 8.1  SMTP integration -- wire JavaMailSender, template engine, test endpoint
+- [x] 8.2  Password change flow -- `POST /auth/password` + settings form (replace the disabled button)
+- [x] 8.3  Active sessions view -- list refresh tokens, revoke one or all-but-current
+- [x] 8.4  Login rate limit -- Redis token-bucket, N failures per IP and per username
+- [x] 8.5  Email verification on register -- `email_verifications` table, confirm link, resend
+- [x] 8.6  Password reset via email -- request + confirm endpoints, single-use token, short TTL
 
 ## Phase 9 -- Portfolio Expansion
 

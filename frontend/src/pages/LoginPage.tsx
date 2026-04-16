@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -319,7 +319,17 @@ export function LoginPage() {
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="password">{t('auth.password')}</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">{t('auth.password')}</Label>
+                {!isRegister && (
+                  <Link
+                    to="/reset-password"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {t('auth.forgotPassword')}
+                  </Link>
+                )}
+              </div>
               <div className="relative">
                 <Input
                   id="password"

@@ -127,6 +127,42 @@ Revokes every session except the one identified by the supplied refresh token.
 { "revoked": 3 }
 ```
 
+### POST /api/v1/auth/email-verify/confirm
+Public. Confirms the email using the token delivered by the verification email.
+```json
+// Request
+{ "token": "abc..." }
+// Response 200
+{ "status": "verified" }
+// Response 400 — EMAIL_TOKEN_INVALID, EMAIL_TOKEN_USED, or EMAIL_TOKEN_EXPIRED
+```
+
+### POST /api/v1/auth/email-verify/resend
+Re-issues the verification email for the signed-in user. Silent if already verified.
+```json
+// Response 200
+{ "status": "queued" }
+```
+
+### POST /api/v1/auth/password-reset/request
+Public. Sends a reset link if the email is known. Always 200 to prevent enumeration.
+```json
+// Request
+{ "email": "ali@example.com" }
+// Response 200
+{ "status": "queued" }
+```
+
+### POST /api/v1/auth/password-reset/confirm
+Public. Consumes the reset token, sets a new password, and revokes every session.
+```json
+// Request
+{ "token": "abc...", "newPassword": "new-strong-pass" }
+// Response 200
+{ "status": "reset" }
+// Response 400 — RESET_TOKEN_INVALID, RESET_TOKEN_USED, RESET_TOKEN_EXPIRED, or PASSWORD_UNCHANGED
+```
+
 ### POST /api/v1/auth/refresh
 ```json
 // Request
