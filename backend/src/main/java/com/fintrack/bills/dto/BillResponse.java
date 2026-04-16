@@ -22,6 +22,8 @@ public record BillResponse(
         String currentPeriodStatus,
         LocalDate currentPeriodDueDate,
         long daysUntilDue,
+        LocalDate lastUsedOn,
+        Long daysSinceLastUse,
         BillVarianceDto variance
 ) {
 
@@ -44,6 +46,9 @@ public record BillResponse(
                 ? currentPayment.getStatus().name()
                 : "PENDING";
 
+        LocalDate lastUsed = bill.getLastUsedOn();
+        Long daysSinceLastUse = lastUsed == null ? null : ChronoUnit.DAYS.between(lastUsed, today);
+
         return new BillResponse(
                 bill.getId(),
                 bill.getName(),
@@ -58,6 +63,8 @@ public record BillResponse(
                 status,
                 dueDate,
                 daysUntil,
+                lastUsed,
+                daysSinceLastUse,
                 variance
         );
     }

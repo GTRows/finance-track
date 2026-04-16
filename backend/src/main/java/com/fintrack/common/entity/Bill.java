@@ -62,6 +62,9 @@ public class Bill {
     @Column(name = "last_reminded_on")
     private LocalDate lastRemindedOn;
 
+    @Column(name = "last_used_on")
+    private LocalDate lastUsedOn;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

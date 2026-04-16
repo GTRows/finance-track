@@ -280,7 +280,24 @@
     "daysLeft_other": "{{count}} gün kaldı",
     "markPaid": "Öde",
     "totalBills": "fatura",
-    "calendarHint": "Bu ayın vade tarihleri"
+    "calendarHint": "Bu ayın vade tarihleri",
+    "markUsed": "Kullanıldı işaretle",
+    "usedToday": "Bugün kullanıldı",
+    "lastUsed": "{{days}} gün önce kullanıldı",
+    "neverUsed": "Hiç kullanıldı olarak işaretlenmedi",
+    "audit": {
+      "title": "Abonelik denetimi",
+      "subtitle": "Unutmuş olabileceğiniz düzenli ödemeler",
+      "empty": "Atıl abonelik yok. Hepsi aktif kullanımda.",
+      "potentialSavings": "Olası tasarruf",
+      "perMonth": "aylık",
+      "flagged_one": "{{count}} işaretli",
+      "flagged_other": "{{count}} işaretli",
+      "reasonNeverUsed": "Hiç kullanıldı olarak işaretlenmedi",
+      "reasonStale": "{{days}} gündür kullanılmıyor",
+      "stillUsingIt": "Hâlâ kullanıyorum",
+      "cancelIt": "Bu faturayı iptal et"
+    }
   },
   "settings": {
     "title": "Ayarlar",

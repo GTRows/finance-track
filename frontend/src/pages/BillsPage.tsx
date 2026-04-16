@@ -6,7 +6,14 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { AddBillDialog } from '@/components/bills/AddBillDialog';
 import { BillsCalendar } from '@/components/bills/BillsCalendar';
-import { useBills, useCreateBill, useDeleteBill, usePayBill } from '@/hooks/useBills';
+import { SubscriptionAuditCard } from '@/components/bills/SubscriptionAuditCard';
+import {
+  useBills,
+  useCreateBill,
+  useDeleteBill,
+  useMarkBillUsed,
+  usePayBill,
+} from '@/hooks/useBills';
 import { formatTRY } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 import {
@@ -18,11 +25,42 @@ import {
   CreditCard,
   TrendingUp,
   TrendingDown,
+  CircleDot,
 } from 'lucide-react';
 
 function currentPeriod(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function LastUsedBadge({ days, hasRecord }: { days: number | null; hasRecord: boolean }) {
+  const { t } = useTranslation();
+  if (!hasRecord) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-rose-500/10 text-rose-400/90 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider">
+        {t('bills.neverUsed')}
+      </span>
+    );
+  }
+  const d = days ?? 0;
+  if (d <= 0) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-400/90 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider">
+        {t('bills.usedToday')}
+      </span>
+    );
+  }
+  const stale = d > 90;
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider',
+        stale ? 'bg-amber-500/10 text-amber-400/90' : 'bg-muted text-muted-foreground'
+      )}
+    >
+      {t('bills.lastUsed', { days: d })}
+    </span>
+  );
 }
 
 export function BillsPage() {
@@ -32,6 +70,7 @@ export function BillsPage() {
   const createBill = useCreateBill();
   const deleteBill = useDeleteBill();
   const payBill = usePayBill();
+  const markUsed = useMarkBillUsed();
 
   const bills = billsQuery.data ?? [];
   const activeBills = bills.filter((b) => b.isActive);
@@ -138,6 +177,8 @@ export function BillsPage() {
         </Card>
       )}
 
+      {activeBills.length > 0 && <SubscriptionAuditCard />}
+
       {/* Bills list */}
       <Card>
         <CardHeader className="pb-2">
@@ -179,16 +220,22 @@ export function BillsPage() {
                       <p className={cn('text-sm font-medium', isPaid && 'line-through opacity-60')}>
                         {bill.name}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {bill.category && <span>{bill.category} -- </span>}
-                        {t('bills.dueDayLabel', { day: bill.dueDay })}
-                        {!isPaid && bill.daysUntilDue >= 0 && (
-                          <span className={cn('ml-1.5', isUrgent && 'text-red-400 font-medium')}>
-                            ({bill.daysUntilDue === 0
-                              ? t('bills.dueToday')
-                              : t('bills.daysLeft', { count: bill.daysUntilDue })})
-                          </span>
-                        )}
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                        <span>
+                          {bill.category && <span>{bill.category} -- </span>}
+                          {t('bills.dueDayLabel', { day: bill.dueDay })}
+                          {!isPaid && bill.daysUntilDue >= 0 && (
+                            <span className={cn('ml-1.5', isUrgent && 'text-red-400 font-medium')}>
+                              ({bill.daysUntilDue === 0
+                                ? t('bills.dueToday')
+                                : t('bills.daysLeft', { count: bill.daysUntilDue })})
+                            </span>
+                          )}
+                        </span>
+                        <LastUsedBadge
+                          days={bill.daysSinceLastUse}
+                          hasRecord={bill.lastUsedOn !== null}
+                        />
                       </p>
                     </div>
 
@@ -222,6 +269,16 @@ export function BillsPage() {
                         {formatTRY(bill.amount)}
                       </span>
                     </div>
+
+                    <button
+                      onClick={() => markUsed.mutate(bill.id)}
+                      disabled={markUsed.isPending}
+                      title={t('bills.markUsed')}
+                      className="opacity-0 group-hover:opacity-100 h-7 px-2 text-[11px] rounded-md inline-flex items-center gap-1 cursor-pointer text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
+                    >
+                      <CircleDot className="w-3.5 h-3.5" />
+                      {t('bills.markUsed')}
+                    </button>
 
                     {/* Pay button */}
                     {!isPaid && (

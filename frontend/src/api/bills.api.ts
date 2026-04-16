@@ -1,5 +1,11 @@
 import client from './client';
-import type { Bill, BillPayment, CreateBillRequest, PayBillRequest } from '@/types/bill.types';
+import type {
+  Bill,
+  BillPayment,
+  CreateBillRequest,
+  PayBillRequest,
+  SubscriptionAudit,
+} from '@/types/bill.types';
 
 export const billsApi = {
   list: async (): Promise<Bill[]> => {
@@ -28,6 +34,16 @@ export const billsApi = {
 
   history: async (id: string): Promise<BillPayment[]> => {
     const { data } = await client.get<BillPayment[]>(`/bills/${id}/history`);
+    return data;
+  },
+
+  markUsed: async (id: string): Promise<Bill> => {
+    const { data } = await client.post<Bill>(`/bills/${id}/mark-used`);
+    return data;
+  },
+
+  audit: async (): Promise<SubscriptionAudit> => {
+    const { data } = await client.get<SubscriptionAudit>('/bills/audit');
     return data;
   },
 };

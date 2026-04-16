@@ -63,4 +63,17 @@ public class BillController {
             @PathVariable UUID id) {
         return ResponseEntity.ok(billService.history(user.getId(), id));
     }
+
+    @PostMapping("/{id}/mark-used")
+    public ResponseEntity<BillResponse> markUsed(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(billService.markUsed(user.getId(), id));
+    }
+
+    @GetMapping("/audit")
+    public ResponseEntity<SubscriptionAuditDto> audit(
+            @AuthenticationPrincipal FinTrackUserDetails user) {
+        return ResponseEntity.ok(billService.audit(user.getId()));
+    }
 }

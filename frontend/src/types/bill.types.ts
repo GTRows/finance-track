@@ -24,7 +24,32 @@ export interface Bill {
   currentPeriodStatus: PaymentStatus;
   currentPeriodDueDate: string;
   daysUntilDue: number;
+  lastUsedOn: string | null;
+  daysSinceLastUse: number | null;
   variance: BillVariance | null;
+}
+
+/** Reason a bill was flagged in the subscription audit. */
+export type SubscriptionAuditReason = 'NEVER_USED' | 'STALE';
+
+/** One flagged subscription. */
+export interface SubscriptionAuditCandidate {
+  billId: string;
+  name: string;
+  category: string | null;
+  amount: number;
+  currency: string;
+  lastUsedOn: string | null;
+  daysSinceLastUse: number | null;
+  reason: SubscriptionAuditReason;
+}
+
+/** Subscription audit summary returned by GET /bills/audit. */
+export interface SubscriptionAudit {
+  totalMonthlySpend: number;
+  potentialMonthlySavings: number;
+  candidateCount: number;
+  candidates: SubscriptionAuditCandidate[];
 }
 
 /** Bill payment history entry. */

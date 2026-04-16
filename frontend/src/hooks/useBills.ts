@@ -3,6 +3,7 @@ import { billsApi } from '@/api/bills.api';
 import type { CreateBillRequest, PayBillRequest } from '@/types/bill.types';
 
 const billsKey = () => ['bills'] as const;
+const billsAuditKey = () => ['bills', 'audit'] as const;
 
 export function useBills() {
   return useQuery({
@@ -40,6 +41,24 @@ export function usePayBill() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: billsKey() });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useSubscriptionAudit() {
+  return useQuery({
+    queryKey: billsAuditKey(),
+    queryFn: billsApi.audit,
+  });
+}
+
+export function useMarkBillUsed() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => billsApi.markUsed(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: billsKey() });
+      qc.invalidateQueries({ queryKey: billsAuditKey() });
     },
   });
 }

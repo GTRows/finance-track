@@ -452,6 +452,46 @@ Mark a bill as paid for a period.
 ]
 ```
 
+### POST /api/v1/bills/{id}/mark-used
+Stamp `lastUsedOn` with today's date so the subscription audit no longer flags this bill.
+```json
+// Response 200 -> updated BillResponse with lastUsedOn set
+```
+
+### GET /api/v1/bills/audit
+Recurring charges that look stale. A bill is a candidate when it is active, created at
+least 60 days ago, and either was never marked as used or was last used more than 90 days ago.
+```json
+// Response 200
+{
+  "totalMonthlySpend": 1580.00,
+  "potentialMonthlySavings": 299.00,
+  "candidateCount": 2,
+  "candidates": [
+    {
+      "billId": "uuid",
+      "name": "Old streaming bundle",
+      "category": "Abonelik",
+      "amount": 149.00,
+      "currency": "TRY",
+      "lastUsedOn": null,
+      "daysSinceLastUse": null,
+      "reason": "NEVER_USED"
+    },
+    {
+      "billId": "uuid",
+      "name": "Forgotten cloud storage",
+      "category": "Abonelik",
+      "amount": 150.00,
+      "currency": "TRY",
+      "lastUsedOn": "2026-01-03",
+      "daysSinceLastUse": 103,
+      "reason": "STALE"
+    }
+  ]
+}
+```
+
 ---
 
 ## Prices

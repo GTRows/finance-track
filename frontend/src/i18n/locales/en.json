@@ -280,7 +280,24 @@
     "markPaid": "Pay",
     "totalBills": "bills",
     "calendarHint": "Due dates for this month",
-    "varianceVs": "vs {{previous}} in {{period}}"
+    "varianceVs": "vs {{previous}} in {{period}}",
+    "markUsed": "Mark used",
+    "usedToday": "Used today",
+    "lastUsed": "Used {{days}}d ago",
+    "neverUsed": "Never marked as used",
+    "audit": {
+      "title": "Subscription audit",
+      "subtitle": "Recurring charges you may have forgotten about",
+      "empty": "No stale subscriptions. Everything in active rotation.",
+      "potentialSavings": "Potential savings",
+      "perMonth": "per month",
+      "flagged_one": "{{count}} flagged",
+      "flagged_other": "{{count}} flagged",
+      "reasonNeverUsed": "Never marked as used",
+      "reasonStale": "Unused for {{days}} days",
+      "stillUsingIt": "Still using it",
+      "cancelIt": "Cancel this bill"
+    }
   },
   "settings": {
     "title": "Settings",
