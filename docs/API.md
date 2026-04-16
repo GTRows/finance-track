@@ -441,6 +441,36 @@ Manually trigger price sync (admin only).
 
 ---
 
+## Allocation
+
+### GET /api/v1/portfolios/{id}/allocation
+Computed drift between the portfolio's target allocation and its live holdings.
+```json
+// Response 200
+{
+  "totalValueTry": 165240.50,
+  "configured": true,
+  "rows": [
+    { "assetType": "CRYPTO", "targetPercent": 40.00, "actualPercent": 47.30, "actualValueTry": 78160.40, "driftPercent": 7.30, "driftValueTry": 12062.00 }
+  ]
+}
+```
+
+### PUT /api/v1/portfolios/{id}/allocation
+Replace all allocation targets for the portfolio. Sum must equal 100% (tolerance 0.05). An empty list clears all targets.
+```json
+{
+  "targets": [
+    { "assetType": "CRYPTO", "targetPercent": 40 },
+    { "assetType": "FUND", "targetPercent": 30 },
+    { "assetType": "CURRENCY", "targetPercent": 20 },
+    { "assetType": "GOLD", "targetPercent": 10 }
+  ]
+}
+```
+
+---
+
 ## Watchlist
 
 ### GET /api/v1/watchlist

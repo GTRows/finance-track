@@ -210,6 +210,23 @@
     "historyLine": "Portföy değeri",
     "historyPoints": "nokta"
   },
+  "allocation": {
+    "title": "Hedef dağılım",
+    "description": "Varlık sınıfı başına ideal ağırlıkları belirle. Çubuk, her sınıfın hedeften ne kadar saptığını gösterir.",
+    "target": "Hedef",
+    "edit": "Düzenle",
+    "setTargets": "Hedef belirle",
+    "clearAll": "Hepsini temizle",
+    "clearHint": "portföyü serbest bırakır",
+    "sum": "Toplam",
+    "sumError": "Hedeflerin toplamı %100 olmalı (şu an: %{{sum}}).",
+    "saveError": "Hedef dağılım kaydedilemedi.",
+    "totalValue": "Hedeflere göre portföy değeri",
+    "emptyTitle": "Henüz hedef belirlenmedi",
+    "emptyHint": "Sınıf bazlı ağırlık tanımla; rebalance sapmaları otomatik çıksın.",
+    "overweightHint": "{{type}} fazla ağırlıkta: {{amount}} indirmek için aday.",
+    "underweightHint": "{{type}} eksik ağırlıkta: {{amount}} artırmak için aday."
+  },
   "budget": {
     "title": "Bütçe",
     "descriptionFor": "{{month}} için gelir ve gider özeti",
@@ -380,7 +397,8 @@
       "FUND": "Fon",
       "CURRENCY": "Döviz",
       "GOLD": "Altın",
-      "STOCK": "Hisse"
+      "STOCK": "Hisse",
+      "OTHER": "Diğer"
     }
   },
   "assetDetail": {

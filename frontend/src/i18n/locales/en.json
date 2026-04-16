@@ -210,6 +210,23 @@
     "historyLine": "Portfolio value",
     "historyPoints": "points"
   },
+  "allocation": {
+    "title": "Target allocation",
+    "description": "Set ideal weights per asset class. The bar shows how far each class has drifted from its target.",
+    "target": "Target",
+    "edit": "Edit",
+    "setTargets": "Set targets",
+    "clearAll": "Clear all",
+    "clearHint": "leaves the portfolio unconstrained",
+    "sum": "Sum",
+    "sumError": "Targets must add up to 100% (current total: {{sum}}%).",
+    "saveError": "Could not save allocation targets.",
+    "totalValue": "Portfolio value under targets",
+    "emptyTitle": "No targets set yet",
+    "emptyHint": "Define per-class weights to surface rebalance drift automatically.",
+    "overweightHint": "Overweight by {{amount}} in {{type}} — candidate to trim.",
+    "underweightHint": "Underweight by {{amount}} in {{type}} — candidate to top up."
+  },
   "budget": {
     "title": "Budget",
     "descriptionFor": "Income and expense overview for {{month}}",
@@ -380,7 +397,8 @@
       "FUND": "Fund",
       "CURRENCY": "Currency",
       "GOLD": "Gold",
-      "STOCK": "Stock"
+      "STOCK": "Stock",
+      "OTHER": "Other"
     }
   },
   "assetDetail": {
