@@ -65,7 +65,11 @@
     "featureBudgetDesc": "Trendlerle aylık gelir ve gider analizi",
     "featureSecureTitle": "Güvenli ve Gizli",
     "featureSecureDesc": "Kendi sunucunuzda barındırın, veriniz sizde kalır",
-    "footer": "Açık kaynak  ·  Kendiniz barındırın  ·  Veriniz, sizin sunucunuzda"
+    "footer": "Açık kaynak  ·  Kendiniz barındırın  ·  Veriniz, sizin sunucunuzda",
+    "totpTitle": "İki aşamalı doğrulama",
+    "totpSubtitle": "Kimlik doğrulayıcı uygulamandaki 6 haneli kodu gir.",
+    "totpCode": "Doğrulama kodu",
+    "totpVerify": "Doğrula"
   },
   "dashboard": {
     "greetingMorning": "Günaydın",
@@ -284,7 +288,18 @@
     "importColStatus": "Durum",
     "importNoFile": "Önce bir dosya seç.",
     "importPreviewFailed": "Önizleme başarısız.",
-    "importFailed": "İçe aktarma başarısız."
+    "importFailed": "İçe aktarma başarısız.",
+    "totpEnabledLabel": "İki aşamalı doğrulama açık",
+    "totpDisabledLabel": "İki aşamalı doğrulama kapalı",
+    "totpDescription": "Şifrenin üzerine kimlik doğrulayıcı uygulamadan 6 haneli zaman tabanlı kod ekler.",
+    "totpEnable": "2FA'yı aç",
+    "totpDisable": "2FA'yı kapat",
+    "totpScanHint": "Google Authenticator, 1Password, Authy veya herhangi bir TOTP uygulamasıyla tara. Ya da anahtarı elle yapıştır.",
+    "totpManualKey": "Kurulum anahtarı",
+    "totpCopy": "Kurulum anahtarını kopyala",
+    "totpConfirmCode": "Uygulamandaki 6 haneli kodu gir",
+    "totpActivate": "Etkinleştir",
+    "totpDisableHint": "2FA'yı kapatmak için şifreni gir."
   },
   "reports": {
     "downloadPdf": "PDF raporu indir",

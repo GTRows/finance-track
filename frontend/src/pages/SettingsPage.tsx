@@ -10,6 +10,7 @@ import { useSettingsStore } from '@/store/settings.store';
 import { useUpdateSettings } from '@/hooks/useSettings';
 import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet } from 'lucide-react';
 import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
+import { TotpSection } from '@/components/settings/TotpSection';
 import { cn } from '@/lib/utils';
 
 const CURRENCY_OPTIONS = ['TRY', 'USD', 'EUR', 'GBP'];
@@ -207,14 +208,17 @@ export function SettingsPage() {
         title={t('settings.security')}
         description={t('settings.securityDesc')}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium">{t('settings.password')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t('settings.passwordLastChanged')}</p>
+        <div className="space-y-5">
+          <TotpSection />
+          <div className="border-t pt-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">{t('settings.password')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('settings.passwordLastChanged')}</p>
+            </div>
+            <Button variant="outline" size="sm" className="cursor-pointer" disabled>
+              {t('settings.changePassword')}
+            </Button>
           </div>
-          <Button variant="outline" size="sm" className="cursor-pointer" disabled>
-            {t('settings.changePassword')}
-          </Button>
         </div>
       </SettingsSection>
     </div>

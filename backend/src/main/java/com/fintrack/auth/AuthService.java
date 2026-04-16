@@ -31,13 +31,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final TotpService totpService;
 
-    /**
-     * Registers a new user account and returns token pair.
-     *
-     * @param request the registration data
-     * @return auth response with tokens and user profile
-     */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
@@ -64,12 +59,6 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
-    /**
-     * Authenticates a user by username and password.
-     *
-     * @param request the login credentials
-     * @return auth response with tokens and user profile
-     */
     @Transactional
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
@@ -78,17 +67,86 @@ public class AuthService {
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        if (user.isTotpEnabled()) {
+            String challenge = jwtUtil.generateTotpChallengeToken(user.getId().toString());
+            log.info("TOTP challenge issued for user: {}", user.getUsername());
+            return AuthResponse.challenge(challenge);
+        }
+
         log.info("User logged in: {}", user.getUsername());
         return buildAuthResponse(user);
     }
 
-    /**
-     * Refreshes an expired access token using a valid refresh token.
-     * Implements token rotation: old refresh token is invalidated.
-     *
-     * @param request contains the current refresh token
-     * @return auth response with new token pair
-     */
+    @Transactional
+    public AuthResponse verifyTotp(TotpVerifyRequest request) {
+        String userId = jwtUtil.validateTotpChallenge(request.challengeToken());
+        if (userId == null) {
+            throw new BusinessRuleException("Invalid or expired challenge", "TOTP_CHALLENGE_INVALID");
+        }
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!user.isTotpEnabled() || user.getTotpSecret() == null) {
+            throw new BusinessRuleException("TOTP not enabled for this user", "TOTP_NOT_ENABLED");
+        }
+
+        if (!totpService.verify(user.getTotpSecret(), request.code())) {
+            throw new BusinessRuleException("Invalid verification code", "TOTP_INVALID");
+        }
+
+        log.info("TOTP verified and user logged in: {}", user.getUsername());
+        return buildAuthResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public TotpStatusResponse totpStatus(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return new TotpStatusResponse(user.isTotpEnabled());
+    }
+
+    @Transactional
+    public TotpSetupResponse totpSetup(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (user.isTotpEnabled()) {
+            throw new BusinessRuleException("TOTP already enabled", "TOTP_ALREADY_ENABLED");
+        }
+        String secret = totpService.generateSecret();
+        user.setTotpSecret(secret);
+        userRepository.save(user);
+        String otpauthUrl = totpService.buildOtpauthUrl(secret, user.getEmail());
+        return new TotpSetupResponse(secret, otpauthUrl);
+    }
+
+    @Transactional
+    public void totpEnable(UUID userId, TotpEnableRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (user.getTotpSecret() == null) {
+            throw new BusinessRuleException("TOTP setup not initiated", "TOTP_NOT_STARTED");
+        }
+        if (!totpService.verify(user.getTotpSecret(), request.code())) {
+            throw new BusinessRuleException("Invalid verification code", "TOTP_INVALID");
+        }
+        user.setTotpEnabled(true);
+        userRepository.save(user);
+        log.info("TOTP enabled for user: {}", user.getUsername());
+    }
+
+    @Transactional
+    public void totpDisable(UUID userId, TotpDisableRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new BusinessRuleException("Incorrect password", "PASSWORD_INVALID");
+        }
+        user.setTotpEnabled(false);
+        user.setTotpSecret(null);
+        userRepository.save(user);
+        log.info("TOTP disabled for user: {}", user.getUsername());
+    }
+
     @Transactional
     public AuthResponse refresh(RefreshRequest request) {
         RefreshToken existing = refreshTokenService.validate(request.refreshToken());
@@ -100,26 +158,15 @@ public class AuthService {
                 user.getId().toString(), user.getUsername(), user.getRole().name());
 
         log.debug("Token refreshed for user: {}", user.getUsername());
-        return new AuthResponse(accessToken, newRefreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
+        return AuthResponse.of(accessToken, newRefreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
     }
 
-    /**
-     * Logs out a user by revoking their refresh token.
-     *
-     * @param refreshToken the token to revoke
-     */
     @Transactional
     public void logout(String refreshToken) {
         refreshTokenService.revoke(refreshToken);
         log.debug("User logged out");
     }
 
-    /**
-     * Returns the profile of the given user.
-     *
-     * @param userId the user's UUID as string
-     * @return user profile data
-     */
     @Transactional(readOnly = true)
     public UserProfileResponse getProfile(UUID userId) {
         User user = userRepository.findById(userId)
@@ -131,7 +178,7 @@ public class AuthService {
         String accessToken = jwtUtil.generateAccessToken(
                 user.getId().toString(), user.getUsername(), user.getRole().name());
         String refreshToken = refreshTokenService.createRefreshToken(user.getId());
-        return new AuthResponse(accessToken, refreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
+        return AuthResponse.of(accessToken, refreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
     }
 
     private UserProfileResponse toProfile(User user) {

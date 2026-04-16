@@ -9,10 +9,21 @@ export interface User {
 
 /** Response from login, register, and refresh endpoints. */
 export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
+  accessToken: string | null;
+  refreshToken: string | null;
   accessExpiresIn: number;
-  user: User;
+  user: User | null;
+  requiresTotp: boolean;
+  totpChallengeToken: string | null;
+}
+
+export interface TotpStatus {
+  enabled: boolean;
+}
+
+export interface TotpSetup {
+  secret: string;
+  otpauthUrl: string;
 }
 
 /** API error response format. */

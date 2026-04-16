@@ -42,6 +42,13 @@ public class User {
     @Builder.Default
     private boolean active = true;
 
+    @Column(name = "totp_secret", length = 64)
+    private String totpSecret;
+
+    @Column(name = "totp_enabled", nullable = false)
+    @Builder.Default
+    private boolean totpEnabled = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

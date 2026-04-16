@@ -1,21 +1,30 @@
 import client from './client';
-import type { AuthResponse } from '@/types/auth.types';
+import type { AuthResponse, TotpSetup, TotpStatus } from '@/types/auth.types';
 
 /** Auth API module. */
 export const authApi = {
-  /** Registers a new user and returns token pair. */
   register: (data: { username: string; email: string; password: string }) =>
     client.post<AuthResponse>('/auth/register', data).then((r) => r.data),
 
-  /** Authenticates a user and returns token pair. */
   login: (data: { username: string; password: string }) =>
     client.post<AuthResponse>('/auth/login', data).then((r) => r.data),
 
-  /** Refreshes the access token using the refresh token. */
   refresh: (refreshToken: string) =>
     client.post<AuthResponse>('/auth/refresh', { refreshToken }).then((r) => r.data),
 
-  /** Revokes the refresh token (logout). */
   logout: (refreshToken: string) =>
     client.post('/auth/logout', { refreshToken }),
+
+  verifyTotp: (data: { challengeToken: string; code: string }) =>
+    client.post<AuthResponse>('/auth/2fa/verify', data).then((r) => r.data),
+
+  totpStatus: () => client.get<TotpStatus>('/auth/2fa/status').then((r) => r.data),
+
+  totpSetup: () => client.post<TotpSetup>('/auth/2fa/setup').then((r) => r.data),
+
+  totpEnable: (code: string) =>
+    client.post('/auth/2fa/enable', { code }).then((r) => r.data),
+
+  totpDisable: (password: string) =>
+    client.post('/auth/2fa/disable', { password }).then((r) => r.data),
 };

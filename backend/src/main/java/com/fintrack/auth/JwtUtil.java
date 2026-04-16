@@ -54,6 +54,38 @@ public class JwtUtil {
     }
 
     /**
+     * Generates a short-lived (5 min) challenge token issued to clients after
+     * a correct username/password but before the TOTP code is verified.
+     */
+    public String generateTotpChallengeToken(String userId) {
+        long expiry = 5 * 60 * 1000L;
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(userId)
+                .claim("type", "TOTP_CHALLENGE")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiry))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    /**
+     * Validates a TOTP challenge token and returns the user id.
+     * Returns null if the token is invalid, expired, or not of type TOTP_CHALLENGE.
+     */
+    public String validateTotpChallenge(String token) {
+        try {
+            Claims claims = validateAndParse(token);
+            if (!"TOTP_CHALLENGE".equals(claims.get("type", String.class))) {
+                return null;
+            }
+            return claims.getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
      * Generates a long-lived refresh token for token rotation.
      *
      * @param userId the user's UUID

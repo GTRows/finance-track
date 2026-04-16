@@ -51,6 +51,8 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
+  const [totpCode, setTotpCode] = useState('');
 
   const strengthScore = useMemo(() => getPasswordScore(password), [password]);
   const strengthLabels: Record<number, string> = {
@@ -86,6 +88,19 @@ export function LoginPage() {
     setTouched({});
     setShowPassword(false);
     setShowConfirm(false);
+    setChallengeToken(null);
+    setTotpCode('');
+  };
+
+  const completeAuth = (response: Awaited<ReturnType<typeof authApi.login>>) => {
+    if (response.requiresTotp && response.totpChallengeToken) {
+      setChallengeToken(response.totpChallengeToken);
+      return;
+    }
+    if (response.user && response.accessToken && response.refreshToken) {
+      setAuth(response.user, response.accessToken, response.refreshToken);
+      navigate('/', { replace: true });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,8 +121,24 @@ export function LoginPage() {
       const response = isRegister
         ? await authApi.register({ username, email, password })
         : await authApi.login({ username, password });
-      setAuth(response.user, response.accessToken, response.refreshToken);
-      navigate('/', { replace: true });
+      completeAuth(response);
+    } catch (err) {
+      const axiosError = err as AxiosError<ApiError>;
+      const message = axiosError.response?.data?.error || t('common.somethingWentWrong');
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTotpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!challengeToken || totpCode.length !== 6) return;
+    setLoading(true);
+    try {
+      const response = await authApi.verifyTotp({ challengeToken, code: totpCode });
+      completeAuth(response);
     } catch (err) {
       const axiosError = err as AxiosError<ApiError>;
       const message = axiosError.response?.data?.error || t('common.somethingWentWrong');
@@ -185,13 +216,74 @@ export function LoginPage() {
 
           <div className="mb-8">
             <h1 className="text-2xl font-semibold tracking-tight">
-              {isRegister ? t('auth.createAccount') : t('auth.welcomeBack')}
+              {challengeToken
+                ? t('auth.totpTitle')
+                : isRegister
+                  ? t('auth.createAccount')
+                  : t('auth.welcomeBack')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5">
-              {isRegister ? t('auth.createAccountSubtitle') : t('auth.signInSubtitle')}
+              {challengeToken
+                ? t('auth.totpSubtitle')
+                : isRegister
+                  ? t('auth.createAccountSubtitle')
+                  : t('auth.signInSubtitle')}
             </p>
           </div>
 
+          {challengeToken ? (
+            <form onSubmit={handleTotpSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="totp">{t('auth.totpCode')}</Label>
+                <Input
+                  id="totp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123 456"
+                  autoFocus
+                  required
+                  className="font-mono tracking-[0.4em] text-center text-lg"
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2.5">
+                  <p className="text-sm text-destructive">{error}</p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={loading || totpCode.length !== 6}
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    {t('auth.totpVerify')}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setChallengeToken(null);
+                  setTotpCode('');
+                  setError(null);
+                }}
+                className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                {t('common.back')}
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="username">{t('auth.username')}</Label>
@@ -315,20 +407,23 @@ export function LoginPage() {
               )}
             </Button>
           </form>
+          )}
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            {isRegister ? t('auth.haveAccount') : t('auth.noAccount')}{' '}
-            <button
-              type="button"
-              className="text-primary hover:text-primary/80 font-medium transition-colors cursor-pointer"
-              onClick={() => {
-                setIsRegister(!isRegister);
-                resetForm();
-              }}
-            >
-              {isRegister ? t('auth.signIn') : t('auth.createAccount')}
-            </button>
-          </p>
+          {!challengeToken && (
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              {isRegister ? t('auth.haveAccount') : t('auth.noAccount')}{' '}
+              <button
+                type="button"
+                className="text-primary hover:text-primary/80 font-medium transition-colors cursor-pointer"
+                onClick={() => {
+                  setIsRegister(!isRegister);
+                  resetForm();
+                }}
+              >
+                {isRegister ? t('auth.signIn') : t('auth.createAccount')}
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -65,7 +65,11 @@
     "featureBudgetDesc": "Monthly income & expense analysis with trends",
     "featureSecureTitle": "Secure & Private",
     "featureSecureDesc": "Self-hosted, your data stays on your server",
-    "footer": "Open source  ·  Self-hosted  ·  Your data, your server"
+    "footer": "Open source  ·  Self-hosted  ·  Your data, your server",
+    "totpTitle": "Two-step verification",
+    "totpSubtitle": "Enter the 6-digit code from your authenticator app.",
+    "totpCode": "Authentication code",
+    "totpVerify": "Verify"
   },
   "dashboard": {
     "greetingMorning": "Good morning",
@@ -284,7 +288,18 @@
     "importColStatus": "Status",
     "importNoFile": "Choose a file first.",
     "importPreviewFailed": "Preview failed.",
-    "importFailed": "Import failed."
+    "importFailed": "Import failed.",
+    "totpEnabledLabel": "Two-factor authentication is on",
+    "totpDisabledLabel": "Two-factor authentication is off",
+    "totpDescription": "Adds a time-based 6-digit code from an authenticator app on top of your password.",
+    "totpEnable": "Enable 2FA",
+    "totpDisable": "Disable 2FA",
+    "totpScanHint": "Scan with Google Authenticator, 1Password, Authy, or any TOTP app. Or paste the key manually.",
+    "totpManualKey": "Setup key",
+    "totpCopy": "Copy setup key",
+    "totpConfirmCode": "Enter the 6-digit code from your app",
+    "totpActivate": "Activate",
+    "totpDisableHint": "Enter your password to turn off 2FA."
   },
   "reports": {
     "downloadPdf": "Download PDF report",
