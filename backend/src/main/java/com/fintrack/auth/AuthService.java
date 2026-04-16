@@ -38,6 +38,7 @@ public class AuthService {
     private final TotpService totpService;
     private final AuditService auditService;
     private final LoginRateLimiter loginRateLimiter;
+    private final EmailVerificationService emailVerificationService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -63,6 +64,11 @@ public class AuthService {
 
         log.info("User registered: {}", user.getUsername());
         auditService.success(AuditAction.REGISTER, user.getId(), user.getUsername());
+        try {
+            emailVerificationService.sendVerification(user.getId());
+        } catch (Exception e) {
+            log.warn("Failed to queue verification email for {}: {}", user.getUsername(), e.getMessage());
+        }
         return buildAuthResponse(user);
     }
 
@@ -241,6 +247,7 @@ public class AuthService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole().name(),
+                user.isEmailVerified(),
                 user.getCreatedAt() != null ? user.getCreatedAt().toString() : null
         );
     }

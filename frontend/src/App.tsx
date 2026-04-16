@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PortfolioPage } from '@/pages/PortfolioPage';
 import { PortfolioDetailPage } from '@/pages/PortfolioDetailPage';
@@ -17,6 +18,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route
         element={
           <ProtectedRoute>

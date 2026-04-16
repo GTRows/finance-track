@@ -8,6 +8,7 @@ public record UserProfileResponse(
         String username,
         String email,
         String role,
+        boolean emailVerified,
         String createdAt
 ) {
 }

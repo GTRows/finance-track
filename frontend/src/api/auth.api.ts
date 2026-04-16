@@ -30,4 +30,16 @@ export const authApi = {
 
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     client.post('/auth/password', data).then((r) => r.data),
+
+  confirmEmailVerification: (token: string) =>
+    client.post('/auth/email-verify/confirm', { token }).then((r) => r.data),
+
+  resendEmailVerification: () =>
+    client.post('/auth/email-verify/resend').then((r) => r.data),
+
+  requestPasswordReset: (email: string) =>
+    client.post('/auth/password-reset/request', { email }).then((r) => r.data),
+
+  confirmPasswordReset: (data: { token: string; newPassword: string }) =>
+    client.post('/auth/password-reset/confirm', data).then((r) => r.data),
 };

@@ -16,4 +16,8 @@ public final class AuditAction {
     public static final String PASSWORD_CHANGE = "PASSWORD_CHANGE";
     public static final String SESSION_REVOKE = "SESSION_REVOKE";
     public static final String SESSION_REVOKE_OTHERS = "SESSION_REVOKE_OTHERS";
+    public static final String EMAIL_VERIFICATION_SENT = "EMAIL_VERIFICATION_SENT";
+    public static final String EMAIL_VERIFICATION_CONFIRMED = "EMAIL_VERIFICATION_CONFIRMED";
+    public static final String PASSWORD_RESET_REQUESTED = "PASSWORD_RESET_REQUESTED";
+    public static final String PASSWORD_RESET_CONFIRMED = "PASSWORD_RESET_CONFIRMED";
 }

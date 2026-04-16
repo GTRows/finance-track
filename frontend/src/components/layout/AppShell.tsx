@@ -26,6 +26,7 @@ import { NotificationBell } from './NotificationBell';
 import { useLivePrices } from '@/hooks/useLivePrices';
 import { useSettings } from '@/hooks/useSettings';
 import { BackendStatusBanner } from './BackendStatusBanner';
+import { EmailVerificationBanner } from './EmailVerificationBanner';
 
 export function AppShell() {
   useLivePrices();
@@ -200,6 +201,7 @@ export function AppShell() {
         </header>
 
         <BackendStatusBanner />
+        <EmailVerificationBanner />
 
         {/* Page content */}
         <main className="flex-1 p-4 sm:p-6">
