@@ -8,9 +8,10 @@ import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, type Theme } from '@/store/theme.store';
 import { useSettingsStore } from '@/store/settings.store';
 import { useUpdateSettings } from '@/hooks/useSettings';
-import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet } from 'lucide-react';
+import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet, ScrollText } from 'lucide-react';
 import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
 import { TotpSection } from '@/components/settings/TotpSection';
+import { AuditLogSection } from '@/components/settings/AuditLogSection';
 import { cn } from '@/lib/utils';
 
 const CURRENCY_OPTIONS = ['TRY', 'USD', 'EUR', 'GBP'];
@@ -221,6 +222,16 @@ export function SettingsPage() {
           </div>
         </div>
       </SettingsSection>
+
+      {user?.role === 'ADMIN' && (
+        <SettingsSection
+          icon={ScrollText}
+          title={t('audit.title')}
+          description={t('audit.description')}
+        >
+          <AuditLogSection />
+        </SettingsSection>
+      )}
     </div>
   );
 }

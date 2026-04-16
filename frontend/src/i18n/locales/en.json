@@ -443,5 +443,17 @@
       "triggered": "Triggered",
       "disabled": "Disabled"
     }
+  },
+  "audit": {
+    "title": "Audit log",
+    "description": "Recent security-relevant events for this account",
+    "empty": "No audit events yet",
+    "loadError": "Could not load audit log",
+    "time": "Time",
+    "action": "Action",
+    "user": "User",
+    "ip": "IP",
+    "detail": "Detail",
+    "pageInfo": "Page {{page}} of {{total}} — {{count}} events"
   }
 }

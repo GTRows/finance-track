@@ -443,5 +443,17 @@
       "triggered": "Tetiklendi",
       "disabled": "Devre dışı"
     }
+  },
+  "audit": {
+    "title": "Denetim kaydı",
+    "description": "Hesapla ilgili son güvenlik olayları",
+    "empty": "Henüz denetim kaydı yok",
+    "loadError": "Denetim kaydı yüklenemedi",
+    "time": "Zaman",
+    "action": "İşlem",
+    "user": "Kullanıcı",
+    "ip": "IP",
+    "detail": "Ayrıntı",
+    "pageInfo": "Sayfa {{page}} / {{total}} — {{count}} olay"
   }
 }
