@@ -101,9 +101,34 @@ To safely expose to the internet:
 5. **Strong secrets:** Generate JWT_SECRET with `openssl rand -base64 64`
 6. **Strong passwords:** POSTGRES_PASSWORD and REDIS_PASSWORD should be 32+ chars
 
+## Two-Factor Authentication (TOTP)
+
+Optional, per-user. Compatible with any RFC 6238 authenticator (Google Authenticator,
+Authy, 1Password, Bitwarden, etc.).
+
+**Enrollment (Settings → Security):**
+1. `POST /api/v1/auth/2fa/setup` — backend generates a 160-bit Base32 secret, stores
+   it unenabled, returns the secret plus an `otpauth://` URI. Frontend renders the URI
+   as a QR code.
+2. User scans QR, types the 6-digit code back, frontend calls `POST /api/v1/auth/2fa/enable`.
+   Backend verifies the code against the stored secret and flips `users.totp_enabled = true`.
+
+**Login flow when TOTP is enabled:**
+1. User submits password. Backend recognises `totp_enabled` and, instead of issuing an
+   access token, returns a short-lived (5 min) JWT challenge token with claim
+   `type=TOTP_CHALLENGE`.
+2. Frontend renders a 6-digit code prompt, then calls `POST /api/v1/auth/2fa/verify`
+   with `{ challengeToken, code }`. Backend validates the challenge claim + the TOTP
+   code (±1 step drift) and returns the real access/refresh pair.
+
+**Disabling:** `POST /api/v1/auth/2fa/disable` requires the user's password again; the
+stored secret is wiped.
+
+**Secret handling:** Secrets live in `users.totp_secret` (VARCHAR 64). They never leave
+the backend after enrollment except during the one-time provisioning response.
+
 ## What's NOT in Scope (yet)
 
-- 2FA / TOTP — future
 - OAuth2 (Google/GitHub login) — future
 - IP allowlist — can be added in Nginx if needed
 - Audit logging (who changed what) — future

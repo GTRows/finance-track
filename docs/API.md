@@ -36,8 +36,55 @@ Create new user account.
 // Request
 { "username": "ali", "password": "securepass123" }
 
-// Response 200 — same as register response
+// Response 200 — same as register response when 2FA is disabled.
+// When 2FA is enabled the response instead carries a challenge token:
+{ "requiresTotp": true, "totpChallengeToken": "eyJ..." }
+
 // Response 401 — invalid credentials
+```
+
+### POST /api/v1/auth/2fa/verify
+Second step of login when the account has TOTP enabled.
+```json
+// Request
+{ "challengeToken": "eyJ...", "code": "123456" }
+
+// Response 200 — full auth response (accessToken / refreshToken / user)
+// Response 401 — invalid code or expired challenge token
+```
+
+### GET /api/v1/auth/2fa/status
+```json
+// Response 200
+{ "enabled": true }
+```
+
+### POST /api/v1/auth/2fa/setup
+Generates a secret and returns provisioning data. Does not enable 2FA yet.
+```json
+// Response 200
+{
+  "secret": "JBSWY3DPEHPK3PXP...",
+  "otpauthUrl": "otpauth://totp/FinTrack%20Pro:ali?secret=...&issuer=FinTrack%20Pro&..."
+}
+```
+
+### POST /api/v1/auth/2fa/enable
+Confirms the pending secret by verifying a code from the authenticator app.
+```json
+// Request
+{ "code": "123456" }
+// Response 204 — TOTP is now active for this user
+// Response 400 — code is wrong or no secret has been provisioned
+```
+
+### POST /api/v1/auth/2fa/disable
+Requires the current password.
+```json
+// Request
+{ "password": "securepass123" }
+// Response 204 — secret wiped and TOTP disabled
+// Response 401 — wrong password
 ```
 
 ### POST /api/v1/auth/refresh

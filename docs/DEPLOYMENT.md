@@ -86,7 +86,24 @@ powershell -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
 
 Flyway applies pending migrations on backend start.
 
-## 7. Troubleshooting
+## 7. Monitoring (Prometheus + Grafana)
+
+The compose stack includes a metrics stack wired to the backend's
+`/api/actuator/prometheus` endpoint.
+
+- **Prometheus** runs internally (no published ports) and scrapes the backend every 30s.
+  Config at `monitoring/prometheus.yml`, retention 30 days.
+- **Grafana** is published on the host at `http://localhost:${GRAFANA_PORT}`
+  (default 3001). Login with `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` from
+  `.env`.
+- The "FinTrack Overview" dashboard is provisioned automatically from
+  `monitoring/grafana/dashboards/fintrack-overview.json` — CPU, heap, live threads,
+  Hikari connections, HTTP request rate / P95 latency / 4xx-5xx rate, JVM memory.
+
+To keep Grafana private, leave `GRAFANA_PORT` bound to localhost in Docker Desktop
+(default behaviour) and don't add an Nginx route for it.
+
+## 8. Troubleshooting
 
 ```powershell
 docker compose ps
