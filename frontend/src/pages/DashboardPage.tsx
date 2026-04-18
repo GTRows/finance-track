@@ -21,6 +21,7 @@ import { usePortfolioSnapshotsAggregate } from '@/hooks/useAnalytics';
 import { LivePriceTicker } from '@/components/dashboard/LivePriceTicker';
 import { NetWorthHistoryCard } from '@/components/dashboard/NetWorthHistoryCard';
 import { SavingsGoalsCard } from '@/components/dashboard/SavingsGoalsCard';
+import { DebtTrackerCard } from '@/components/dashboard/DebtTrackerCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatTRY, formatPercent, formatMonth, formatShortDate } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
@@ -219,6 +220,8 @@ export function DashboardPage() {
       <NetWorthHistoryCard />
 
       <SavingsGoalsCard />
+
+      <DebtTrackerCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Portfolios */}

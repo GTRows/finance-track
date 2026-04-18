@@ -735,6 +735,79 @@ Removes a single contribution. Returns 204.
 
 ---
 
+## Debts
+
+### GET /api/v1/debts
+Active debts with amortization-derived fields.
+```json
+// Response 200
+[
+  {
+    "id": "uuid",
+    "name": "Home mortgage",
+    "debtType": "MORTGAGE",
+    "principal": 2500000.00,
+    "annualRate": 0.1750,
+    "termMonths": 240,
+    "startDate": "2024-06-01",
+    "notes": null,
+    "scheduledMonthlyPayment": 39540.12,
+    "totalScheduledPaid": 9489628.80,
+    "totalActuallyPaid": 890000.00,
+    "remainingBalance": 2410860.00,
+    "totalInterest": 6989628.80,
+    "scheduledPayoffDate": "2044-06-01",
+    "projectedPayoffDate": "2044-02-01",
+    "progressRatio": 0.0938,
+    "monthsAhead": 4,
+    "status": "ACTIVE",
+    "nextPayments": [
+      { "dueDate": "2026-05-01", "payment": 39540.12, "principal": 4368.87, "interest": 35171.25, "remainingBalance": 2406491.13 }
+    ]
+  }
+]
+```
+`debtType` accepts `MORTGAGE`, `AUTO`, `PERSONAL`, `CREDIT_CARD`, `STUDENT`,
+`OTHER`. `annualRate` is a decimal (0.175 = 17.5% APR). `monthsAhead` is
+positive when projected payoff is earlier than the scheduled one, negative when
+later. `nextPayments` previews the next 6 months of amortization.
+
+### POST /api/v1/debts
+```json
+{
+  "name": "Car loan",
+  "debtType": "AUTO",
+  "principal": 450000.00,
+  "annualRate": 0.22,
+  "termMonths": 48,
+  "startDate": "2026-01-15",
+  "notes": "Zero down"
+}
+```
+
+### PUT /api/v1/debts/{id}
+Same body as POST. Returns the updated debt with recomputed projections.
+
+### DELETE /api/v1/debts/{id}
+Soft-archives the debt. Returns 204.
+
+### GET /api/v1/debts/{id}/payments
+Payments recorded against the debt, oldest first.
+
+### POST /api/v1/debts/{id}/payments
+```json
+{
+  "paymentDate": "2026-04-01",
+  "amount": 40000.00,
+  "note": "Regular monthly"
+}
+```
+
+### DELETE /api/v1/debts/{id}/payments/{paymentId}
+Removes a single payment. Returns 204.
+
+---
+
 ## Reports
 
 ### GET /api/v1/reports/portfolio/{id}?format=pdf&period=2026-04
