@@ -105,6 +105,35 @@ GET https://v6.exchangerate-api.com/v6/{API_KEY}/pair/USD/TRY
 }
 ```
 
+## gold-api.com (Precious Metals Spot)
+
+**URL:** https://api.gold-api.com
+**Free:** Yes, keyless
+**Coverage:** XAU (gold), XAG (silver), XPT (platinum), XPD (palladium) — USD per troy ounce
+
+### Endpoint
+```
+GET https://api.gold-api.com/price/XAU
+```
+
+### Response
+```json
+{
+  "name": "Gold",
+  "price": 2345.12,
+  "symbol": "XAU",
+  "updatedAt": "2026-04-17T16:10:00Z"
+}
+```
+
+### Asset metadata
+- `metalsSymbol` (required): XAU / XAG / XPT / XPD
+- `metalsUnit` (optional): `ounce` (default) or `gram` — scales USD by `1 / 31.1034768`
+
+TRY price is computed by multiplying USD-per-unit by the current USD/TRY rate from the
+ExchangeRate-API client. Assets keyed by `metalsSymbol` take precedence over `tefasCode`
+when both are present on a GOLD asset.
+
 ## Sync Scheduler Logic
 
 ```java

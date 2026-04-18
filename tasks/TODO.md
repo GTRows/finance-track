@@ -234,7 +234,7 @@ email-reminder work in later phases.
 - [x] 9.1  Watchlist (assets tracked without owning)
 - [x] 9.2  Target allocation + rebalance drift view
 - [x] 9.3  Risk metrics -- Sharpe, volatility, max drawdown (computed from snapshots)
-- [ ] 9.4  Precious metals spot (goldapi.io free tier if available, otherwise compute from exchange APIs)
+- [x] 9.4  Precious metals spot via gold-api.com (keyless USD/oz) × live USD/TRY FX rate
 - [ ] 9.5  BIST equities via Alpha Vantage or Finnhub free tier (e.g. `THYAO.IS`)
 
 ## Phase 10 -- Budget & Expenses Deepening

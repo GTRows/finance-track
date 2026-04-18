@@ -5,6 +5,7 @@ import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.PriceHistory;
 import com.fintrack.price.client.CoinGeckoClient;
 import com.fintrack.price.client.ExchangeRateClient;
+import com.fintrack.price.client.PreciousMetalsClient;
 import com.fintrack.price.client.TefasClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,17 +34,21 @@ import java.util.UUID;
 @Slf4j
 public class PriceSyncService {
 
+    private static final BigDecimal GRAMS_PER_OUNCE = new BigDecimal("31.1034768");
+
     private final AssetRepository assetRepository;
     private final PriceHistoryRepository priceHistoryRepository;
     private final CoinGeckoClient coinGeckoClient;
     private final ExchangeRateClient exchangeRateClient;
     private final TefasClient tefasClient;
+    private final PreciousMetalsClient preciousMetalsClient;
 
     /** Summary row returned to controllers after a refresh. */
     public record SyncResult(
             int cryptoUpdated,
             int currencyUpdated,
             int fundUpdated,
+            int metalUpdated,
             Instant runAt
     ) {
     }
@@ -53,11 +59,12 @@ public class PriceSyncService {
         int crypto = refreshCrypto();
         int currency = refreshCurrencies();
         int funds = refreshFunds();
-        return new SyncResult(crypto, currency, funds, Instant.now());
+        int metals = refreshMetals();
+        return new SyncResult(crypto, currency, funds, metals, Instant.now());
     }
 
     /**
-     * Fast refresh: crypto + currency only. Used by the 30 second scheduler
+     * Fast refresh: crypto + currency + metals. Used by the 30 second scheduler
      * since those sources are rate-limit friendly. Fund prices come from TEFAS
      * which only changes once per day and runs on its own hourly schedule.
      */
@@ -65,7 +72,8 @@ public class PriceSyncService {
     public SyncResult refreshLive() {
         int crypto = refreshCrypto();
         int currency = refreshCurrencies();
-        return new SyncResult(crypto, currency, 0, Instant.now());
+        int metals = refreshMetals();
+        return new SyncResult(crypto, currency, 0, metals, Instant.now());
     }
 
     /** Updates all CRYPTO assets that carry a {@code coingeckoId} in metadata. */
@@ -145,6 +153,8 @@ public class PriceSyncService {
      * Updates FUND and GOLD assets that carry a {@code tefasCode} in metadata.
      * TEFAS has no batch endpoint, so this iterates one fund at a time with
      * a small delay between requests to stay friendly to the public server.
+     * GOLD assets carrying a {@code metalsSymbol} are skipped here and handled
+     * by {@link #refreshMetals()} instead.
      */
     @Transactional
     public int refreshFunds() {
@@ -157,6 +167,7 @@ public class PriceSyncService {
         Instant now = Instant.now();
 
         for (Asset asset : fundAssets) {
+            if (readMetadataString(asset, "metalsSymbol") != null) continue;
             String code = readMetadataString(asset, "tefasCode");
             if (code == null) continue;
             total++;
@@ -185,6 +196,62 @@ public class PriceSyncService {
         if (total > 0) {
             log.info("Fund price refresh updated {}/{} assets", updated, total);
         }
+        return updated;
+    }
+
+    /**
+     * Updates GOLD assets that carry a {@code metalsSymbol} (XAU/XAG/XPT/XPD).
+     * Fetches USD-per-ounce from the metals client, multiplies by the current
+     * USD/TRY rate, and optionally scales to a gram price when the asset has
+     * {@code metalsUnit=gram} in its metadata.
+     */
+    @Transactional
+    public int refreshMetals() {
+        List<Asset> goldAssets = assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.GOLD);
+        List<Asset> metalAssets = new ArrayList<>();
+        Set<String> symbols = new HashSet<>();
+        for (Asset a : goldAssets) {
+            String sym = readMetadataString(a, "metalsSymbol");
+            if (sym == null) continue;
+            metalAssets.add(a);
+            symbols.add(sym.toUpperCase());
+        }
+        if (metalAssets.isEmpty()) return 0;
+
+        Map<String, BigDecimal> usdPerOunce = preciousMetalsClient.fetchUsdPerOunce(symbols);
+        if (usdPerOunce.isEmpty()) {
+            log.warn("Metal price refresh: no prices returned for symbols {}", symbols);
+            return 0;
+        }
+
+        Map<String, BigDecimal> fx = exchangeRateClient.fetchTryRates(Set.of("USD"));
+        BigDecimal usdTry = fx.get("USD");
+        if (usdTry == null || usdTry.signum() <= 0) {
+            log.warn("Metal price refresh skipped: USD/TRY rate unavailable");
+            return 0;
+        }
+
+        Instant now = Instant.now();
+        int updated = 0;
+        for (Asset asset : metalAssets) {
+            String sym = readMetadataString(asset, "metalsSymbol").toUpperCase();
+            BigDecimal usd = usdPerOunce.get(sym);
+            if (usd == null || usd.signum() <= 0) continue;
+
+            String unit = readMetadataString(asset, "metalsUnit");
+            BigDecimal usdForUnit = "gram".equalsIgnoreCase(unit)
+                    ? usd.divide(GRAMS_PER_OUNCE, 6, RoundingMode.HALF_UP)
+                    : usd;
+            BigDecimal tryPrice = usdForUnit.multiply(usdTry).setScale(4, RoundingMode.HALF_UP);
+
+            asset.setPrice(tryPrice);
+            asset.setPriceUsd(usdForUnit.setScale(4, RoundingMode.HALF_UP));
+            asset.setPriceUpdatedAt(now);
+            recordHistory(asset, now);
+            updated++;
+        }
+
+        log.info("Metal price refresh updated {}/{} assets", updated, metalAssets.size());
         return updated;
     }
 
@@ -220,6 +287,27 @@ public class PriceSyncService {
                 return true;
             }
             case FUND, GOLD -> {
+                String metalsSymbol = readMetadataString(asset, "metalsSymbol");
+                if (metalsSymbol != null) {
+                    Map<String, BigDecimal> usdPerOunce = preciousMetalsClient
+                            .fetchUsdPerOunce(List.of(metalsSymbol));
+                    BigDecimal usd = usdPerOunce.get(metalsSymbol.toUpperCase());
+                    if (usd == null || usd.signum() <= 0) return false;
+
+                    Map<String, BigDecimal> fx = exchangeRateClient.fetchTryRates(Set.of("USD"));
+                    BigDecimal usdTry = fx.get("USD");
+                    if (usdTry == null || usdTry.signum() <= 0) return false;
+
+                    String unit = readMetadataString(asset, "metalsUnit");
+                    BigDecimal usdForUnit = "gram".equalsIgnoreCase(unit)
+                            ? usd.divide(GRAMS_PER_OUNCE, 6, RoundingMode.HALF_UP)
+                            : usd;
+                    asset.setPrice(usdForUnit.multiply(usdTry).setScale(4, RoundingMode.HALF_UP));
+                    asset.setPriceUsd(usdForUnit.setScale(4, RoundingMode.HALF_UP));
+                    asset.setPriceUpdatedAt(now);
+                    recordHistory(asset, now);
+                    return true;
+                }
                 String code = readMetadataString(asset, "tefasCode");
                 if (code == null) return false;
                 String typeCode = readMetadataString(asset, "tefasType");
