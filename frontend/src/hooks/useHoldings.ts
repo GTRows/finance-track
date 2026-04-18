@@ -39,3 +39,31 @@ export function useDeleteHolding(portfolioId: string) {
     },
   });
 }
+
+/** Toggles the pinned flag on a holding. Optimistically updates the cache so
+ *  the star flips instantly; React Query's refetch reconciles on error. */
+export function useToggleHoldingPin(portfolioId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (holdingId: string) => holdingApi.togglePin(portfolioId, holdingId),
+    onMutate: async (holdingId) => {
+      await qc.cancelQueries({ queryKey: holdingsKey(portfolioId) });
+      const prev = qc.getQueryData<ReturnType<typeof holdingApi.list> extends Promise<infer T> ? T : never>(
+        holdingsKey(portfolioId)
+      );
+      if (prev) {
+        qc.setQueryData(
+          holdingsKey(portfolioId),
+          prev.map((h) => (h.id === holdingId ? { ...h, pinned: !h.pinned } : h))
+        );
+      }
+      return { prev };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(holdingsKey(portfolioId), ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+    },
+  });
+}

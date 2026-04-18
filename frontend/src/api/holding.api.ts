@@ -16,4 +16,9 @@ export const holdingApi = {
   delete: async (portfolioId: string, holdingId: string): Promise<void> => {
     await client.delete(`/portfolios/${portfolioId}/holdings/${holdingId}`);
   },
+
+  togglePin: async (portfolioId: string, holdingId: string): Promise<Holding> => {
+    const { data } = await client.put<Holding>(`/portfolios/${portfolioId}/holdings/${holdingId}/pin`);
+    return data;
+  },
 };

@@ -44,6 +44,10 @@ public class PortfolioHolding {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean pinned = false;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;

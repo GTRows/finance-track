@@ -25,6 +25,7 @@ public record HoldingResponse(
         BigDecimal costBasisTry,
         BigDecimal pnlTry,
         BigDecimal pnlPercent,
+        boolean pinned,
         Instant priceUpdatedAt,
         Instant updatedAt
 ) {
@@ -65,6 +66,7 @@ public record HoldingResponse(
                 costBasis,
                 pnl,
                 pnlPercent,
+                h.isPinned(),
                 asset.getPriceUpdatedAt(),
                 h.getUpdatedAt()
         );

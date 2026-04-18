@@ -58,8 +58,27 @@ public class HoldingService {
                     }
                     return HoldingResponse.from(h, asset);
                 })
-                .sorted((a, b) -> a.assetSymbol().compareToIgnoreCase(b.assetSymbol()))
+                .sorted((a, b) -> {
+                    if (a.pinned() != b.pinned()) return a.pinned() ? -1 : 1;
+                    return a.assetSymbol().compareToIgnoreCase(b.assetSymbol());
+                })
                 .toList();
+    }
+
+    /** Toggles the pin flag on a single holding. Returns the refreshed response. */
+    @Transactional
+    public HoldingResponse togglePin(UUID userId, UUID portfolioId, UUID holdingId) {
+        requireOwnedPortfolio(userId, portfolioId);
+
+        PortfolioHolding holding = holdingRepository.findByIdAndPortfolioId(holdingId, portfolioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Holding not found"));
+        holding.setPinned(!holding.isPinned());
+
+        Asset asset = assetRepository.findById(holding.getAssetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
+
+        log.info("Holding pin toggled: id={} pinned={}", holdingId, holding.isPinned());
+        return HoldingResponse.from(holding, asset);
     }
 
     /** Adds a new holding to the user's portfolio. Fails if the asset is already held. */

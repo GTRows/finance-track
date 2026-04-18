@@ -185,6 +185,8 @@
     "tableValue": "Value",
     "tablePnl": "P&L",
     "deleteHolding": "Delete holding",
+    "pin": "Pin to top",
+    "unpin": "Unpin",
     "dialogTitle": "Add Holding",
     "dialogDescription": "Pick an asset and enter the quantity and average cost you paid for it.",
     "assetLabel": "Asset",

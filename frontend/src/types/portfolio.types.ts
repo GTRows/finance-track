@@ -99,6 +99,7 @@ export interface Holding {
   costBasisTry: number | null;
   pnlTry: number | null;
   pnlPercent: number | null;
+  pinned: boolean;
   priceUpdatedAt: string | null;
   updatedAt: string;
 }

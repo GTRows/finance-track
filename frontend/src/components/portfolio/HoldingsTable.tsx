@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Star } from 'lucide-react';
 import type { Holding } from '@/types/portfolio.types';
 import { formatTRY, formatPercent } from '@/utils/formatters';
-import { useDeleteHolding } from '@/hooks/useHoldings';
+import { useDeleteHolding, useToggleHoldingPin } from '@/hooks/useHoldings';
 import { cn } from '@/lib/utils';
 
 interface HoldingsTableProps {
@@ -16,6 +16,7 @@ type FlashDirection = 'up' | 'down' | null;
 export function HoldingsTable({ portfolioId, holdings }: HoldingsTableProps) {
   const { t } = useTranslation();
   const deleteMutation = useDeleteHolding(portfolioId);
+  const togglePin = useToggleHoldingPin(portfolioId);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const previousPrices = useRef<Record<string, number | null>>({});
@@ -59,6 +60,7 @@ export function HoldingsTable({ portfolioId, holdings }: HoldingsTableProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-xs uppercase tracking-wider text-muted-foreground">
+            <th className="w-10 px-2 py-3"></th>
             <th className="text-left font-medium px-5 py-3">{t('holdings.tableAsset')}</th>
             <th className="text-right font-medium px-3 py-3">{t('holdings.tableQuantity')}</th>
             <th className="text-right font-medium px-3 py-3">{t('holdings.tableAvgCost')}</th>
@@ -87,8 +89,27 @@ export function HoldingsTable({ portfolioId, holdings }: HoldingsTableProps) {
             return (
               <tr
                 key={h.id}
-                className="group border-b last:border-b-0 hover:bg-accent/30 transition-colors"
+                className={cn(
+                  'group border-b last:border-b-0 hover:bg-accent/30 transition-colors',
+                  h.pinned && 'bg-amber-500/[0.04]'
+                )}
               >
+                <td className="px-2 py-3.5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => togglePin.mutate(h.id)}
+                    title={h.pinned ? t('holdings.unpin') : t('holdings.pin')}
+                    aria-pressed={h.pinned}
+                    className={cn(
+                      'w-7 h-7 rounded-md flex items-center justify-center mx-auto transition-colors cursor-pointer',
+                      h.pinned
+                        ? 'text-amber-400 opacity-100'
+                        : 'text-muted-foreground hover:text-amber-400 opacity-30 group-hover:opacity-100 focus:opacity-100'
+                    )}
+                  >
+                    <Star className={cn('w-4 h-4', h.pinned && 'fill-amber-400')} />
+                  </button>
+                </td>
                 <td className="px-5 py-3.5">
                   <div className="flex flex-col">
                     <span className="font-medium">{h.assetSymbol}</span>

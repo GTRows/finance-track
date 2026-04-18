@@ -185,6 +185,8 @@
     "tableValue": "Değer",
     "tablePnl": "K/Z",
     "deleteHolding": "Varlığı sil",
+    "pin": "Üste sabitle",
+    "unpin": "Sabitlemeyi kaldır",
     "dialogTitle": "Varlık Ekle",
     "dialogDescription": "Bir varlık seçin, sahip olduğunuz miktarı ve ortalama maliyeti girin.",
     "assetLabel": "Varlık",

@@ -50,4 +50,13 @@ public class HoldingController {
         holdingService.delete(user.getId(), portfolioId, holdingId);
         return ResponseEntity.noContent().build();
     }
+
+    /** Toggles the pinned flag on a holding (favourite at top of list). */
+    @PutMapping("/{holdingId}/pin")
+    public ResponseEntity<HoldingResponse> togglePin(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @PathVariable UUID portfolioId,
+            @PathVariable UUID holdingId) {
+        return ResponseEntity.ok(holdingService.togglePin(user.getId(), portfolioId, holdingId));
+    }
 }

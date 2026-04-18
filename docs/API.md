@@ -246,6 +246,11 @@ Full portfolio with holdings detail.
 }
 ```
 
+### PUT /api/v1/portfolios/{portfolioId}/holdings/{holdingId}/pin
+Toggle the `pinned` flag on a holding. Pinned holdings float to the top of the
+list response and render with a filled star in the UI. Response is the same
+`HoldingResponse` shape returned by the holdings list.
+
 ### GET /api/v1/portfolios/{id}/history?from=2026-01-01&to=2026-04-08
 Historical snapshots for chart.
 ```json

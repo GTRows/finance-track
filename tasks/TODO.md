@@ -275,7 +275,7 @@ email-reminder work in later phases.
 
 - [ ] 14.1 Global command palette (Cmd/Ctrl+K over holdings, bills, transactions)
 - [ ] 14.2 Bulk operations (multi-select delete / edit / tag)
-- [ ] 14.3 Pinned holdings (favourites at top of list)
+- [x] 14.3 Pinned holdings (favourites at top of list)
 - [ ] 14.4 First-run onboarding wizard
 - [ ] 14.5 PWA manifest + installable + offline shell
 
