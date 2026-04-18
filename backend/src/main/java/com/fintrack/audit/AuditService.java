@@ -22,20 +22,31 @@ public class AuditService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(String action, AuditLog.Status status, UUID userId, String username, String detail) {
+        String ip = RequestContext.clientIp();
+        String ua = truncate(RequestContext.userAgent(), USER_AGENT_MAX);
+        String safeDetail = truncate(detail, DETAIL_MAX);
+
         AuditLog entry = AuditLog.builder()
                 .action(action)
                 .status(status)
                 .userId(userId)
                 .username(username)
-                .detail(truncate(detail, DETAIL_MAX))
-                .ipAddress(RequestContext.clientIp())
-                .userAgent(truncate(RequestContext.userAgent(), USER_AGENT_MAX))
+                .detail(safeDetail)
+                .ipAddress(ip)
+                .userAgent(ua)
                 .build();
         try {
             repository.save(entry);
         } catch (Exception e) {
             log.warn("Audit log write failed for action={}: {}", action, e.getMessage());
         }
+
+        log.info("AUDIT action={} status={} user=\"{}\" ip={} detail=\"{}\"",
+                action,
+                status,
+                username == null ? "" : username,
+                ip == null ? "" : ip,
+                safeDetail == null ? "" : safeDetail.replace("\"", "'"));
     }
 
     public void success(String action, UUID userId, String username) {

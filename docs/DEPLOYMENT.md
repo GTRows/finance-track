@@ -177,7 +177,30 @@ The Promtail config lives at `monitoring/promtail.yml`. It reads the `timestamp`
 `level`, `logger`, `msg`, `userId`, and `requestId` fields from each JSON log
 line; everything else stays in the log body.
 
-## 11. Homarr dashboard tile
+## 11. CrowdSec integration (optional)
+
+If your homelab runs CrowdSec, FinTrack emits a stable audit line for every
+auth-adjacent event (`LOGIN`, `TOTP_VERIFY`, `PASSWORD_CHANGE`, etc.). Ready
+snippets live in `docs/crowdsec/`:
+
+- `fintrack-audit.yaml` -- parser that extracts `action`, `status`, `username`,
+  `source_ip`, and `detail` from each line.
+- `fintrack-bruteforce.yaml` -- scenario that bans a source IP after 5 failed
+  login / 2FA attempts within 5 minutes.
+
+Install on the CrowdSec host:
+
+```bash
+sudo cp docs/crowdsec/fintrack-audit.yaml /etc/crowdsec/parsers/s01-parse/
+sudo cp docs/crowdsec/fintrack-bruteforce.yaml /etc/crowdsec/scenarios/
+sudo systemctl reload crowdsec
+```
+
+Then point `acquis.yaml` at the backend log file (when shipping logs from the
+docker volume) or at the journald unit if you're collecting container logs
+upstream.
+
+## 12. Homarr dashboard tile
 
 If you run Homarr as the homelab launcher, FinTrack drops in as a standard app
 tile. The public-facing URL is `https://fatihaciroglu.dev` and the health

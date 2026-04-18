@@ -1,0 +1,31 @@
+# CrowdSec parser for the FinTrack structured audit log line.
+#
+# Every authentication-adjacent event in FinTrack writes one log line shaped:
+#
+#   AUDIT action=LOGIN status=FAILURE user="alice" ip=203.0.113.4 detail="Bad password"
+#
+# The backend writes this via SLF4J at INFO level from
+# `com.fintrack.audit.AuditService#record`. In the production profile both
+# stdout (JSON) and /var/log/fintrack/fintrack.log (plain text) carry it, so
+# CrowdSec can scrape either -- point its `acquis.yaml` at the file source.
+#
+# Install:
+#   sudo cp docs/crowdsec/fintrack-audit.yaml /etc/crowdsec/parsers/s01-parse/
+#   sudo cp docs/crowdsec/fintrack-bruteforce.yaml /etc/crowdsec/scenarios/
+#   sudo systemctl reload crowdsec
+
+onsuccess: next_stage
+filter: "evt.Parsed.program == 'fintrack'"
+name: fintrack/audit
+description: "Parse FinTrack audit log events"
+nodes:
+  - grok:
+      pattern: 'AUDIT action=%{WORD:action} status=%{WORD:status} user="%{DATA:username}" ip=%{IPORHOST:source_ip} detail="%{DATA:detail}"'
+      apply_on: message
+statics:
+  - meta: log_type
+    expression: "evt.Parsed.action + '_' + evt.Parsed.status"
+  - meta: source_ip
+    expression: "evt.Parsed.source_ip"
+  - meta: service
+    value: fintrack
