@@ -7,12 +7,13 @@ import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, type Theme } from '@/store/theme.store';
 import { useSettingsStore } from '@/store/settings.store';
 import { useUpdateSettings } from '@/hooks/useSettings';
-import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet, ScrollText } from 'lucide-react';
+import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet, ScrollText, Tag as TagIcon } from 'lucide-react';
 import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
 import { TotpSection } from '@/components/settings/TotpSection';
 import { PasswordSection } from '@/components/settings/PasswordSection';
 import { SessionsSection } from '@/components/settings/SessionsSection';
 import { AuditLogSection } from '@/components/settings/AuditLogSection';
+import { TagsSection } from '@/components/settings/TagsSection';
 import { cn } from '@/lib/utils';
 
 const CURRENCY_OPTIONS = ['TRY', 'USD', 'EUR', 'GBP'];
@@ -195,6 +196,14 @@ export function SettingsPage() {
         description={t('settings.notificationsDesc')}
       >
         <p className="text-sm text-muted-foreground">{t('settings.notificationsSoon')}</p>
+      </SettingsSection>
+
+      <SettingsSection
+        icon={TagIcon}
+        title={t('tag.sectionTitle')}
+        description={t('tag.sectionDescription')}
+      >
+        <TagsSection />
       </SettingsSection>
 
       <SettingsSection

@@ -10,6 +10,13 @@ export interface Category {
   budgetAmount?: number;
 }
 
+/** Tag embedded on a transaction response. */
+export interface TransactionTagRef {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
 /** Budget transaction entry returned by the API. */
 export interface BudgetTransaction {
   id: string;
@@ -22,7 +29,7 @@ export interface BudgetTransaction {
   description: string | null;
   txnDate: string;
   recurring: boolean;
-  tags: string[] | null;
+  tags: TransactionTagRef[] | null;
   createdAt: string;
 }
 
@@ -34,7 +41,7 @@ export interface CreateTransactionRequest {
   description?: string;
   txnDate: string;
   isRecurring: boolean;
-  tags?: string[];
+  tagIds?: string[];
 }
 
 /** Monthly budget summary (live, computed from transactions). */

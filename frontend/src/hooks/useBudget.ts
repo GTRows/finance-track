@@ -2,15 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { budgetApi } from '@/api/budget.api';
 import type { CreateTransactionRequest } from '@/types/budget.types';
 
-const txnKey = (month: string, type?: string) => ['budget', 'transactions', month, type ?? 'ALL'] as const;
+const txnKey = (month: string, type?: string, tagId?: string) =>
+  ['budget', 'transactions', month, type ?? 'ALL', tagId ?? 'ALL_TAGS'] as const;
 const summaryKey = (month: string) => ['budget', 'summary', month] as const;
 const categoriesKey = () => ['budget', 'categories'] as const;
 const summariesKey = () => ['budget', 'summaries'] as const;
 
-export function useTransactions(month: string, type?: string, page = 0) {
+export function useTransactions(month: string, type?: string, page = 0, tagId?: string) {
   return useQuery({
-    queryKey: [...txnKey(month, type), page],
-    queryFn: () => budgetApi.listTransactions(month, type, page),
+    queryKey: [...txnKey(month, type, tagId), page],
+    queryFn: () => budgetApi.listTransactions(month, type, page, 20, tagId),
     enabled: !!month,
   });
 }

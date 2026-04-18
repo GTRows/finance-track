@@ -1,6 +1,7 @@
 package com.fintrack.budget.dto;
 
 import com.fintrack.common.entity.BudgetTransaction;
+import com.fintrack.tag.TagService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,11 +20,20 @@ public record TransactionResponse(
         String description,
         LocalDate txnDate,
         boolean recurring,
-        List<String> tags,
+        List<TagRef> tags,
         Instant createdAt
 ) {
 
-    public static TransactionResponse from(BudgetTransaction t, String categoryName, String categoryColor) {
+    public record TagRef(UUID id, String name, String color) {
+        public static TagRef from(TagService.TagSummary s) {
+            return new TagRef(s.id(), s.name(), s.color());
+        }
+    }
+
+    public static TransactionResponse from(BudgetTransaction t,
+                                            String categoryName,
+                                            String categoryColor,
+                                            List<TagRef> tags) {
         return new TransactionResponse(
                 t.getId(),
                 t.getTxnType(),
@@ -35,7 +45,7 @@ public record TransactionResponse(
                 t.getDescription(),
                 t.getTxnDate(),
                 t.isRecurring(),
-                t.getTags(),
+                tags,
                 t.getCreatedAt()
         );
     }

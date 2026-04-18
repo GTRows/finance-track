@@ -8,7 +8,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -59,9 +58,6 @@ public class BudgetTransaction {
 
     @Column(name = "recurrence_rule", length = 100)
     private String recurrenceRule;
-
-    @Column(columnDefinition = "TEXT[]")
-    private List<String> tags;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

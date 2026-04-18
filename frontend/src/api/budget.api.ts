@@ -17,10 +17,12 @@ export const budgetApi = {
     month: string,
     type?: string,
     page = 0,
-    size = 20
+    size = 20,
+    tagId?: string
   ): Promise<PageResponse<BudgetTransaction>> => {
     const params: Record<string, string | number> = { month, page, size };
     if (type) params.type = type;
+    if (tagId) params.tagId = tagId;
     const { data } = await client.get<PageResponse<BudgetTransaction>>('/budget/transactions', { params });
     return data;
   },

@@ -27,8 +27,11 @@ import {
   Trash2,
   Download,
   Loader2,
+  Tag as TagIcon,
+  X,
 } from 'lucide-react';
 import { reportApi } from '@/api/report.api';
+import { useTags } from '@/hooks/useTags';
 
 function currentPeriod(): string {
   const now = new Date();
@@ -46,9 +49,12 @@ export function BudgetPage() {
   const [month, setMonth] = useState(currentPeriod);
   const locale = i18n.resolvedLanguage === 'tr' ? 'tr-TR' : 'en-US';
 
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
+
   const summaryQuery = useBudgetSummary(month);
-  const txnQuery = useTransactions(month);
+  const txnQuery = useTransactions(month, undefined, 0, tagFilter ?? undefined);
   const catQuery = useCategories();
+  const tagsQuery = useTags();
   const createTxn = useCreateTransaction(month);
   const deleteTxn = useDeleteTransaction(month);
   const [downloading, setDownloading] = useState(false);
@@ -70,6 +76,8 @@ export function BudgetPage() {
   const transactions = txnQuery.data?.content ?? [];
   const incomeCategories = catQuery.data?.income ?? [];
   const expenseCategories = catQuery.data?.expense ?? [];
+  const availableTags = tagsQuery.data ?? [];
+  const activeTag = availableTags.find((tag) => tag.id === tagFilter) ?? null;
 
   const monthLabel = (() => {
     const [y, m] = month.split('-').map(Number);
@@ -172,8 +180,36 @@ export function BudgetPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Transaction list */}
         <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex-row items-center justify-between gap-3 space-y-0">
             <CardTitle className="text-sm font-medium">{t('budget.recentTransactions')}</CardTitle>
+            {availableTags.length > 0 && (
+              <div className="flex items-center gap-1 max-w-[65%] overflow-x-auto scrollbar-thin">
+                <TagIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                {activeTag ? (
+                  <button
+                    type="button"
+                    onClick={() => setTagFilter(null)}
+                    className="inline-flex items-center gap-1 rounded-full border border-sky-500/50 bg-sky-500/10 px-2 py-0.5 text-[11px] text-sky-300 cursor-pointer"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: activeTag.color ?? '#64748b' }} />
+                    {activeTag.name}
+                    <X className="w-3 h-3" />
+                  </button>
+                ) : (
+                  availableTags.slice(0, 6).map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => setTagFilter(tag.id)}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-accent transition-colors cursor-pointer flex-shrink-0"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tag.color ?? '#64748b' }} />
+                      {tag.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </CardHeader>
           <CardContent className="px-0">
             {transactions.length === 0 ? (
@@ -203,22 +239,33 @@ export function BudgetPage() {
                       style={{ backgroundColor: txn.categoryColor ?? 'hsl(var(--muted-foreground))' }}
                     />
 
-                    {/* Description + category */}
+                    {/* Description + category + tags */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm truncate">
                         {txn.description || txn.categoryName || t('budget.uncategorized')}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {new Date(txn.txnDate).toLocaleDateString(locale, {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
-                        {txn.categoryName && txn.description && (
-                          <span className="ml-1.5 opacity-70">
-                            {txn.categoryName}
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span className="text-[11px] text-muted-foreground">
+                          {new Date(txn.txnDate).toLocaleDateString(locale, {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                          {txn.categoryName && txn.description && (
+                            <span className="ml-1.5 opacity-70">
+                              {txn.categoryName}
+                            </span>
+                          )}
+                        </span>
+                        {txn.tags && txn.tags.length > 0 && txn.tags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 border border-sky-500/30 px-1.5 py-px text-[10px] text-sky-300"
+                          >
+                            <span className="w-1 h-1 rounded-full" style={{ backgroundColor: tag.color ?? '#64748b' }} />
+                            {tag.name}
                           </span>
-                        )}
-                      </p>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Amount */}

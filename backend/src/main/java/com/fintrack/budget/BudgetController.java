@@ -27,8 +27,9 @@ public class BudgetController {
             @AuthenticationPrincipal FinTrackUserDetails user,
             @RequestParam String month,
             @RequestParam(required = false) BudgetTransaction.TxnType type,
+            @RequestParam(required = false) UUID tagId,
             Pageable pageable) {
-        return ResponseEntity.ok(budgetService.listTransactions(user.getId(), month, type, pageable));
+        return ResponseEntity.ok(budgetService.listTransactions(user.getId(), month, type, tagId, pageable));
     }
 
     @PostMapping("/transactions")

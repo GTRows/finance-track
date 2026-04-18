@@ -243,7 +243,7 @@ email-reminder work in later phases.
 - [ ] 10.2 Multi-currency transactions (foreign expense auto-converted to preferred currency)
 - [ ] 10.3 Category rollover (unused monthly budget carried forward)
 - [ ] 10.4 Receipt photo upload (filesystem storage, OCR marked as follow-up)
-- [ ] 10.5 Transaction tags (many-to-many `transaction_tags` table)
+- [x] 10.5 Transaction tags (many-to-many `transaction_tags` table)
 - [ ] 10.6 Rule-based auto-categorization (merchant -> category learned from history)
 - [ ] 10.7 Cash flow allocator -- new feature. Inputs: income, obligatory outflows
         (credit card minimums, HOA dues, fixed debts) and optional buckets

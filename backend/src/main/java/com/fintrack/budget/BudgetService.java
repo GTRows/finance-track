@@ -6,6 +6,7 @@ import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
 import com.fintrack.common.entity.MonthlySummary;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.tag.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,7 +20,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,29 +34,35 @@ public class BudgetService {
     private final ExpenseCategoryRepository expenseRepo;
     private final MonthlySummaryRepository summaryRepo;
     private final BudgetRuleService budgetRuleService;
+    private final TagService tagService;
 
     // -- Transactions --
 
     @Transactional(readOnly = true)
     public Page<TransactionResponse> listTransactions(UUID userId, String month,
                                                        BudgetTransaction.TxnType type,
+                                                       UUID tagId,
                                                        Pageable pageable) {
         YearMonth ym = YearMonth.parse(month, PERIOD_FMT);
         LocalDate from = ym.atDay(1);
         LocalDate to = ym.atEndOfMonth();
 
         Page<BudgetTransaction> page;
-        if (type != null) {
+        if (tagId != null && type != null) {
+            page = txnRepo.findByUserIdAndTypeAndTagIdAndDateRange(userId, type, tagId, from, to, pageable);
+        } else if (tagId != null) {
+            page = txnRepo.findByUserIdAndTagIdAndDateRange(userId, tagId, from, to, pageable);
+        } else if (type != null) {
             page = txnRepo.findByUserIdAndTxnTypeAndTxnDateBetweenOrderByTxnDateDesc(userId, type, from, to, pageable);
         } else {
             page = txnRepo.findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(userId, from, to, pageable);
         }
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
-        return page.map(t -> {
-            String[] catInfo = catLookup.getOrDefault(t.getCategoryId(), new String[]{null, null});
-            return TransactionResponse.from(t, catInfo[0], catInfo[1]);
-        });
+        List<UUID> txnIds = page.getContent().stream().map(BudgetTransaction::getId).toList();
+        Map<UUID, List<TransactionResponse.TagRef>> tagLookup = buildTagLookup(userId, txnIds);
+
+        return page.map(t -> toResponse(t, catLookup, tagLookup));
     }
 
     @Transactional
@@ -69,10 +75,12 @@ public class BudgetService {
                 .description(req.description())
                 .txnDate(req.txnDate())
                 .recurring(req.isRecurring())
-                .tags(req.tags())
                 .build();
         txn = txnRepo.save(txn);
         log.info("Transaction created: id={} type={} amount={}", txn.getId(), txn.getTxnType(), txn.getAmount());
+
+        List<UUID> ownedTagIds = tagService.resolveOwnedIds(userId, req.tagIds());
+        tagService.setTransactionTags(txn.getId(), ownedTagIds);
 
         try {
             budgetRuleService.evaluateForTransaction(userId, txn);
@@ -81,8 +89,8 @@ public class BudgetService {
         }
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
-        String[] catInfo = catLookup.getOrDefault(txn.getCategoryId(), new String[]{null, null});
-        return TransactionResponse.from(txn, catInfo[0], catInfo[1]);
+        Map<UUID, List<TransactionResponse.TagRef>> tagLookup = buildTagLookup(userId, List.of(txn.getId()));
+        return toResponse(txn, catLookup, tagLookup);
     }
 
     @Transactional
@@ -95,7 +103,9 @@ public class BudgetService {
         txn.setDescription(req.description());
         txn.setTxnDate(req.txnDate());
         txn.setRecurring(req.isRecurring());
-        txn.setTags(req.tags());
+
+        List<UUID> ownedTagIds = tagService.resolveOwnedIds(userId, req.tagIds());
+        tagService.setTransactionTags(txn.getId(), ownedTagIds);
 
         try {
             budgetRuleService.evaluateForTransaction(userId, txn);
@@ -104,8 +114,8 @@ public class BudgetService {
         }
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
-        String[] catInfo = catLookup.getOrDefault(txn.getCategoryId(), new String[]{null, null});
-        return TransactionResponse.from(txn, catInfo[0], catInfo[1]);
+        Map<UUID, List<TransactionResponse.TagRef>> tagLookup = buildTagLookup(userId, List.of(txn.getId()));
+        return toResponse(txn, catLookup, tagLookup);
     }
 
     @Transactional
@@ -174,6 +184,21 @@ public class BudgetService {
     }
 
     // -- Helpers --
+
+    private TransactionResponse toResponse(BudgetTransaction t,
+                                            Map<UUID, String[]> catLookup,
+                                            Map<UUID, List<TransactionResponse.TagRef>> tagLookup) {
+        String[] catInfo = catLookup.getOrDefault(t.getCategoryId(), new String[]{null, null});
+        List<TransactionResponse.TagRef> tags = tagLookup.getOrDefault(t.getId(), List.of());
+        return TransactionResponse.from(t, catInfo[0], catInfo[1], tags);
+    }
+
+    private Map<UUID, List<TransactionResponse.TagRef>> buildTagLookup(UUID userId, Collection<UUID> txnIds) {
+        Map<UUID, List<TagService.TagSummary>> raw = tagService.loadTagsForTransactions(userId, txnIds);
+        Map<UUID, List<TransactionResponse.TagRef>> out = new HashMap<>();
+        raw.forEach((id, list) -> out.put(id, list.stream().map(TransactionResponse.TagRef::from).toList()));
+        return out;
+    }
 
     private Map<UUID, String[]> buildCategoryLookup(UUID userId) {
         Map<UUID, String[]> map = new HashMap<>();

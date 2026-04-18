@@ -340,6 +340,15 @@
     "needMoreData_one": "Güvenilir projeksiyon için {{count}} ay daha gelir ve gider kaydı gerekiyor.",
     "needMoreData_other": "Güvenilir projeksiyon için {{count}} ay daha gelir ve gider kaydı gerekiyor."
   },
+  "tag": {
+    "tags": "Etiketler",
+    "newTagPlaceholder": "Yeni etiket",
+    "sectionTitle": "Etiketler",
+    "sectionDescription": "İşlemleri tekrar kullanılabilir etiketlerle işaretleyip hızla filtreleyin.",
+    "empty": "Henüz etiket yok. İşlemleri gruplamak için yukarıdan bir tane oluşturun.",
+    "usageCount_one": "{{count}} kullanım",
+    "usageCount_other": "{{count}} kullanım"
+  },
   "risk": {
     "title": "Risk profili",
     "waiting_one": "Günlük anlık görüntüler toplanıyor -- anlamlı risk metriği için {{count}} gün daha gerek.",

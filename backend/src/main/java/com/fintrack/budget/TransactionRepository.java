@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -22,6 +23,30 @@ public interface TransactionRepository extends JpaRepository<BudgetTransaction, 
 
     Page<BudgetTransaction> findByUserIdAndTxnTypeAndTxnDateBetweenOrderByTxnDateDesc(
             UUID userId, BudgetTransaction.TxnType txnType, LocalDate from, LocalDate to, Pageable pageable);
+
+    @Query("SELECT t FROM BudgetTransaction t " +
+           "WHERE t.userId = :userId AND t.txnDate BETWEEN :from AND :to " +
+           "AND t.id IN (SELECT tt.transactionId FROM TransactionTag tt WHERE tt.tagId = :tagId) " +
+           "ORDER BY t.txnDate DESC")
+    Page<BudgetTransaction> findByUserIdAndTagIdAndDateRange(
+            @Param("userId") UUID userId,
+            @Param("tagId") UUID tagId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            Pageable pageable);
+
+    @Query("SELECT t FROM BudgetTransaction t " +
+           "WHERE t.userId = :userId AND t.txnType = :txnType " +
+           "AND t.txnDate BETWEEN :from AND :to " +
+           "AND t.id IN (SELECT tt.transactionId FROM TransactionTag tt WHERE tt.tagId = :tagId) " +
+           "ORDER BY t.txnDate DESC")
+    Page<BudgetTransaction> findByUserIdAndTypeAndTagIdAndDateRange(
+            @Param("userId") UUID userId,
+            @Param("txnType") BudgetTransaction.TxnType txnType,
+            @Param("tagId") UUID tagId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM BudgetTransaction t " +
            "WHERE t.userId = :userId AND t.txnType = :txnType AND t.txnDate BETWEEN :from AND :to")

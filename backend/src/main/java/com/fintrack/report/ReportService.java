@@ -8,6 +8,7 @@ import com.fintrack.common.entity.*;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.HoldingRepository;
+import com.fintrack.tag.TagService;
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -45,6 +46,7 @@ public class ReportService {
     private final TransactionRepository txnRepo;
     private final IncomeCategoryRepository incomeCatRepo;
     private final ExpenseCategoryRepository expenseCatRepo;
+    private final TagService tagService;
 
     private static final Font TITLE_FONT = new Font(Font.HELVETICA, 18, Font.BOLD, Color.DARK_GRAY);
     private static final Font SUBTITLE_FONT = new Font(Font.HELVETICA, 12, Font.NORMAL, Color.GRAY);
@@ -95,6 +97,9 @@ public class ReportService {
         incomeCatRepo.findByUserIdOrderByNameAsc(userId).forEach(c -> catNames.put(c.getId(), c.getName()));
         expenseCatRepo.findByUserIdOrderByNameAsc(userId).forEach(c -> catNames.put(c.getId(), c.getName()));
 
+        Map<UUID, List<TagService.TagSummary>> tagsByTxn = tagService.loadTagsForTransactions(
+                userId, txns.stream().map(BudgetTransaction::getId).toList());
+
         StringBuilder sb = new StringBuilder();
         sb.append("Date,Type,Amount,Currency,Category,Description,Recurring,Tags\n");
 
@@ -107,7 +112,10 @@ public class ReportService {
             sb.append(csvEscape(catNames.getOrDefault(t.getCategoryId(), ""))).append(',');
             sb.append(csvEscape(t.getDescription() != null ? t.getDescription() : "")).append(',');
             sb.append(t.isRecurring()).append(',');
-            sb.append(t.getTags() != null ? csvEscape(String.join(";", t.getTags())) : "");
+            List<TagService.TagSummary> tagList = tagsByTxn.getOrDefault(t.getId(), List.of());
+            sb.append(tagList.isEmpty()
+                    ? ""
+                    : csvEscape(tagList.stream().map(TagService.TagSummary::name).reduce((a, b) -> a + ";" + b).orElse("")));
             sb.append('\n');
         }
 

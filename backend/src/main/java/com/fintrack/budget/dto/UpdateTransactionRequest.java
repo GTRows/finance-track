@@ -16,6 +16,6 @@ public record UpdateTransactionRequest(
         String description,
         @NotNull LocalDate txnDate,
         boolean isRecurring,
-        List<String> tags
+        List<UUID> tagIds
 ) {
 }

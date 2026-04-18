@@ -10,9 +10,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Tag as TagIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { BudgetTxnType, Category, CreateTransactionRequest } from '@/types/budget.types';
+import { useCreateTag, useTags } from '@/hooks/useTags';
 
 interface AddTransactionDialogProps {
   incomeCategories: Category[];
@@ -28,12 +29,17 @@ export function AddTransactionDialog({
   isPending,
 }: AddTransactionDialogProps) {
   const { t } = useTranslation();
+  const { data: allTags } = useTags();
+  const createTag = useCreateTag();
+
   const [open, setOpen] = useState(false);
   const [txnType, setTxnType] = useState<BudgetTxnType>('EXPENSE');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
   const [txnDate, setTxnDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [newTagName, setNewTagName] = useState('');
 
   const categories = txnType === 'INCOME' ? incomeCategories : expenseCategories;
 
@@ -43,6 +49,24 @@ export function AddTransactionDialog({
     setCategoryId('');
     setDescription('');
     setTxnDate(new Date().toISOString().slice(0, 10));
+    setSelectedTagIds([]);
+    setNewTagName('');
+  };
+
+  const toggleTag = (id: string) => {
+    setSelectedTagIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const handleCreateTag = async () => {
+    const name = newTagName.trim();
+    if (!name) return;
+    try {
+      const created = await createTag.mutateAsync({ name });
+      setSelectedTagIds((prev) => [...prev, created.id]);
+      setNewTagName('');
+    } catch {
+      // validation / duplicate — surface via toast elsewhere
+    }
   };
 
   const handleSubmit = () => {
@@ -56,6 +80,7 @@ export function AddTransactionDialog({
       description: description || undefined,
       txnDate,
       isRecurring: false,
+      tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
     });
     reset();
     setOpen(false);
@@ -69,7 +94,7 @@ export function AddTransactionDialog({
           {t('budget.addTransaction')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('budget.addTransaction')}</DialogTitle>
         </DialogHeader>
@@ -156,6 +181,66 @@ export function AddTransactionDialog({
             )}
           </div>
 
+          {/* Tags */}
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5">
+              <TagIcon className="w-3.5 h-3.5" />
+              {t('tag.tags')}
+            </Label>
+
+            {allTags && allTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {allTags.map((tag) => {
+                  const selected = selectedTagIds.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer',
+                        selected
+                          ? 'border-sky-500/50 bg-sky-500/10 text-sky-300'
+                          : 'border-border text-muted-foreground hover:bg-accent'
+                      )}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: tag.color ?? '#64748b' }}
+                      />
+                      {tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex gap-1.5 pt-1">
+              <Input
+                placeholder={t('tag.newTagPlaceholder')}
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCreateTag();
+                  }
+                }}
+                className="h-8 text-xs"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCreateTag}
+                disabled={!newTagName.trim() || createTag.isPending}
+                className="h-8 px-3 cursor-pointer"
+              >
+                {t('common.add')}
+              </Button>
+            </div>
+          </div>
+
           {/* Description */}
           <div className="space-y-1.5">
             <Label>{t('budget.description')}</Label>
@@ -188,3 +273,4 @@ export function AddTransactionDialog({
     </Dialog>
   );
 }
+

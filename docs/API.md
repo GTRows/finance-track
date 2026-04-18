@@ -854,6 +854,66 @@ still returns values but the UI should caution the user. `monthsToFi` is
 
 ---
 
+## Tags
+
+Named labels applied to budget transactions through a many-to-many join. Each
+tag is owned by a single user and can be attached to any number of income or
+expense transactions. Tag assignments are edited through the standard
+transaction create/update endpoints by passing `tagIds`.
+
+### GET /api/v1/tags
+Returns all tags owned by the caller, alphabetically sorted.
+```json
+// Response 200
+[
+  {
+    "id": "7b1c...",
+    "name": "travel",
+    "color": "#0ea5e9",
+    "usageCount": 14
+  }
+]
+```
+`usageCount` is the number of transactions currently carrying the tag.
+
+### POST /api/v1/tags
+```json
+// Request
+{
+  "name": "travel",
+  "color": "#0ea5e9"
+}
+
+// Response 201 -- same shape as GET items
+```
+Returns 400 with code `TAG_DUPLICATE` when a tag with the same name already
+exists.
+
+### PUT /api/v1/tags/{id}
+Renames and/or recolors a tag. Same payload as POST.
+
+### DELETE /api/v1/tags/{id}
+Removes the tag and detaches it from every transaction it was linked to.
+Returns 204.
+
+### Transaction references
+`GET /api/v1/budget/transactions` now accepts an optional `tagId` query
+parameter that filters results to transactions carrying that tag. The
+transaction response embeds tag references:
+```json
+{
+  "id": "...",
+  "tags": [
+    { "id": "7b1c...", "name": "travel", "color": "#0ea5e9" }
+  ]
+}
+```
+`POST` / `PUT /api/v1/budget/transactions` accept `tagIds: string[]` that
+replace (not merge) the tag set on the transaction. Tag ids not owned by the
+caller are silently dropped.
+
+---
+
 ## Reports
 
 ### GET /api/v1/reports/portfolio/{id}?format=pdf&period=2026-04
