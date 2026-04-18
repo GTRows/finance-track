@@ -62,6 +62,12 @@ public class BudgetTransaction {
     @Column(name = "receipt_path", length = 512)
     private String receiptPath;
 
+    @Column(name = "original_amount", precision = 12, scale = 2)
+    private BigDecimal originalAmount;
+
+    @Column(name = "original_currency", length = 10)
+    private String originalCurrency;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

@@ -12,6 +12,7 @@ import java.util.UUID;
 public record CreateTransactionRequest(
         @NotNull BudgetTransaction.TxnType txnType,
         @NotNull @Positive BigDecimal amount,
+        String currency,
         UUID categoryId,
         String description,
         @NotNull LocalDate txnDate,

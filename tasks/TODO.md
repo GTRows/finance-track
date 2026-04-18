@@ -240,7 +240,7 @@ email-reminder work in later phases.
 ## Phase 10 -- Budget & Expenses Deepening
 
 - [x] 10.1 Recurring transaction templates (salary, rent, subscriptions outside Bills)
-- [ ] 10.2 Multi-currency transactions (foreign expense auto-converted to preferred currency)
+- [x] 10.2 Multi-currency transactions (foreign expense auto-converted to preferred currency)
 - [x] 10.3 Category rollover (unused monthly budget carried forward)
 - [x] 10.4 Receipt photo upload (filesystem storage, OCR marked as follow-up) — backend only; frontend UI pending
 - [x] 10.5 Transaction tags (many-to-many `transaction_tags` table)

@@ -6,7 +6,10 @@ import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
 import com.fintrack.common.entity.MonthlySummary;
+import com.fintrack.common.entity.UserSettings;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.price.FxConversionService;
+import com.fintrack.settings.UserSettingsRepository;
 import com.fintrack.tag.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,8 @@ public class BudgetService {
 
     private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
+    private static final String DEFAULT_CURRENCY = "TRY";
+
     private final TransactionRepository txnRepo;
     private final IncomeCategoryRepository incomeRepo;
     private final ExpenseCategoryRepository expenseRepo;
@@ -37,6 +42,8 @@ public class BudgetService {
     private final BudgetRuleService budgetRuleService;
     private final TransactionCategoryRuleService categoryRuleService;
     private final TagService tagService;
+    private final UserSettingsRepository userSettingsRepo;
+    private final FxConversionService fxConversionService;
 
     // -- Transactions --
 
@@ -73,10 +80,14 @@ public class BudgetService {
         if (categoryId == null) {
             categoryId = categoryRuleService.matchFor(userId, req.txnType(), req.description()).orElse(null);
         }
+        ConvertedAmount converted = convertForUser(userId, req.amount(), req.currency());
         BudgetTransaction txn = BudgetTransaction.builder()
                 .userId(userId)
                 .txnType(req.txnType())
-                .amount(req.amount())
+                .amount(converted.amount())
+                .currency(converted.currency())
+                .originalAmount(converted.originalAmount())
+                .originalCurrency(converted.originalCurrency())
                 .categoryId(categoryId)
                 .description(req.description())
                 .txnDate(req.txnDate())
@@ -103,8 +114,12 @@ public class BudgetService {
     public TransactionResponse update(UUID userId, UUID txnId, UpdateTransactionRequest req) {
         BudgetTransaction txn = txnRepo.findByIdAndUserId(txnId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        ConvertedAmount converted = convertForUser(userId, req.amount(), req.currency());
         txn.setTxnType(req.txnType());
-        txn.setAmount(req.amount());
+        txn.setAmount(converted.amount());
+        txn.setCurrency(converted.currency());
+        txn.setOriginalAmount(converted.originalAmount());
+        txn.setOriginalCurrency(converted.originalCurrency());
         txn.setCategoryId(req.categoryId());
         txn.setDescription(req.description());
         txn.setTxnDate(req.txnDate());
@@ -298,6 +313,32 @@ public class BudgetService {
     }
 
     // -- Helpers --
+
+    /**
+     * Resolve the user's home currency and convert the submitted amount if
+     * needed. Null/blank incoming currency is treated as the user's home
+     * currency — keeps backwards compatibility with old clients that never
+     * sent the field.
+     */
+    private ConvertedAmount convertForUser(UUID userId, BigDecimal amount, String incomingCurrency) {
+        String home = userSettingsRepo.findById(userId)
+                .map(UserSettings::getCurrency)
+                .orElse(DEFAULT_CURRENCY);
+        String source = (incomingCurrency == null || incomingCurrency.isBlank())
+                ? home
+                : incomingCurrency.trim().toUpperCase(Locale.ROOT);
+
+        if (source.equalsIgnoreCase(home)) {
+            return new ConvertedAmount(amount, home, null, null);
+        }
+
+        BigDecimal converted = fxConversionService.convert(amount, source, home);
+        return new ConvertedAmount(converted, home, amount, source);
+    }
+
+    private record ConvertedAmount(BigDecimal amount, String currency,
+                                    BigDecimal originalAmount, String originalCurrency) {
+    }
 
     private TransactionResponse toResponse(BudgetTransaction t,
                                             Map<UUID, String[]> catLookup,
