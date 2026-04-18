@@ -18,4 +18,6 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
     List<Debt> findActive(@Param("userId") UUID userId);
 
     Optional<Debt> findByIdAndUserId(UUID id, UUID userId);
+
+    List<Debt> findByUserIdOrderByCreatedAtAsc(UUID userId);
 }

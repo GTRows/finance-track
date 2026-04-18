@@ -18,4 +18,6 @@ public interface SavingsGoalRepository extends JpaRepository<SavingsGoal, UUID> 
     List<SavingsGoal> findActive(@Param("userId") UUID userId);
 
     Optional<SavingsGoal> findByIdAndUserId(UUID id, UUID userId);
+
+    List<SavingsGoal> findByUserIdOrderByCreatedAtAsc(UUID userId);
 }

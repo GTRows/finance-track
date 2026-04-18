@@ -25,4 +25,7 @@ public interface PortfolioRepository extends JpaRepository<Portfolio, UUID> {
 
     /** Returns all active portfolios across users (used by the snapshot scheduler). */
     List<Portfolio> findAllByActiveTrue();
+
+    /** Returns every portfolio for a user regardless of active flag (used by backup export). */
+    List<Portfolio> findByUserIdOrderByCreatedAtAsc(UUID userId);
 }

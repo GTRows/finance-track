@@ -22,6 +22,8 @@ public interface TransactionRepository extends JpaRepository<BudgetTransaction, 
 
     List<BudgetTransaction> findByIdInAndUserId(Collection<UUID> ids, UUID userId);
 
+    List<BudgetTransaction> findByUserIdOrderByTxnDateAsc(UUID userId);
+
     Page<BudgetTransaction> findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(
             UUID userId, LocalDate from, LocalDate to, Pageable pageable);
 

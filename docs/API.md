@@ -1040,6 +1040,69 @@ collapsed into a semicolon-separated string.
 
 ---
 
+## Backup & restore
+
+### GET /api/v1/backup/export
+Download a full JSON snapshot of all user-scoped data: settings, portfolios +
+holdings + investment transactions + snapshots + allocation targets, budget
+transactions + categories + tags + transaction-tag joins, recurring templates,
+category rules, budget rules, bills + payments, savings goals + contributions,
+debts + payments, and net-worth events.
+
+Response is `application/json` with `Content-Disposition: attachment;
+filename=fintrack-backup-YYYY-MM-DD.json`. The top-level object has:
+
+```json
+{
+  "meta": { "version": 1, "exportedAt": "2026-04-18T12:00:00Z", "userEmail": "owner@example.com" },
+  "userSettings": { ... },
+  "portfolios": [ ... ],
+  "holdings": [ ... ],
+  "investmentTransactions": [ ... ],
+  "portfolioSnapshots": [ ... ],
+  "allocationTargets": [ ... ],
+  "incomeCategories": [ ... ],
+  "expenseCategories": [ ... ],
+  "tags": [ ... ],
+  "transactions": [ ... ],
+  "transactionTags": [ ... ],
+  "recurringTemplates": [ ... ],
+  "categoryRules": [ ... ],
+  "budgetRules": [ ... ],
+  "bills": [ ... ],
+  "billPayments": [ ... ],
+  "savingsGoals": [ ... ],
+  "savingsContributions": [ ... ],
+  "debts": [ ... ],
+  "debtPayments": [ ... ],
+  "netWorthEvents": [ ... ]
+}
+```
+
+Shared reference data (Asset, AdminSetting, PriceHistory) and auth/identity
+state (User, RefreshToken, EmailVerification, PasswordReset, AuditLog) are not
+included -- the backup is meant to be restored into an already-provisioned
+account.
+
+### POST /api/v1/backup/import
+Restore a previously exported JSON snapshot. Wipes all current user-scoped
+rows listed above, then inserts the payload contents preserving UUIDs so
+intra-backup references stay intact. Payload `userId` fields are rewritten to
+the authenticated user so a backup can be restored into a freshly registered
+account.
+
+Request body is the JSON object returned by `/backup/export`. `meta.version`
+must equal the current supported version (`1`); any other value is rejected.
+
+```json
+// Response 200
+{ "status": "restored", "transactions": 942, "portfolios": 3, "bills": 11 }
+```
+
+This is destructive. Clients must confirm with the user before calling it.
+
+---
+
 ## AI Analysis (optional — only if CLAUDE_ENABLED=true)
 
 ### POST /api/v1/ai/analyze
