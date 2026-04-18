@@ -735,5 +735,20 @@
     "ip": "IP",
     "detail": "Detail",
     "pageInfo": "Page {{page}} of {{total}} — {{count}} events"
+  },
+  "palette": {
+    "title": "Command palette",
+    "description": "Jump to any page, portfolio, or bill",
+    "open": "Open command palette",
+    "placeholder": "Search pages, portfolios, bills...",
+    "triggerHint": "Search everything",
+    "empty": "Nothing matches that search",
+    "emptyHint": "Try a page name, portfolio, or bill",
+    "groupNavigate": "Navigate",
+    "groupPortfolios": "Portfolios",
+    "groupBills": "Bills",
+    "groupRecent": "Recent",
+    "hintNavigate": "Navigate",
+    "hintSelect": "Select"
   }
 }

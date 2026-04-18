@@ -17,12 +17,14 @@ import {
   ChevronRight,
   Menu,
   X,
+  Search,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { NotificationBell } from './NotificationBell';
+import { CommandPalette } from './CommandPalette';
 import { useLivePrices } from '@/hooks/useLivePrices';
 import { useSettings } from '@/hooks/useSettings';
 import { BackendStatusBanner } from './BackendStatusBanner';
@@ -37,10 +39,28 @@ export function AppShell() {
   const { user, refreshToken, clearAuth } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const isMac = useMemo(
+    () => typeof navigator !== 'undefined' && /mac|iphone|ipad|ipod/i.test(navigator.userAgent),
+    []
+  );
 
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isTrigger = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';
+      if (isTrigger) {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const navItems = [
     { path: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
@@ -184,7 +204,34 @@ export function AppShell() {
           >
             <Menu className="w-4 h-4" />
           </button>
-          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            aria-label={t('palette.open')}
+            className="ml-auto md:ml-0 group hidden sm:flex items-center gap-2 h-9 pl-3 pr-2 rounded-md border border-border bg-background/40 text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors cursor-pointer min-w-[220px]"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span className="text-xs tracking-tight flex-1 text-left">
+              {t('palette.triggerHint')}
+            </span>
+            <span className="flex items-center gap-0.5">
+              <kbd className="inline-flex items-center h-5 px-1 rounded border border-border bg-muted/60 text-[10px] font-mono uppercase tracking-wider">
+                {isMac ? 'Cmd' : 'Ctrl'}
+              </kbd>
+              <kbd className="inline-flex items-center h-5 px-1 rounded border border-border bg-muted/60 text-[10px] font-mono uppercase tracking-wider">
+                K
+              </kbd>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            aria-label={t('palette.open')}
+            className="ml-auto sm:hidden w-9 h-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell />
             <ThemeSwitcher />
             <LanguageSwitcher />
@@ -208,6 +255,8 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
   );
 }

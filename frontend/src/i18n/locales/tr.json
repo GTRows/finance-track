@@ -736,5 +736,20 @@
     "ip": "IP",
     "detail": "Ayrıntı",
     "pageInfo": "Sayfa {{page}} / {{total}} — {{count}} olay"
+  },
+  "palette": {
+    "title": "Komut paleti",
+    "description": "Herhangi bir sayfaya, portföye veya faturaya atla",
+    "open": "Komut paletini aç",
+    "placeholder": "Sayfa, portföy, fatura ara...",
+    "triggerHint": "Her şeyi ara",
+    "empty": "Eşleşen bir sonuç yok",
+    "emptyHint": "Sayfa adı, portföy veya fatura deneyin",
+    "groupNavigate": "Gezinti",
+    "groupPortfolios": "Portföyler",
+    "groupBills": "Faturalar",
+    "groupRecent": "Son kullanılanlar",
+    "hintNavigate": "Gezin",
+    "hintSelect": "Seç"
   }
 }
