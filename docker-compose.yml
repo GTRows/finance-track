@@ -150,6 +150,9 @@ services:
       - AUTHELIA_TRUSTED_IPS=${AUTHELIA_TRUSTED_IPS:-}
       - MONTHLY_REPORT_ENABLED=${MONTHLY_REPORT_ENABLED:-false}
       - RECEIPT_DIR=${RECEIPT_DIR:-/var/lib/fintrack/receipts}
+      - PUSH_VAPID_PUBLIC_KEY=${PUSH_VAPID_PUBLIC_KEY:-}
+      - PUSH_VAPID_PRIVATE_KEY=${PUSH_VAPID_PRIVATE_KEY:-}
+      - PUSH_SUBJECT=${PUSH_SUBJECT:-mailto:admin@fintrack.local}
     volumes:
       - app-logs:/var/log/fintrack
       - app-receipts:/var/lib/fintrack/receipts

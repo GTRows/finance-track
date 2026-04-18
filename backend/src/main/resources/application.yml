@@ -66,6 +66,10 @@ fintrack:
   monthly-report:
     enabled: ${MONTHLY_REPORT_ENABLED:false}
   receipt-dir: ${RECEIPT_DIR:/var/lib/fintrack/receipts}
+  push:
+    vapid-public-key: ${PUSH_VAPID_PUBLIC_KEY:}
+    vapid-private-key: ${PUSH_VAPID_PRIVATE_KEY:}
+    subject: ${PUSH_SUBJECT:mailto:admin@fintrack.local}
 
   # Cache
   cache:

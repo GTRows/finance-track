@@ -302,4 +302,4 @@ applications behind this stack.
 
 ## Phase 16 -- Notifications
 
-- [ ] 16.1 Web Push API (VAPID keys, service worker subscription, notification payload)
+- [x] 16.1 Web Push API (VAPID keys, service worker subscription, notification payload) — backend only; empty-body push (no payload encryption). Frontend service worker + subscribe UI pending.
