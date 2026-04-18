@@ -1,0 +1,39 @@
+# ============================================================
+# FinTrack Pro -- Traefik ingress override
+#
+# Attaches the frontend + backend containers to an external
+# Traefik network so a homelab-managed Traefik instance can
+# route traffic based on the labels declared in
+# docker-compose.yml.
+#
+# Usage:
+#   1. Make sure your Traefik stack exposes a shared network
+#      (default name: traefik-proxy). If it does not exist yet:
+#         docker network create traefik-proxy
+#   2. Start FinTrack with this override layered on top:
+#         docker compose -f docker-compose.yml \
+#                        -f docker-compose.traefik.yml up -d
+#   3. Set TRAEFIK_NETWORK in .env if your Traefik network uses
+#      a different name.
+#
+# This file intentionally contains NO labels -- those live in
+# docker-compose.yml so a single source of truth drives both
+# the standalone Nginx fallback (`--profile nginx`) and the
+# Traefik path.
+# ============================================================
+
+networks:
+  traefik-proxy:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik-proxy}
+
+services:
+  frontend:
+    networks:
+      - fintrack-net
+      - traefik-proxy
+
+  backend:
+    networks:
+      - fintrack-net
+      - traefik-proxy

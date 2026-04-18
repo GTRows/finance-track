@@ -5,6 +5,37 @@ Single user, self-hosted on the owner's own machine. Domain: `fatihaciroglu.dev`
 The reference deployment target is **this Windows 11 host** with Docker Desktop.
 A Linux path is documented at the bottom for completeness.
 
+## Ingress modes
+
+FinTrack ships with two ingress paths; pick one before running `up`:
+
+- **Traefik (default).** The compose stack declares Traefik router labels on
+  `frontend` and `backend`. Layer `docker-compose.traefik.yml` on top to attach
+  both services to the external Traefik network; the bundled Nginx + Certbot
+  stay off. This is how FinTrack integrates with the homelab stack.
+- **Bundled Nginx (fallback).** When no Traefik is available, start Nginx +
+  Certbot explicitly with `--profile nginx`. Traefik labels remain but do
+  nothing without the external network; TLS is provisioned on-box via
+  `scripts/ssl-setup.sh`.
+
+Traefik mode:
+
+```powershell
+# Ensure the Traefik network exists (usually provisioned by the Traefik stack).
+docker network create traefik-proxy   # no-op if it already exists
+docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build
+```
+
+Bundled Nginx fallback:
+
+```powershell
+docker compose --profile nginx up -d --build
+```
+
+Tune the Traefik hostname, entrypoint, and cert resolver via `TRAEFIK_HOST`,
+`TRAEFIK_ENTRYPOINT`, `TRAEFIK_CERT_RESOLVER`, and `TRAEFIK_NETWORK` in `.env`
+(defaults: `fatihaciroglu.dev`, `websecure`, `letsencrypt`, `traefik-proxy`).
+
 ## 1. Prerequisites
 
 - Docker Desktop for Windows, running, with "Start Docker Desktop when you log in" enabled
@@ -28,8 +59,12 @@ cd D:\fintrack
 Copy-Item .env.example .env
 notepad .env
 
-# Build + start everything.
-docker compose up -d --build
+# Build + start everything (Traefik ingress; homelab default).
+docker network create traefik-proxy   # no-op if it already exists
+docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build
+
+# Or: bundled Nginx fallback if no external Traefik is available.
+# docker compose --profile nginx up -d --build
 ```
 
 The compose stack includes a built-in `backup` container that takes a daily
@@ -45,6 +80,10 @@ powershell -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
 ```
 
 ## 3. Issue the Let's Encrypt certificate
+
+Only needed when running the bundled Nginx fallback. With external Traefik,
+TLS is managed by the homelab-side cert resolver referenced by
+`TRAEFIK_CERT_RESOLVER`.
 
 DNS and port-forwarding must already be live.
 

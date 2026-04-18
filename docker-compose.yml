@@ -21,11 +21,17 @@ services:
 
   # ----------------------------------------------------------
   # Nginx -- Reverse proxy, SSL termination, rate limiting
+  # Fallback ingress. Default deployment expects an external
+  # Traefik instance (homelab pattern) to route to frontend +
+  # backend via the Traefik labels declared below. If you are
+  # not running Traefik, activate the bundled Nginx with:
+  #   docker compose --profile nginx up -d
   # ----------------------------------------------------------
   nginx:
     image: nginx:1.25-alpine
     container_name: fintrack-nginx
     restart: always
+    profiles: ["nginx"]
     ports:
       - "80:80"
       - "443:443"
@@ -56,6 +62,7 @@ services:
     image: certbot/certbot:latest
     container_name: fintrack-certbot
     restart: unless-stopped
+    profiles: ["nginx"]
     volumes:
       - nginx-certs:/etc/letsencrypt
       - certbot-www:/var/www/certbot
@@ -76,6 +83,14 @@ services:
         - VITE_APP_NAME=${VITE_APP_NAME:-FinTrack Pro}
     container_name: fintrack-ui
     restart: always
+    labels:
+      traefik.enable: "${TRAEFIK_ENABLED:-true}"
+      traefik.docker.network: "${TRAEFIK_NETWORK:-traefik-proxy}"
+      traefik.http.routers.fintrack-ui.rule: "Host(`${TRAEFIK_HOST:-fatihaciroglu.dev}`)"
+      traefik.http.routers.fintrack-ui.entrypoints: "${TRAEFIK_ENTRYPOINT:-websecure}"
+      traefik.http.routers.fintrack-ui.tls: "true"
+      traefik.http.routers.fintrack-ui.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      traefik.http.services.fintrack-ui.loadbalancer.server.port: "3000"
     networks:
       - fintrack-net
     healthcheck:
@@ -96,6 +111,14 @@ services:
     labels:
       com.fintrack.log: "true"
       com.fintrack.service: backend
+      traefik.enable: "${TRAEFIK_ENABLED:-true}"
+      traefik.docker.network: "${TRAEFIK_NETWORK:-traefik-proxy}"
+      traefik.http.routers.fintrack-api.rule: "Host(`${TRAEFIK_HOST:-fatihaciroglu.dev}`) && (PathPrefix(`/api/`) || PathPrefix(`/ws/`))"
+      traefik.http.routers.fintrack-api.entrypoints: "${TRAEFIK_ENTRYPOINT:-websecure}"
+      traefik.http.routers.fintrack-api.tls: "true"
+      traefik.http.routers.fintrack-api.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      traefik.http.routers.fintrack-api.priority: "100"
+      traefik.http.services.fintrack-api.loadbalancer.server.port: "8080"
     environment:
       - SPRING_PROFILES_ACTIVE=${APP_ENV:-production}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-fintrack}
