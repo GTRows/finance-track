@@ -134,6 +134,46 @@ TRY price is computed by multiplying USD-per-unit by the current USD/TRY rate fr
 ExchangeRate-API client. Assets keyed by `metalsSymbol` take precedence over `tefasCode`
 when both are present on a GOLD asset.
 
+## Yahoo Finance (Stocks, BIST + Global)
+
+**URL:** https://query1.finance.yahoo.com
+**Free:** Yes, keyless (unofficial but stable public endpoint)
+**Coverage:** BIST via `.IS` suffix (e.g. `THYAO.IS`, `ASELS.IS`), plus all major global tickers (`AAPL`, `MSFT`, ...)
+
+### Endpoint (current quote + minimal metadata)
+```
+GET https://query1.finance.yahoo.com/v8/finance/chart/THYAO.IS?interval=1d&range=1d
+```
+
+### Response shape (abbreviated)
+```json
+{
+  "chart": {
+    "result": [{
+      "meta": {
+        "regularMarketPrice": 315.5,
+        "currency": "TRY",
+        "symbol": "THYAO.IS"
+      },
+      "timestamp": [1712659200],
+      "indicators": { "quote": [{ "close": [315.5] }] }
+    }]
+  }
+}
+```
+
+### Asset metadata
+- `yahooSymbol` (required): `THYAO.IS` for BIST, `AAPL` for NASDAQ, etc.
+
+USD-denominated tickers are auto-converted to TRY using the ExchangeRate-API USD/TRY
+rate, and the native USD price is stored on `assets.price_usd`. TRY tickers are
+stored as-is with no conversion.
+
+The history endpoint uses the same chart URL with `range` derived from the
+requested day window (5d, 1mo, 3mo, 6mo, 1y, 2y). BIST history typically has
+daily granularity; callers that pass `days<=5` get intraday-ish 5d data at 1d
+interval.
+
 ## Sync Scheduler Logic
 
 ```java
@@ -163,9 +203,3 @@ If an external API fails:
 - After 3 consecutive failures: send in-app notification to user
 - Price shows "⚠ stale" indicator in UI if `price_updated_at` > 15 minutes ago
 
-## Future: BIST Individual Stocks
-
-If user wants to track individual BIST stocks (e.g. THYAO, ASELS):
-- Use `https://api.bigpara.hurriyet.com.tr/borsa/hisse/...` (unofficial, may break)
-- Or integrate with a broker API (İş Yatırım, Garanti BBVA Yatırım)
-- Out of scope for initial version

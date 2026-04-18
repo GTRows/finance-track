@@ -7,6 +7,7 @@ import com.fintrack.price.client.CoinGeckoClient;
 import com.fintrack.price.client.ExchangeRateClient;
 import com.fintrack.price.client.PreciousMetalsClient;
 import com.fintrack.price.client.TefasClient;
+import com.fintrack.price.client.YahooFinanceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class PriceSyncService {
     private final ExchangeRateClient exchangeRateClient;
     private final TefasClient tefasClient;
     private final PreciousMetalsClient preciousMetalsClient;
+    private final YahooFinanceClient yahooFinanceClient;
 
     /** Summary row returned to controllers after a refresh. */
     public record SyncResult(
@@ -49,6 +51,7 @@ public class PriceSyncService {
             int currencyUpdated,
             int fundUpdated,
             int metalUpdated,
+            int stockUpdated,
             Instant runAt
     ) {
     }
@@ -60,20 +63,22 @@ public class PriceSyncService {
         int currency = refreshCurrencies();
         int funds = refreshFunds();
         int metals = refreshMetals();
-        return new SyncResult(crypto, currency, funds, metals, Instant.now());
+        int stocks = refreshStocks();
+        return new SyncResult(crypto, currency, funds, metals, stocks, Instant.now());
     }
 
     /**
-     * Fast refresh: crypto + currency + metals. Used by the 30 second scheduler
-     * since those sources are rate-limit friendly. Fund prices come from TEFAS
-     * which only changes once per day and runs on its own hourly schedule.
+     * Fast refresh: crypto + currency + metals + stocks. Used by the 30 second
+     * scheduler since those sources are rate-limit friendly. Fund prices come
+     * from TEFAS which only changes once per day and runs on its own schedule.
      */
     @Transactional
     public SyncResult refreshLive() {
         int crypto = refreshCrypto();
         int currency = refreshCurrencies();
         int metals = refreshMetals();
-        return new SyncResult(crypto, currency, 0, metals, Instant.now());
+        int stocks = refreshStocks();
+        return new SyncResult(crypto, currency, 0, metals, stocks, Instant.now());
     }
 
     /** Updates all CRYPTO assets that carry a {@code coingeckoId} in metadata. */
@@ -255,6 +260,65 @@ public class PriceSyncService {
         return updated;
     }
 
+    /**
+     * Updates STOCK assets that carry a {@code yahooSymbol} in metadata (BIST
+     * tickers use the {@code .IS} suffix, e.g. {@code THYAO.IS}). Prices are
+     * returned in the asset's native currency; USD quotes are converted to TRY
+     * using the live FX rate and also recorded on {@code priceUsd}.
+     */
+    @Transactional
+    public int refreshStocks() {
+        List<Asset> stockAssets = assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.STOCK);
+        Map<String, Asset> bySymbol = new HashMap<>();
+        for (Asset a : stockAssets) {
+            String sym = readMetadataString(a, "yahooSymbol");
+            if (sym != null) bySymbol.put(sym, a);
+        }
+        if (bySymbol.isEmpty()) return 0;
+
+        Map<String, YahooFinanceClient.Quote> quotes = yahooFinanceClient.fetchQuotes(bySymbol.keySet());
+        if (quotes.isEmpty()) return 0;
+
+        BigDecimal usdTry = null;
+        boolean needsFx = quotes.values().stream()
+                .anyMatch(q -> q != null && "USD".equalsIgnoreCase(q.currency()));
+        if (needsFx) {
+            Map<String, BigDecimal> fx = exchangeRateClient.fetchTryRates(Set.of("USD"));
+            usdTry = fx.get("USD");
+        }
+
+        Instant now = Instant.now();
+        int updated = 0;
+        for (Map.Entry<String, YahooFinanceClient.Quote> entry : quotes.entrySet()) {
+            Asset asset = bySymbol.get(entry.getKey());
+            YahooFinanceClient.Quote quote = entry.getValue();
+            if (asset == null || quote == null || quote.price() == null) continue;
+
+            String currency = quote.currency() == null ? "" : quote.currency().toUpperCase();
+            BigDecimal tryPrice;
+            BigDecimal usdPrice = null;
+            if ("TRY".equals(currency) || currency.isBlank()) {
+                tryPrice = quote.price();
+            } else if ("USD".equals(currency)) {
+                if (usdTry == null || usdTry.signum() <= 0) continue;
+                usdPrice = quote.price();
+                tryPrice = quote.price().multiply(usdTry).setScale(4, RoundingMode.HALF_UP);
+            } else {
+                log.debug("Stock {}: unsupported currency {}, skipping", entry.getKey(), currency);
+                continue;
+            }
+
+            asset.setPrice(tryPrice);
+            if (usdPrice != null) asset.setPriceUsd(usdPrice);
+            asset.setPriceUpdatedAt(now);
+            recordHistory(asset, now);
+            updated++;
+        }
+
+        log.info("Stock price refresh updated {}/{} assets", updated, bySymbol.size());
+        return updated;
+    }
+
     /** Refreshes a single asset by id and returns true if a new price was written. */
     @Transactional
     public boolean refreshAsset(UUID assetId) {
@@ -317,6 +381,33 @@ public class PriceSyncService {
                 BigDecimal price = tefasClient.fetchPrice(code, type);
                 if (price == null || price.signum() <= 0) return false;
                 asset.setPrice(price);
+                asset.setPriceUpdatedAt(now);
+                recordHistory(asset, now);
+                return true;
+            }
+            case STOCK -> {
+                String sym = readMetadataString(asset, "yahooSymbol");
+                if (sym == null) return false;
+                Map<String, YahooFinanceClient.Quote> quotes = yahooFinanceClient.fetchQuotes(List.of(sym));
+                YahooFinanceClient.Quote quote = quotes.get(sym);
+                if (quote == null || quote.price() == null) return false;
+
+                String currency = quote.currency() == null ? "" : quote.currency().toUpperCase();
+                BigDecimal tryPrice;
+                BigDecimal usdPrice = null;
+                if ("TRY".equals(currency) || currency.isBlank()) {
+                    tryPrice = quote.price();
+                } else if ("USD".equals(currency)) {
+                    Map<String, BigDecimal> fx = exchangeRateClient.fetchTryRates(Set.of("USD"));
+                    BigDecimal usdTry = fx.get("USD");
+                    if (usdTry == null || usdTry.signum() <= 0) return false;
+                    usdPrice = quote.price();
+                    tryPrice = quote.price().multiply(usdTry).setScale(4, RoundingMode.HALF_UP);
+                } else {
+                    return false;
+                }
+                asset.setPrice(tryPrice);
+                if (usdPrice != null) asset.setPriceUsd(usdPrice);
                 asset.setPriceUpdatedAt(now);
                 recordHistory(asset, now);
                 return true;

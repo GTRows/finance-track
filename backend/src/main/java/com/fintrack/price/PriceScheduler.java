@@ -37,9 +37,9 @@ public class PriceScheduler {
     public void onStartup() {
         try {
             PriceSyncService.SyncResult result = priceSyncService.refreshAll();
-            log.info("Initial price sync complete: crypto={} currency={} fund={} metal={}",
+            log.info("Initial price sync complete: crypto={} currency={} fund={} metal={} stock={}",
                     result.cryptoUpdated(), result.currencyUpdated(),
-                    result.fundUpdated(), result.metalUpdated());
+                    result.fundUpdated(), result.metalUpdated(), result.stockUpdated());
             priceBroadcaster.broadcastAll();
             evaluateAlertsSafely();
         } catch (Exception e) {
@@ -52,9 +52,11 @@ public class PriceScheduler {
     public void scheduledRefresh() {
         try {
             PriceSyncService.SyncResult result = priceSyncService.refreshLive();
-            log.debug("Scheduled price sync: crypto={} currency={} metal={}",
-                    result.cryptoUpdated(), result.currencyUpdated(), result.metalUpdated());
-            if (result.cryptoUpdated() + result.currencyUpdated() + result.metalUpdated() > 0) {
+            log.debug("Scheduled price sync: crypto={} currency={} metal={} stock={}",
+                    result.cryptoUpdated(), result.currencyUpdated(),
+                    result.metalUpdated(), result.stockUpdated());
+            if (result.cryptoUpdated() + result.currencyUpdated()
+                    + result.metalUpdated() + result.stockUpdated() > 0) {
                 priceBroadcaster.broadcastAll();
                 evaluateAlertsSafely();
             }

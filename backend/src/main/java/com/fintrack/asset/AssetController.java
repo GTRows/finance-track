@@ -6,6 +6,7 @@ import com.fintrack.common.entity.PriceHistory;
 import com.fintrack.price.PriceHistoryRepository;
 import com.fintrack.price.client.CoinGeckoClient;
 import com.fintrack.price.client.TefasClient;
+import com.fintrack.price.client.YahooFinanceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,7 @@ public class AssetController {
     private final TefasFundService tefasFundService;
     private final TefasClient tefasClient;
     private final CoinGeckoClient coinGeckoClient;
+    private final YahooFinanceClient yahooFinanceClient;
 
     /** Lists all assets, optionally filtered by type. */
     @GetMapping
@@ -98,6 +100,13 @@ public class AssetController {
                 id = metadataString(asset, "coingeckoId");
                 if (id == null) return List.of();
                 return coinGeckoClient.fetchHistory(id, days).stream()
+                        .map(p -> new PricePoint(p.at(), p.price(), null))
+                        .toList();
+            }
+            case STOCK -> {
+                id = metadataString(asset, "yahooSymbol");
+                if (id == null) return List.of();
+                return yahooFinanceClient.fetchHistory(id, days).stream()
                         .map(p -> new PricePoint(p.at(), p.price(), null))
                         .toList();
             }
