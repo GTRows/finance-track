@@ -287,7 +287,7 @@ Alertmanager + Homarr + Restic + Syncthing. FinTrack integrates as one of the
 applications behind this stack.
 
 - [ ] 15.1 Restic-based encrypted backups replacing raw `pg_dump` loop (S3/B2 target configurable)
-- [ ] 15.2 Trivy image + filesystem scan step in GitHub Actions
+- [x] 15.2 Trivy image + filesystem scan step in GitHub Actions
 - [ ] 15.3 Grafana business dashboard (portfolio total value, tx/day, savings rate, alerts fired)
 - [x] 15.4 Dependabot auto-merge on green CI
 - [x] 15.5 PostgreSQL index audit (Flyway migration for missing indexes)
