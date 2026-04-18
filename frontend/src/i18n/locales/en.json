@@ -412,6 +412,35 @@
     "manageCategoryBudgets": "Category Budgets",
     "manageCategoryBudgetsHint": "Set a monthly target per category. Toggle rollover to carry unspent amounts into the next month.",
     "noExpenseCategories": "No expense categories yet. Create them from Settings.",
+    "receipt": {
+      "attach": "Attach receipt",
+      "view": "View receipt",
+      "remove": "Remove receipt",
+      "uploading": "Uploading...",
+      "tooLarge": "File too large. Max 5 MB.",
+      "unsupported": "Unsupported file type. Use JPG, PNG, WebP or PDF."
+    },
+    "allocator": {
+      "title": "Cash flow allocator",
+      "description": "Split your discretionary income into buckets — rent-safe goals, investing, fun money. Nothing books to the ledger; this is a suggestion.",
+      "addBucket": "Add bucket",
+      "bucketName": "Bucket",
+      "bucketNamePlaceholder": "e.g. Investing",
+      "percent": "%",
+      "categoryOptional": "Category (optional)",
+      "noCategory": "No category",
+      "saveBuckets": "Save buckets",
+      "empty": "No buckets yet. Add one to start.",
+      "income": "Income",
+      "obligations": "Fixed obligations",
+      "obligationsHint": "Rent, subscriptions, debt payments",
+      "preview": "Preview",
+      "discretionary": "Discretionary",
+      "assigned": "Assigned",
+      "unassigned": "Unassigned",
+      "totalWarn": "Total is {{total}}% — trimming to 100 is recommended.",
+      "overWarn": "Exceeds income after obligations."
+    },
     "bulk": {
       "selected_one": "{{count}} selected",
       "selected_other": "{{count}} selected",
@@ -424,6 +453,18 @@
       "setCategory": "Set category",
       "clearCategory": "Clear category"
     }
+  },
+  "onboarding": {
+    "welcomeTitle": "Welcome to FinTrack Pro",
+    "welcomeBody": "Let's tune a couple of basics before you get started. You can always change these later in Settings.",
+    "prefsTitle": "Your preferences",
+    "prefsBody": "Set your default currency, language, and theme.",
+    "tourTitle": "You're ready",
+    "tourBody": "Head to Dashboard for a live overview, Portfolio for assets, Budget for income and expenses, Bills for recurring payments, and Analytics for trends.",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Get started",
+    "skip": "Skip"
   },
   "bills": {
     "title": "Bills",
@@ -493,6 +534,21 @@
     "notifications": "Notifications",
     "notificationsDesc": "Email and in-app alert preferences",
     "notificationsSoon": "Notification settings will be available soon.",
+    "push": {
+      "title": "Browser push",
+      "description": "Get a system notification when bills are about to go past due, even when the app is closed.",
+      "unsupported": "Your browser does not support push notifications.",
+      "subscribed": "Push notifications on",
+      "subscribedHint": "You will receive alerts for upcoming bills and critical reminders.",
+      "notSubscribed": "Push notifications off",
+      "notSubscribedHint": "Grant permission to get reminders when bills are due.",
+      "subscribe": "Enable",
+      "unsubscribe": "Disable",
+      "denied": "Notifications were blocked. Update your browser permissions to re-enable.",
+      "testTitle": "Send test notification",
+      "testHint": "Confirm everything is wired up.",
+      "sendTest": "Send test"
+    },
     "security": "Security",
     "securityDesc": "Password and session management",
     "password": "Password",

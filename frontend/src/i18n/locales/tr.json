@@ -413,6 +413,35 @@
     "manageCategoryBudgets": "Kategori Bütçeleri",
     "manageCategoryBudgetsHint": "Her kategori için aylık hedef belirleyin. Harcanmayan tutarın bir sonraki aya aktarılması için devri açın.",
     "noExpenseCategories": "Henüz gider kategorisi yok. Ayarlar'dan ekleyebilirsiniz.",
+    "receipt": {
+      "attach": "Fiş ekle",
+      "view": "Fişi görüntüle",
+      "remove": "Fişi kaldır",
+      "uploading": "Yükleniyor...",
+      "tooLarge": "Dosya çok büyük. En fazla 5 MB.",
+      "unsupported": "Desteklenmeyen dosya türü. JPG, PNG, WebP veya PDF kullanın."
+    },
+    "allocator": {
+      "title": "Nakit akışı dağıtıcısı",
+      "description": "Harcanabilir gelirinizi kovalara bölün — hedefler, yatırım, keyif. Deftere işlenmez; yalnızca bir öneridir.",
+      "addBucket": "Kova ekle",
+      "bucketName": "Kova",
+      "bucketNamePlaceholder": "örn. Yatırım",
+      "percent": "%",
+      "categoryOptional": "Kategori (isteğe bağlı)",
+      "noCategory": "Kategori yok",
+      "saveBuckets": "Kovaları kaydet",
+      "empty": "Henüz kova yok. Başlamak için bir tane ekleyin.",
+      "income": "Gelir",
+      "obligations": "Sabit yükümlülükler",
+      "obligationsHint": "Kira, abonelikler, borç ödemeleri",
+      "preview": "Önizleme",
+      "discretionary": "Harcanabilir",
+      "assigned": "Atanmış",
+      "unassigned": "Atanmamış",
+      "totalWarn": "Toplam %{{total}} — 100'e çekmeniz önerilir.",
+      "overWarn": "Yükümlülüklerden sonra geliri aşıyor."
+    },
     "bulk": {
       "selected_one": "{{count}} seçili",
       "selected_other": "{{count}} seçili",
@@ -425,6 +454,18 @@
       "setCategory": "Kategori ata",
       "clearCategory": "Kategoriyi temizle"
     }
+  },
+  "onboarding": {
+    "welcomeTitle": "FinTrack Pro'ya hoş geldiniz",
+    "welcomeBody": "Başlamadan önce birkaç temeli ayarlayalım. Bunları istediğiniz zaman Ayarlar'dan değiştirebilirsiniz.",
+    "prefsTitle": "Tercihleriniz",
+    "prefsBody": "Varsayılan para birimi, dil ve temanızı seçin.",
+    "tourTitle": "Hazırsınız",
+    "tourBody": "Canlı genel bakış için Panoya, varlıklar için Portföye, gelir ve gider için Bütçeye, düzenli ödemeler için Faturalara ve trendler için Analitiğe göz atın.",
+    "next": "İleri",
+    "back": "Geri",
+    "finish": "Başla",
+    "skip": "Atla"
   },
   "bills": {
     "title": "Faturalar",
@@ -494,6 +535,21 @@
     "notifications": "Bildirimler",
     "notificationsDesc": "E-posta ve uygulama içi bildirim tercihleri",
     "notificationsSoon": "Bildirim ayarları yakında kullanılabilir olacak.",
+    "push": {
+      "title": "Tarayıcı bildirimleri",
+      "description": "Faturalar gecikmeye yaklaştığında, uygulama kapalı olsa bile sistem bildirimi alın.",
+      "unsupported": "Tarayıcınız push bildirimlerini desteklemiyor.",
+      "subscribed": "Push bildirimleri açık",
+      "subscribedHint": "Yaklaşan faturalar ve kritik hatırlatmalar için bildirim alacaksınız.",
+      "notSubscribed": "Push bildirimleri kapalı",
+      "notSubscribedHint": "Fatura hatırlatmaları almak için izin verin.",
+      "subscribe": "Etkinleştir",
+      "unsubscribe": "Devre dışı bırak",
+      "denied": "Bildirimler engellendi. Yeniden etkinleştirmek için tarayıcı izinlerini güncelleyin.",
+      "testTitle": "Test bildirimi gönder",
+      "testHint": "Her şeyin çalıştığını doğrulayın.",
+      "sendTest": "Test gönder"
+    },
     "security": "Güvenlik",
     "securityDesc": "Şifre ve oturum yönetimi",
     "password": "Şifre",

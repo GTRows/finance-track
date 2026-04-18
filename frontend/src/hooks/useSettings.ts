@@ -42,3 +42,13 @@ export function useUpdateSettings() {
     },
   });
 }
+
+export function useCompleteOnboarding() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => settingsApi.completeOnboarding(),
+    onSuccess: (data) => {
+      qc.setQueryData(['settings'], data);
+    },
+  });
+}

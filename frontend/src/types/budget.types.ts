@@ -24,6 +24,8 @@ export interface BudgetTransaction {
   txnType: BudgetTxnType;
   amount: number;
   currency: string;
+  originalAmount: number | null;
+  originalCurrency: string | null;
   categoryId: string | null;
   categoryName: string | null;
   categoryColor: string | null;
@@ -31,6 +33,7 @@ export interface BudgetTransaction {
   txnDate: string;
   recurring: boolean;
   tags: TransactionTagRef[] | null;
+  hasReceipt: boolean;
   createdAt: string;
 }
 
@@ -38,6 +41,7 @@ export interface BudgetTransaction {
 export interface CreateTransactionRequest {
   txnType: BudgetTxnType;
   amount: number;
+  currency?: string;
   categoryId?: string;
   description?: string;
   txnDate: string;

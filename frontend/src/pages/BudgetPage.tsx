@@ -10,6 +10,8 @@ import { MonthlyLogSection } from '@/components/budget/MonthlyLogSection';
 import { BudgetRulesSection } from '@/components/budget/BudgetRulesSection';
 import { RecurringTemplatesSection } from '@/components/budget/RecurringTemplatesSection';
 import { BulkActionBar } from '@/components/budget/BulkActionBar';
+import { ReceiptAction } from '@/components/budget/ReceiptAction';
+import { CashFlowAllocatorSection } from '@/components/budget/CashFlowAllocatorSection';
 import {
   useTransactions,
   useBudgetSummary,
@@ -425,6 +427,13 @@ export function BudgetPage() {
                       {formatTRY(txn.amount)}
                     </span>
 
+                    {/* Receipt */}
+                    <ReceiptAction
+                      transactionId={txn.id}
+                      hasReceipt={txn.hasReceipt}
+                      month={month}
+                    />
+
                     {/* Delete */}
                     <button
                       onClick={() => deleteTxn.mutate(txn.id)}
@@ -528,6 +537,8 @@ export function BudgetPage() {
       <RecurringTemplatesSection />
 
       <BudgetRulesSection />
+
+      <CashFlowAllocatorSection />
 
       <MonthlyLogSection currentMonth={month} />
     </div>

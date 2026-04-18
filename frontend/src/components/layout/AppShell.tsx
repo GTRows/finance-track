@@ -29,6 +29,7 @@ import { useLivePrices } from '@/hooks/useLivePrices';
 import { useSettings } from '@/hooks/useSettings';
 import { BackendStatusBanner } from './BackendStatusBanner';
 import { EmailVerificationBanner } from './EmailVerificationBanner';
+import { OnboardingWizard } from './OnboardingWizard';
 
 export function AppShell() {
   useLivePrices();
@@ -257,6 +258,7 @@ export function AppShell() {
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <OnboardingWizard />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { AuditLogSection } from '@/components/settings/AuditLogSection';
 import { TagsSection } from '@/components/settings/TagsSection';
 import { CategoryRulesSection } from '@/components/settings/CategoryRulesSection';
 import { BackupSection } from '@/components/settings/BackupSection';
+import { PushNotificationSection } from '@/components/settings/PushNotificationSection';
 import { cn } from '@/lib/utils';
 
 const CURRENCY_OPTIONS = ['TRY', 'USD', 'EUR', 'GBP'];
@@ -194,10 +195,10 @@ export function SettingsPage() {
 
       <SettingsSection
         icon={Bell}
-        title={t('settings.notifications')}
-        description={t('settings.notificationsDesc')}
+        title={t('settings.push.title')}
+        description={t('settings.push.description')}
       >
-        <p className="text-sm text-muted-foreground">{t('settings.notificationsSoon')}</p>
+        <PushNotificationSection />
       </SettingsSection>
 
       <SettingsSection

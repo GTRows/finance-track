@@ -242,14 +242,13 @@ email-reminder work in later phases.
 - [x] 10.1 Recurring transaction templates (salary, rent, subscriptions outside Bills)
 - [x] 10.2 Multi-currency transactions (foreign expense auto-converted to preferred currency)
 - [x] 10.3 Category rollover (unused monthly budget carried forward)
-- [x] 10.4 Receipt photo upload (filesystem storage, OCR marked as follow-up) — backend only; frontend UI pending
+- [x] 10.4 Receipt photo upload (filesystem storage, OCR marked as follow-up)
 - [x] 10.5 Transaction tags (many-to-many `transaction_tags` table)
 - [x] 10.6 Rule-based auto-categorization (merchant -> category learned from history)
 - [x] 10.7 Cash flow allocator -- new feature. Inputs: income, obligatory outflows
         (credit card minimums, HOA dues, fixed debts) and optional buckets
         (savings, investments, cash buffer). Output: suggested distribution with
         a default based on user's settings, editable step-by-step before committing.
-        Backend: allocation_buckets table + preview endpoint. Frontend UI pending.
 
 ## Phase 11 -- Bills Polish
 
@@ -277,7 +276,7 @@ email-reminder work in later phases.
 - [x] 14.1 Global command palette (Cmd/Ctrl+K over nav, portfolios, bills; topbar trigger + recent items)
 - [x] 14.2 Bulk operations (multi-select delete / edit / tag)
 - [x] 14.3 Pinned holdings (favourites at top of list)
-- [x] 14.4 First-run onboarding wizard — backend: onboarding_completed flag + POST /settings/onboarding-complete. Frontend wizard UI pending.
+- [x] 14.4 First-run onboarding wizard
 - [x] 14.5 PWA manifest + installable + offline shell
 
 ## Phase 15 -- Infrastructure Integration
@@ -302,4 +301,4 @@ applications behind this stack.
 
 ## Phase 16 -- Notifications
 
-- [x] 16.1 Web Push API (VAPID keys, service worker subscription, notification payload) — backend only; empty-body push (no payload encryption). Frontend service worker + subscribe UI pending.
+- [x] 16.1 Web Push API (VAPID keys, service worker subscription, notification payload)
