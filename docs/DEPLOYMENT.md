@@ -200,7 +200,38 @@ Then point `acquis.yaml` at the backend log file (when shipping logs from the
 docker volume) or at the journald unit if you're collecting container logs
 upstream.
 
-## 12. Homarr dashboard tile
+## 12. Wazuh integration (optional)
+
+If your SIEM is Wazuh (OSSEC-derived), FinTrack is compatible out of the box:
+the structured `AUDIT` log line in `fintrack.log` is parseable with the
+decoder + rules in `docs/wazuh/`.
+
+1. Install the Wazuh agent on the Docker host.
+2. Point `ossec.conf` at the backend log file. On Windows (default deployment):
+
+   ```xml
+   <localfile>
+     <location>C:\ProgramData\Docker\volumes\fintrack_app-logs\_data\fintrack.log</location>
+     <log_format>syslog</log_format>
+   </localfile>
+   ```
+
+   On Linux: `/var/lib/docker/volumes/fintrack_app-logs/_data/fintrack.log`.
+
+3. Copy decoder + rules to the Wazuh manager:
+
+   ```bash
+   sudo cp docs/wazuh/fintrack-decoder.xml /var/ossec/etc/decoders/
+   sudo cp docs/wazuh/fintrack-rules.xml /var/ossec/etc/rules/
+   sudo systemctl restart wazuh-manager
+   ```
+
+Supported action field values are defined in
+`backend/src/main/java/com/fintrack/audit/AuditAction.java` -- add a rule line
+for any new action you want to alert on (the generic rules above already cover
+success / failure patterns).
+
+## 13. Homarr dashboard tile
 
 If you run Homarr as the homelab launcher, FinTrack drops in as a standard app
 tile. The public-facing URL is `https://fatihaciroglu.dev` and the health

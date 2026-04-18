@@ -1,0 +1,20 @@
+<!--
+  Wazuh decoder for the FinTrack AUDIT log line.
+
+  Expected log file: /var/log/fintrack/fintrack.log on the backend container,
+  mounted via the `app-logs` Docker volume. Point the Wazuh agent at that path
+  (ossec.conf <localfile>) before enabling these rules.
+
+  Sample line this decoder matches:
+    AUDIT action=LOGIN status=FAILURE user="alice" ip=203.0.113.4 detail="Bad password"
+-->
+
+<decoder name="fintrack-audit">
+  <prematch>AUDIT action=\S+ status=\S+ </prematch>
+</decoder>
+
+<decoder name="fintrack-audit-fields">
+  <parent>fintrack-audit</parent>
+  <regex>AUDIT action=(\S+) status=(\S+) user="(\S*)" ip=(\S+) detail="([^"]*)"</regex>
+  <order>action, status, srcuser, srcip, extra_data</order>
+</decoder>

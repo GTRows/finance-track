@@ -296,7 +296,7 @@ applications behind this stack.
 - [x] 15.8 CrowdSec feed -- expose auth-failure and TOTP-failure events via audit_log format
         consumable by CrowdSec scenarios
 - [x] 15.9 Loki log shipping via Promtail sidecar (structured JSON already emitted)
-- [ ] 15.10 Wazuh agent compatibility -- document log paths and action field set
+- [x] 15.10 Wazuh agent compatibility -- document log paths and action field set
 - [x] 15.11 Homarr tile snippet (icon, URL, health endpoint) in `docs/`
 
 ## Phase 16 -- Notifications
