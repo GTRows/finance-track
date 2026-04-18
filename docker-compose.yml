@@ -165,13 +165,18 @@ services:
       start_period: 60s
 
   # ----------------------------------------------------------
-  # Backup -- daily pg_dump loop, host-agnostic (no systemd/Task
-  # Scheduler needed). Dumps go to ./backups on the host, 30-day
-  # retention. Runs the first dump ~5 min after boot, then every
-  # 24h while the stack is up.
+  # Backup -- restic-based encrypted backup loop. Pipes pg_dump
+  # stdin into a deduplicated, encrypted restic repository. By
+  # default the repo lives on the host at ./backups/restic, but
+  # RESTIC_REPOSITORY can point to an S3 bucket, B2 bucket, or
+  # REST server -- restic natively supports these transports.
+  # A matching password is required; set RESTIC_PASSWORD or the
+  # service will refuse to start rather than use a blank key.
+  # First dump runs ~5 min after boot, then every
+  # BACKUP_INTERVAL_SECONDS while the stack is up.
   # ----------------------------------------------------------
   backup:
-    image: postgres:16-alpine
+    image: restic/restic:latest
     container_name: fintrack-backup
     restart: always
     environment:
@@ -179,8 +184,17 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-fintrack}
       - POSTGRES_DB=${POSTGRES_DB:-fintrack}
       - PGPASSWORD=${POSTGRES_PASSWORD}
+      - RESTIC_REPOSITORY=${RESTIC_REPOSITORY:-/backups/restic}
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
       - BACKUP_INTERVAL_SECONDS=${BACKUP_INTERVAL_SECONDS:-86400}
-      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
+      - RESTIC_KEEP_DAILY=${RESTIC_KEEP_DAILY:-7}
+      - RESTIC_KEEP_WEEKLY=${RESTIC_KEEP_WEEKLY:-4}
+      - RESTIC_KEEP_MONTHLY=${RESTIC_KEEP_MONTHLY:-6}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-}
+      - B2_ACCOUNT_ID=${B2_ACCOUNT_ID:-}
+      - B2_ACCOUNT_KEY=${B2_ACCOUNT_KEY:-}
     volumes:
       - ./backups:/backups
     depends_on:
@@ -190,15 +204,27 @@ services:
       - fintrack-net
     entrypoint: >
       /bin/sh -c '
+        set -e;
+        if [ -z "$$RESTIC_PASSWORD" ]; then
+          echo "[backup] RESTIC_PASSWORD is empty, refusing to start";
+          exit 1;
+        fi;
+        apk add --no-cache postgresql-client >/dev/null 2>&1 || true;
+        restic snapshots >/dev/null 2>&1 || restic init;
         sleep 300;
         while :; do
           TS=$$(date +%Y%m%d_%H%M%S);
-          FILE=/backups/fintrack_$$TS.sql.gz;
-          echo "[backup] dumping to $$FILE";
-          pg_dump -h "$$POSTGRES_HOST" -U "$$POSTGRES_USER" "$$POSTGRES_DB" | gzip > "$$FILE"
-            && echo "[backup] ok $$FILE"
-            || echo "[backup] FAILED $$FILE";
-          find /backups -name "fintrack_*.sql.gz" -mtime +$$BACKUP_RETENTION_DAYS -delete 2>/dev/null || true;
+          echo "[backup] snapshot $$TS -> $$RESTIC_REPOSITORY";
+          pg_dump -h "$$POSTGRES_HOST" -U "$$POSTGRES_USER" "$$POSTGRES_DB" \
+            | restic backup --stdin --stdin-filename "fintrack-$$TS.sql" \
+                --tag postgres --tag fintrack \
+            && echo "[backup] ok $$TS" \
+            || echo "[backup] FAILED $$TS";
+          restic forget --prune \
+            --keep-daily  "$$RESTIC_KEEP_DAILY" \
+            --keep-weekly "$$RESTIC_KEEP_WEEKLY" \
+            --keep-monthly "$$RESTIC_KEEP_MONTHLY" \
+            --tag fintrack >/dev/null 2>&1 || true;
           sleep "$$BACKUP_INTERVAL_SECONDS";
         done
       '

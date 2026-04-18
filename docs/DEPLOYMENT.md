@@ -67,10 +67,13 @@ docker compose -f docker-compose.yml -f docker-compose.traefik.yml up -d --build
 # docker compose --profile nginx up -d --build
 ```
 
-The compose stack includes a built-in `backup` container that takes a daily
-`pg_dump` of the database into `./backups/` with 30-day retention. No Windows
-Task Scheduler setup needed. Tune via `BACKUP_INTERVAL_SECONDS` and
-`BACKUP_RETENTION_DAYS` in `.env`.
+The compose stack includes a built-in `backup` container that pipes a daily
+`pg_dump` into a **restic** encrypted repository. Defaults to a local repo at
+`./backups/restic` on the host; point `RESTIC_REPOSITORY` at an S3 or B2
+bucket to ship off-host. `RESTIC_PASSWORD` is required — the container
+refuses to start without one. Tune the frequency via `BACKUP_INTERVAL_SECONDS`
+and retention via `RESTIC_KEEP_DAILY` / `RESTIC_KEEP_WEEKLY` /
+`RESTIC_KEEP_MONTHLY`. See Section 5 for the restore recipe.
 
 Verify:
 
@@ -110,9 +113,53 @@ supports it, or convert to WSL2's `dockerd` under systemd.
 
 ## 5. Backups + restore
 
-- Daily dumps in `./backups/` via the `backup` compose service (see logs with
-  `docker compose logs -f backup`)
-- Restore: `bash scripts/restore.sh backups/fintrack_YYYYMMDD_HHMMSS.sql.gz`
+The `backup` compose service runs a restic loop — daily encrypted, deduplicated
+snapshots of `pg_dump` output. Tail progress with
+`docker compose logs -f backup`.
+
+**Local repository** (default): snapshots land inside the `./backups/restic/`
+directory on the host. Back that directory up via Syncthing / rsync to get an
+off-host copy, or point `RESTIC_REPOSITORY` directly at S3 / B2 to skip the
+host-copy hop.
+
+**Off-host targets**: set `RESTIC_REPOSITORY` and the transport credentials in
+`.env` before first start. Examples:
+
+```env
+RESTIC_REPOSITORY=s3:s3.amazonaws.com/fintrack-backups
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=eu-central-1
+```
+
+```env
+RESTIC_REPOSITORY=b2:fintrack-backups
+B2_ACCOUNT_ID=...
+B2_ACCOUNT_KEY=...
+```
+
+The container initialises the repo on first boot if it does not exist, then
+applies the `keep-daily/weekly/monthly` forget policy after every snapshot.
+
+**Inspect snapshots**:
+
+```bash
+docker compose exec backup restic snapshots
+docker compose exec backup restic stats
+```
+
+**Restore the latest snapshot** (interactive, writes a fresh dump into the
+backup container's `/tmp`, then pipes it back into postgres):
+
+```bash
+docker compose exec backup restic restore latest --target /tmp/restore
+docker compose exec -T postgres psql -U fintrack fintrack \
+  < $(docker compose exec backup sh -c 'ls /tmp/restore/*.sql | head -1')
+```
+
+For a specific snapshot, swap `latest` for the snapshot ID shown by
+`restic snapshots`. Keep `RESTIC_PASSWORD` in a password manager — without it,
+the repository is unreadable by design.
 
 ## 6. Upgrades
 
