@@ -392,7 +392,14 @@
     "monthlyLogHint": "Ay sonu alınan anlık görüntülerin geçmiş kaydı",
     "captureSnapshot": "Anlık Görüntü Al",
     "noSnapshots": "Henüz anlık görüntü yok. Kaydınıza başlamak için mevcut ayı alın.",
-    "period": "Dönem"
+    "period": "Dönem",
+    "rollover": "Devir",
+    "rolloverTooltip": "Önceki aylardan kalan {{amount}}",
+    "ofEffective": "{{budget}} bütçenin {{used}} kısmı",
+    "budgetAmount": "Bütçe",
+    "manageCategoryBudgets": "Kategori Bütçeleri",
+    "manageCategoryBudgetsHint": "Her kategori için aylık hedef belirleyin. Harcanmayan tutarın bir sonraki aya aktarılması için devri açın.",
+    "noExpenseCategories": "Henüz gider kategorisi yok. Ayarlar'dan ekleyebilirsiniz."
   },
   "bills": {
     "title": "Faturalar",

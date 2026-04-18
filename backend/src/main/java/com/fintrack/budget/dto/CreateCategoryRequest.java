@@ -8,6 +8,7 @@ public record CreateCategoryRequest(
         @NotBlank String name,
         String icon,
         String color,
-        BigDecimal budgetAmount
+        BigDecimal budgetAmount,
+        Boolean rolloverEnabled
 ) {
 }

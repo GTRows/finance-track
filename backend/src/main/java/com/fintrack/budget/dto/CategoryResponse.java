@@ -11,14 +11,22 @@ public record CategoryResponse(
         String name,
         String icon,
         String color,
-        BigDecimal budgetAmount
+        BigDecimal budgetAmount,
+        boolean rolloverEnabled
 ) {
 
     public static CategoryResponse from(IncomeCategory c) {
-        return new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getColor(), null);
+        return new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getColor(), null, false);
     }
 
     public static CategoryResponse from(ExpenseCategory c) {
-        return new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getColor(), c.getBudgetAmount());
+        return new CategoryResponse(
+                c.getId(),
+                c.getName(),
+                c.getIcon(),
+                c.getColor(),
+                c.getBudgetAmount(),
+                c.isRolloverEnabled()
+        );
     }
 }

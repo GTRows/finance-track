@@ -77,6 +77,16 @@ export const budgetApi = {
     return data;
   },
 
+  updateIncomeCategory: async (id: string, req: CreateCategoryRequest): Promise<Category> => {
+    const { data } = await client.put<Category>(`/budget/categories/income/${id}`, req);
+    return data;
+  },
+
+  updateExpenseCategory: async (id: string, req: CreateCategoryRequest): Promise<Category> => {
+    const { data } = await client.put<Category>(`/budget/categories/expense/${id}`, req);
+    return data;
+  },
+
   deleteIncomeCategory: async (id: string): Promise<void> => {
     await client.delete(`/budget/categories/income/${id}`);
   },

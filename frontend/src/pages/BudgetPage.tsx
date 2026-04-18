@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { AddTransactionDialog } from '@/components/budget/AddTransactionDialog';
+import { BudgetCategoriesDialog } from '@/components/budget/BudgetCategoriesDialog';
 import { MonthlyLogSection } from '@/components/budget/MonthlyLogSection';
 import { BudgetRulesSection } from '@/components/budget/BudgetRulesSection';
 import { RecurringTemplatesSection } from '@/components/budget/RecurringTemplatesSection';
@@ -29,6 +30,7 @@ import {
   Loader2,
   Tag as TagIcon,
   X,
+  RotateCcw,
 } from 'lucide-react';
 import { reportApi } from '@/api/report.api';
 import { useTags } from '@/hooks/useTags';
@@ -94,6 +96,7 @@ export function BudgetPage() {
         description={t('budget.descriptionFor', { month: monthLabel })}
         actions={
           <div className="flex items-center gap-2">
+            <BudgetCategoriesDialog month={month} expenseCategories={expenseCategories} />
             <button
               type="button"
               onClick={handleDownloadCsv}
@@ -309,34 +312,69 @@ export function BudgetPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {summary.expenseByCategory.map((cat, i) => (
-                  <div key={i} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: cat.categoryColor ?? 'hsl(var(--muted-foreground))' }}
+                {summary.expenseByCategory.map((cat, i) => {
+                  const rollover = cat.rolloverAmount ?? 0;
+                  const hasRollover = rollover > 0;
+                  const effective = cat.effectiveBudget;
+                  const budgetUsedPct = effective && effective > 0
+                    ? Math.min(100, (cat.amount / effective) * 100)
+                    : null;
+                  return (
+                    <div key={cat.categoryId ?? i} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: cat.categoryColor ?? 'hsl(var(--muted-foreground))' }}
+                          />
+                          <span className="text-muted-foreground truncate">{cat.categoryName}</span>
+                          {hasRollover && (
+                            <span
+                              className="flex items-center gap-1 h-5 px-1.5 rounded-full border border-sky-500/40 bg-sky-500/10 text-[10px] font-medium text-sky-300 shrink-0"
+                              title={t('budget.rolloverTooltip', { amount: formatTRY(rollover) })}
+                            >
+                              <RotateCcw className="w-2.5 h-2.5" />
+                              +{formatTRY(rollover)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono tabular-nums">{formatTRY(cat.amount)}</span>
+                          <span className="text-muted-foreground w-10 text-right">
+                            {formatPercent(cat.percent / 100)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(cat.percent, 100)}%`,
+                            backgroundColor: cat.categoryColor ?? 'hsl(var(--primary))',
+                          }}
                         />
-                        <span className="text-muted-foreground">{cat.categoryName}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono tabular-nums">{formatTRY(cat.amount)}</span>
-                        <span className="text-muted-foreground w-10 text-right">
-                          {formatPercent(cat.percent / 100)}
-                        </span>
-                      </div>
+                      {effective != null && effective > 0 && (
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>
+                            {t('budget.ofEffective', {
+                              used: formatTRY(cat.amount),
+                              budget: formatTRY(effective),
+                            })}
+                          </span>
+                          <span
+                            className={cn(
+                              'tabular-nums',
+                              budgetUsedPct != null && budgetUsedPct >= 100 && 'text-red-400'
+                            )}
+                          >
+                            {budgetUsedPct != null ? formatPercent(budgetUsedPct / 100) : ''}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(cat.percent, 100)}%`,
-                          backgroundColor: cat.categoryColor ?? 'hsl(var(--primary))',
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

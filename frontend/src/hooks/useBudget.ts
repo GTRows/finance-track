@@ -88,3 +88,15 @@ export function useCreateExpenseCategory() {
     onSuccess: () => qc.invalidateQueries({ queryKey: categoriesKey() }),
   });
 }
+
+export function useUpdateExpenseCategory(month?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, req }: { id: string; req: Parameters<typeof budgetApi.updateExpenseCategory>[1] }) =>
+      budgetApi.updateExpenseCategory(id, req),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: categoriesKey() });
+      if (month) qc.invalidateQueries({ queryKey: summaryKey(month) });
+    },
+  });
+}

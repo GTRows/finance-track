@@ -8,6 +8,7 @@ export interface Category {
   icon: string;
   color: string;
   budgetAmount?: number;
+  rolloverEnabled: boolean;
 }
 
 /** Tag embedded on a transaction response. */
@@ -56,10 +57,14 @@ export interface BudgetSummary {
 }
 
 export interface CategoryAmount {
+  categoryId: string | null;
   categoryName: string;
   categoryColor: string | null;
   amount: number;
   percent: number;
+  baseBudget: number | null;
+  rolloverAmount: number | null;
+  effectiveBudget: number | null;
 }
 
 /** Monthly summary log (captured snapshot). */
@@ -85,6 +90,7 @@ export interface CreateCategoryRequest {
   icon?: string;
   color?: string;
   budgetAmount?: number;
+  rolloverEnabled?: boolean;
 }
 
 /** Paginated API response. */

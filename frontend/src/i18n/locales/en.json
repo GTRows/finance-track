@@ -391,7 +391,14 @@
     "monthlyLogHint": "Historical record of captured month-end snapshots",
     "captureSnapshot": "Capture Snapshot",
     "noSnapshots": "No snapshots yet. Capture the current month to start your log.",
-    "period": "Period"
+    "period": "Period",
+    "rollover": "Rollover",
+    "rolloverTooltip": "{{amount}} unspent from prior months",
+    "ofEffective": "{{used}} of {{budget}}",
+    "budgetAmount": "Budget",
+    "manageCategoryBudgets": "Category Budgets",
+    "manageCategoryBudgetsHint": "Set a monthly target per category. Toggle rollover to carry unspent amounts into the next month.",
+    "noExpenseCategories": "No expense categories yet. Create them from Settings."
   },
   "bills": {
     "title": "Bills",

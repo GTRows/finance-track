@@ -47,6 +47,7 @@ public class CategoryService {
                 .icon(req.icon())
                 .color(req.color())
                 .budgetAmount(req.budgetAmount())
+                .rolloverEnabled(Boolean.TRUE.equals(req.rolloverEnabled()))
                 .build();
         return CategoryResponse.from(expenseRepo.save(cat));
     }
@@ -69,6 +70,7 @@ public class CategoryService {
         cat.setIcon(req.icon());
         cat.setColor(req.color());
         cat.setBudgetAmount(req.budgetAmount());
+        cat.setRolloverEnabled(Boolean.TRUE.equals(req.rolloverEnabled()));
         return CategoryResponse.from(cat);
     }
 

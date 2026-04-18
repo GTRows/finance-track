@@ -147,13 +147,52 @@ public class BudgetService {
                 userId, from, to, Pageable.unpaged());
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
+        Map<UUID, BigDecimal> rolloverByCategory = computeRollovers(userId, ym);
+        Map<UUID, ExpenseCategory> expenseById = expenseRepo.findByUserIdOrderByNameAsc(userId).stream()
+                .collect(Collectors.toMap(ExpenseCategory::getId, c -> c));
 
         List<BudgetSummaryResponse.CategoryAmount> incByCat = groupByCategory(
-                all.getContent(), BudgetTransaction.TxnType.INCOME, catLookup, totalIncome);
+                all.getContent(), BudgetTransaction.TxnType.INCOME, catLookup, totalIncome,
+                Map.of(), Map.of());
         List<BudgetSummaryResponse.CategoryAmount> expByCat = groupByCategory(
-                all.getContent(), BudgetTransaction.TxnType.EXPENSE, catLookup, totalExpense);
+                all.getContent(), BudgetTransaction.TxnType.EXPENSE, catLookup, totalExpense,
+                expenseById, rolloverByCategory);
 
         return new BudgetSummaryResponse(month, totalIncome, totalExpense, net, savingsRate, incByCat, expByCat);
+    }
+
+    /**
+     * Walk months from start of year to month before {@code month}; accumulate per-category
+     * unused budget for any category flagged {@code rollover_enabled}. Rollover only carries
+     * positive balances — overspending in any month resets rollover to zero.
+     */
+    private Map<UUID, BigDecimal> computeRollovers(UUID userId, YearMonth month) {
+        List<ExpenseCategory> rolloverCats = expenseRepo.findByUserIdOrderByNameAsc(userId).stream()
+                .filter(ExpenseCategory::isRolloverEnabled)
+                .filter(c -> c.getBudgetAmount() != null && c.getBudgetAmount().signum() > 0)
+                .toList();
+        if (rolloverCats.isEmpty()) return Map.of();
+
+        YearMonth start = YearMonth.of(month.getYear(), 1);
+        if (!start.isBefore(month)) return rolloverCats.stream()
+                .collect(Collectors.toMap(ExpenseCategory::getId, c -> BigDecimal.ZERO));
+
+        Map<UUID, BigDecimal> carry = new HashMap<>();
+        for (ExpenseCategory c : rolloverCats) carry.put(c.getId(), BigDecimal.ZERO);
+
+        YearMonth cursor = start;
+        while (cursor.isBefore(month)) {
+            LocalDate cFrom = cursor.atDay(1);
+            LocalDate cTo = cursor.atEndOfMonth();
+            for (ExpenseCategory c : rolloverCats) {
+                BigDecimal spent = txnRepo.sumByUserIdAndCategoryAndDateRange(userId, c.getId(), cFrom, cTo);
+                BigDecimal effective = c.getBudgetAmount().add(carry.get(c.getId()));
+                BigDecimal leftover = effective.subtract(spent);
+                carry.put(c.getId(), leftover.signum() > 0 ? leftover : BigDecimal.ZERO);
+            }
+            cursor = cursor.plusMonths(1);
+        }
+        return carry;
     }
 
     // -- Monthly summaries (log) --
@@ -209,26 +248,54 @@ public class BudgetService {
         return map;
     }
 
+    private static final UUID UNCATEGORIZED = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     private List<BudgetSummaryResponse.CategoryAmount> groupByCategory(
             List<BudgetTransaction> txns,
             BudgetTransaction.TxnType type,
             Map<UUID, String[]> catLookup,
-            BigDecimal total) {
+            BigDecimal total,
+            Map<UUID, ExpenseCategory> expenseById,
+            Map<UUID, BigDecimal> rolloverByCategory) {
 
         Map<UUID, BigDecimal> grouped = txns.stream()
                 .filter(t -> t.getTxnType() == type)
                 .collect(Collectors.groupingBy(
-                        t -> t.getCategoryId() != null ? t.getCategoryId() : UUID.fromString("00000000-0000-0000-0000-000000000000"),
+                        t -> t.getCategoryId() != null ? t.getCategoryId() : UNCATEGORIZED,
                         Collectors.reducing(BigDecimal.ZERO, BudgetTransaction::getAmount, BigDecimal::add)));
+
+        // Ensure rollover-enabled categories surface even when spent == 0 this month.
+        for (UUID catId : rolloverByCategory.keySet()) {
+            grouped.putIfAbsent(catId, BigDecimal.ZERO);
+        }
 
         return grouped.entrySet().stream()
                 .sorted(Map.Entry.<UUID, BigDecimal>comparingByValue().reversed())
                 .map(e -> {
-                    String[] info = catLookup.getOrDefault(e.getKey(), new String[]{"Uncategorized", null});
+                    UUID catId = e.getKey();
+                    String[] info = catLookup.getOrDefault(catId, new String[]{"Uncategorized", null});
                     BigDecimal pct = total.signum() > 0
                             ? e.getValue().divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
                             : BigDecimal.ZERO;
-                    return new BudgetSummaryResponse.CategoryAmount(info[0], info[1], e.getValue(), pct);
+
+                    ExpenseCategory cat = expenseById.get(catId);
+                    BigDecimal base = cat != null ? cat.getBudgetAmount() : null;
+                    BigDecimal rollover = rolloverByCategory.getOrDefault(catId, null);
+                    BigDecimal effective = null;
+                    if (base != null) {
+                        effective = rollover != null ? base.add(rollover) : base;
+                    }
+
+                    return new BudgetSummaryResponse.CategoryAmount(
+                            catId.equals(UNCATEGORIZED) ? null : catId,
+                            info[0],
+                            info[1],
+                            e.getValue(),
+                            pct,
+                            base,
+                            rollover,
+                            effective
+                    );
                 })
                 .toList();
     }

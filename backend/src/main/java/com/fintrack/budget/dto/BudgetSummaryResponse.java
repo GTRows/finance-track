@@ -2,6 +2,7 @@ package com.fintrack.budget.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 public record BudgetSummaryResponse(
         String period,
@@ -14,10 +15,14 @@ public record BudgetSummaryResponse(
 ) {
 
     public record CategoryAmount(
+            UUID categoryId,
             String categoryName,
             String categoryColor,
             BigDecimal amount,
-            BigDecimal percent
+            BigDecimal percent,
+            BigDecimal baseBudget,
+            BigDecimal rolloverAmount,
+            BigDecimal effectiveBudget
     ) {
     }
 }

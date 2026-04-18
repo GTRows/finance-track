@@ -40,4 +40,8 @@ public class ExpenseCategory {
     @Column(name = "is_default")
     @Builder.Default
     private boolean isDefault = false;
+
+    @Column(name = "rollover_enabled", nullable = false)
+    @Builder.Default
+    private boolean rolloverEnabled = false;
 }

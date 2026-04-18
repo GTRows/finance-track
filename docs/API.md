@@ -315,6 +315,12 @@ Record a new investment transaction.
 ### DELETE /api/v1/budget/transactions/{id}
 
 ### GET /api/v1/budget/summary?month=2026-04
+Each `expenseByCategory` entry carries the category's static `baseBudget`, the
+accumulated `rolloverAmount` carried in from prior months of the same year
+(only for categories flagged `rolloverEnabled`), and the resulting
+`effectiveBudget = baseBudget + rolloverAmount`. Rollover resets to zero in any
+month where spending exceeds the running effective budget, matching the
+bucket-per-year mental model.
 ```json
 // Response 200
 {
@@ -324,10 +330,28 @@ Record a new investment transaction.
   "net": 26500.00,
   "savingsRate": 58.89,
   "incomeByCategory": [
-    { "categoryName": "Maaş", "amount": 40000.00, "percent": 88.9 }
+    {
+      "categoryId": "uuid",
+      "categoryName": "Maaş",
+      "categoryColor": "#22c55e",
+      "amount": 40000.00,
+      "percent": 88.9,
+      "baseBudget": null,
+      "rolloverAmount": null,
+      "effectiveBudget": null
+    }
   ],
   "expenseByCategory": [
-    { "categoryName": "Kira", "amount": 8000.00, "percent": 43.2 }
+    {
+      "categoryId": "uuid",
+      "categoryName": "Kira",
+      "categoryColor": "#ef4444",
+      "amount": 8000.00,
+      "percent": 43.2,
+      "baseBudget": 8500.00,
+      "rolloverAmount": 500.00,
+      "effectiveBudget": 9000.00
+    }
   ]
 }
 ```
@@ -348,19 +372,36 @@ List all monthly summary logs.
 ```
 
 ### GET /api/v1/budget/categories
-Returns income and expense categories.
+Returns income and expense categories. `rolloverEnabled` is always present
+(`false` for income categories, which do not support rollover).
 ```json
 // Response 200
 {
-  "income": [{ "id": "uuid", "name": "Maaş", "icon": "wallet", "color": "#22c55e" }],
-  "expense": [{ "id": "uuid", "name": "Kira", "icon": "home", "color": "#ef4444", "budgetAmount": 8000 }]
+  "income": [
+    { "id": "uuid", "name": "Maaş", "icon": "wallet", "color": "#22c55e", "budgetAmount": null, "rolloverEnabled": false }
+  ],
+  "expense": [
+    { "id": "uuid", "name": "Kira", "icon": "home", "color": "#ef4444", "budgetAmount": 8500, "rolloverEnabled": true }
+  ]
 }
 ```
 
 ### POST /api/v1/budget/categories/income
 ### POST /api/v1/budget/categories/expense
+Body supports `name`, `icon`, `color`, `budgetAmount`, and `rolloverEnabled`
+(expense only; ignored on income).
+```json
+{ "name": "Groceries", "icon": "shopping-cart", "color": "#f97316", "budgetAmount": 6000, "rolloverEnabled": true }
+```
+
 ### PUT /api/v1/budget/categories/income/{id}
+### PUT /api/v1/budget/categories/expense/{id}
+Same body shape as the POST endpoints. Toggling `rolloverEnabled` back to
+`false` stops future rollover accumulation; already-rolled amounts
+disappear from the next summary response.
+
 ### DELETE /api/v1/budget/categories/income/{id}
+### DELETE /api/v1/budget/categories/expense/{id}
 
 ### GET /api/v1/budget/recurring
 Monthly recurring transaction templates. Server auto-materializes due ones daily at 06:00.
