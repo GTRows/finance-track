@@ -1,6 +1,7 @@
 package com.fintrack.budget;
 
 import com.fintrack.budget.dto.*;
+import com.fintrack.budget.rule.TransactionCategoryRuleService;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
@@ -34,6 +35,7 @@ public class BudgetService {
     private final ExpenseCategoryRepository expenseRepo;
     private final MonthlySummaryRepository summaryRepo;
     private final BudgetRuleService budgetRuleService;
+    private final TransactionCategoryRuleService categoryRuleService;
     private final TagService tagService;
 
     // -- Transactions --
@@ -67,11 +69,15 @@ public class BudgetService {
 
     @Transactional
     public TransactionResponse create(UUID userId, CreateTransactionRequest req) {
+        UUID categoryId = req.categoryId();
+        if (categoryId == null) {
+            categoryId = categoryRuleService.matchFor(userId, req.txnType(), req.description()).orElse(null);
+        }
         BudgetTransaction txn = BudgetTransaction.builder()
                 .userId(userId)
                 .txnType(req.txnType())
                 .amount(req.amount())
-                .categoryId(req.categoryId())
+                .categoryId(categoryId)
                 .description(req.description())
                 .txnDate(req.txnDate())
                 .recurring(req.isRecurring())

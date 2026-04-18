@@ -351,6 +351,17 @@
     "usageCount_one": "{{count}} use",
     "usageCount_other": "{{count}} uses"
   },
+  "categoryRules": {
+    "sectionTitle": "Auto-categorization rules",
+    "sectionDescription": "When a transaction description contains the pattern, assign the matched category automatically.",
+    "patternPlaceholder": "Pattern (e.g. Migros)",
+    "selectCategory": "Pick a category",
+    "empty": "No rules yet. Add a pattern above to start auto-categorizing.",
+    "expense": "Expense",
+    "income": "Income",
+    "matchCount_one": "{{count}} hit",
+    "matchCount_other": "{{count}} hits"
+  },
   "risk": {
     "title": "Risk profile",
     "waiting_one": "Collecting daily snapshots -- {{count}} more day needed before risk metrics become meaningful.",

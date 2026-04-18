@@ -351,6 +351,17 @@
     "usageCount_one": "{{count}} kullanım",
     "usageCount_other": "{{count}} kullanım"
   },
+  "categoryRules": {
+    "sectionTitle": "Otomatik kategori kuralları",
+    "sectionDescription": "İşlem açıklaması belirtilen kalıbı içerirse eşleşen kategori otomatik olarak atanır.",
+    "patternPlaceholder": "Kalıp (örn. Migros)",
+    "selectCategory": "Kategori seç",
+    "empty": "Henüz kural yok. Yukarıdan bir kalıp ekleyerek başlayın.",
+    "expense": "Gider",
+    "income": "Gelir",
+    "matchCount_one": "{{count}} eşleşme",
+    "matchCount_other": "{{count}} eşleşme"
+  },
   "risk": {
     "title": "Risk profili",
     "waiting_one": "Günlük anlık görüntüler toplanıyor -- anlamlı risk metriği için {{count}} gün daha gerek.",

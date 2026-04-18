@@ -443,6 +443,40 @@ Remove template. Past materialized transactions are untouched.
 ### POST /api/v1/budget/recurring/{id}/run-now
 Immediately materialize one transaction dated today and advance `lastMaterializedOn`.
 
+### GET /api/v1/budget/category-rules
+List auto-categorization rules, ordered by `priority` ascending then `createdAt` ascending.
+```json
+// Response 200
+[
+  {
+    "id": "uuid",
+    "pattern": "Migros",
+    "categoryId": "uuid",
+    "categoryName": "Groceries",
+    "categoryColor": "#22c55e",
+    "txnType": "EXPENSE",
+    "priority": 100,
+    "matchCount": 17,
+    "createdAt": "2026-04-18T12:00:00Z"
+  }
+]
+```
+
+### POST /api/v1/budget/category-rules
+Create a rule. When a new transaction has no `categoryId`, the service matches its
+description (case-insensitive substring) against each rule for the same `txnType`
+in priority order; the first hit's `categoryId` is assigned and the rule's
+`matchCount` is incremented.
+```json
+{ "pattern": "Migros", "categoryId": "uuid", "txnType": "EXPENSE", "priority": 100 }
+```
+
+### PUT /api/v1/budget/category-rules/{id}
+Replace rule fields (same body as create).
+
+### DELETE /api/v1/budget/category-rules/{id}
+Remove rule. Past transactions already categorized by this rule are not touched.
+
 ---
 
 ## Bills
