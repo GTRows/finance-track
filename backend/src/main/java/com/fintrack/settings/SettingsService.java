@@ -44,12 +44,24 @@ public class SettingsService {
         return toResponse(repository.save(settings));
     }
 
+    @Transactional
+    public SettingsResponse markOnboardingComplete(UUID userId) {
+        UserSettings settings = repository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Settings not found"));
+        if (!settings.isOnboardingCompleted()) {
+            settings.setOnboardingCompleted(true);
+            settings = repository.save(settings);
+        }
+        return toResponse(settings);
+    }
+
     private SettingsResponse toResponse(UserSettings s) {
         return new SettingsResponse(
                 s.getCurrency(),
                 s.getLanguage(),
                 s.getTheme(),
-                s.getTimezone()
+                s.getTimezone(),
+                s.isOnboardingCompleted()
         );
     }
 }

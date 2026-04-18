@@ -28,4 +28,10 @@ public class SettingsController {
             @Valid @RequestBody UpdateSettingsRequest request) {
         return ResponseEntity.ok(settingsService.update(user.getId(), request));
     }
+
+    @PostMapping("/onboarding-complete")
+    public ResponseEntity<SettingsResponse> completeOnboarding(
+            @AuthenticationPrincipal FinTrackUserDetails user) {
+        return ResponseEntity.ok(settingsService.markOnboardingComplete(user.getId()));
+    }
 }

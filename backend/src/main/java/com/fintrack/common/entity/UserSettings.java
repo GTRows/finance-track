@@ -51,6 +51,10 @@ public class UserSettings {
     @Column(name = "notification_preferences", columnDefinition = "jsonb")
     private Map<String, Object> notificationPreferences;
 
+    @Column(name = "onboarding_completed", nullable = false)
+    @Builder.Default
+    private boolean onboardingCompleted = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

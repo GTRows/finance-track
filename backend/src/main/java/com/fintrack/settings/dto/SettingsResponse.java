@@ -4,6 +4,7 @@ public record SettingsResponse(
         String currency,
         String language,
         String theme,
-        String timezone
+        String timezone,
+        boolean onboardingCompleted
 ) {
 }
