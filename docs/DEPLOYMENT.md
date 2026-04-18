@@ -103,7 +103,35 @@ The compose stack includes a metrics stack wired to the backend's
 To keep Grafana private, leave `GRAFANA_PORT` bound to localhost in Docker Desktop
 (default behaviour) and don't add an Nginx route for it.
 
-## 8. Troubleshooting
+## 8. Logs & rotation
+
+Backend logs live in the `app-logs` Docker volume (mounted at `/var/log/fintrack`
+inside the container). The production profile uses a size-and-time rolling
+policy: files rotate daily and again once they exceed `LOG_MAX_FILE_SIZE`, with
+gzipped archives named `fintrack.YYYY-MM-DD.N.log.gz`. Oldest archives are
+deleted first once the combined on-disk size passes `LOG_TOTAL_SIZE_CAP`, so
+disk usage stays bounded regardless of traffic.
+
+Tune the caps in `.env` — these are the defaults:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `LOG_MAX_FILE_SIZE` | `50MB` | Max size of the live file before forced rollover |
+| `LOG_MAX_HISTORY_DAYS` | `90` | Days of archives to keep |
+| `LOG_TOTAL_SIZE_CAP` | `1GB` | Combined cap across `fintrack.*.log.gz` |
+| `LOG_ERROR_TOTAL_SIZE_CAP` | `256MB` | Combined cap for the ERROR-only archive |
+
+Values accept `KB` / `MB` / `GB` suffixes. Example: to give a larger disk 5 GB
+of headroom, set `LOG_TOTAL_SIZE_CAP=5GB` and restart the backend container.
+
+To inspect archives from the host:
+
+```powershell
+docker compose exec backend ls -lh /var/log/fintrack
+docker compose exec backend zcat /var/log/fintrack/fintrack.2026-04-17.0.log.gz | tail -n 200
+```
+
+## 9. Troubleshooting
 
 ```powershell
 docker compose ps

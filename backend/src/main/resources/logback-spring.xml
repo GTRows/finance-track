@@ -2,9 +2,10 @@
 <configuration>
 
     <property name="LOG_DIR" value="${LOG_DIR:-/var/log/fintrack}" />
-    <property name="MAX_FILE_SIZE" value="50MB" />
-    <property name="MAX_HISTORY_DAYS" value="90" />
-    <property name="TOTAL_SIZE_CAP" value="10GB" />
+    <property name="MAX_FILE_SIZE" value="${LOG_MAX_FILE_SIZE:-50MB}" />
+    <property name="MAX_HISTORY_DAYS" value="${LOG_MAX_HISTORY_DAYS:-90}" />
+    <property name="TOTAL_SIZE_CAP" value="${LOG_TOTAL_SIZE_CAP:-1GB}" />
+    <property name="ERROR_TOTAL_SIZE_CAP" value="${LOG_ERROR_TOTAL_SIZE_CAP:-256MB}" />
 
     <!-- ========== Development profile: human-readable console ========== -->
     <springProfile name="development">
@@ -57,7 +58,7 @@
                 <fileNamePattern>${LOG_DIR}/fintrack-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
                 <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
                 <maxHistory>${MAX_HISTORY_DAYS}</maxHistory>
-                <totalSizeCap>2GB</totalSizeCap>
+                <totalSizeCap>${ERROR_TOTAL_SIZE_CAP}</totalSizeCap>
             </rollingPolicy>
             <encoder>
                 <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{requestId:-}] [%X{userId:-}] - %msg%n%ex</pattern>

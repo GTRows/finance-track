@@ -114,6 +114,10 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - LOG_DIR=/var/log/fintrack
+      - LOG_MAX_FILE_SIZE=${LOG_MAX_FILE_SIZE:-50MB}
+      - LOG_MAX_HISTORY_DAYS=${LOG_MAX_HISTORY_DAYS:-90}
+      - LOG_TOTAL_SIZE_CAP=${LOG_TOTAL_SIZE_CAP:-1GB}
+      - LOG_ERROR_TOTAL_SIZE_CAP=${LOG_ERROR_TOTAL_SIZE_CAP:-256MB}
     volumes:
       - app-logs:/var/log/fintrack
     depends_on:
