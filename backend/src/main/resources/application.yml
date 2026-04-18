@@ -63,6 +63,8 @@ fintrack:
     enabled: ${AUTHELIA_ENABLED:false}
     header: ${AUTHELIA_HEADER:Remote-User}
     trusted-ips: ${AUTHELIA_TRUSTED_IPS:}
+  monthly-report:
+    enabled: ${MONTHLY_REPORT_ENABLED:false}
 
   # Cache
   cache:

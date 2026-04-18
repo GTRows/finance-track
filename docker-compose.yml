@@ -147,6 +147,7 @@ services:
       - AUTHELIA_ENABLED=${AUTHELIA_ENABLED:-false}
       - AUTHELIA_HEADER=${AUTHELIA_HEADER:-Remote-User}
       - AUTHELIA_TRUSTED_IPS=${AUTHELIA_TRUSTED_IPS:-}
+      - MONTHLY_REPORT_ENABLED=${MONTHLY_REPORT_ENABLED:-false}
     volumes:
       - app-logs:/var/log/fintrack
     depends_on:

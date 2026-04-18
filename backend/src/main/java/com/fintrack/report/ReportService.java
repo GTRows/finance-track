@@ -1,9 +1,11 @@
 package com.fintrack.report;
 
 import com.fintrack.asset.AssetRepository;
+import com.fintrack.budget.BudgetService;
 import com.fintrack.budget.TransactionRepository;
 import com.fintrack.budget.ExpenseCategoryRepository;
 import com.fintrack.budget.IncomeCategoryRepository;
+import com.fintrack.budget.dto.BudgetSummaryResponse;
 import com.fintrack.common.entity.*;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
@@ -42,6 +44,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -57,6 +60,7 @@ public class ReportService {
     private final IncomeCategoryRepository incomeCatRepo;
     private final ExpenseCategoryRepository expenseCatRepo;
     private final TagService tagService;
+    private final BudgetService budgetService;
 
     private static final Font TITLE_FONT = new Font(Font.HELVETICA, 18, Font.BOLD, Color.DARK_GRAY);
     private static final Font SUBTITLE_FONT = new Font(Font.HELVETICA, 12, Font.NORMAL, Color.GRAY);
@@ -205,6 +209,140 @@ public class ReportService {
             log.error("Failed to generate XLSX for user {}", userId, e);
             throw new RuntimeException("XLSX generation failed", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateMonthlyBudgetPdf(UUID userId, YearMonth period) {
+        String monthKey = period.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        BudgetSummaryResponse summary = budgetService.summary(userId, monthKey);
+
+        LocalDate from = period.atDay(1);
+        LocalDate to = period.atEndOfMonth();
+        List<BudgetTransaction> txns = txnRepo
+                .findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(userId, from, to, Pageable.unpaged())
+                .getContent();
+
+        Map<UUID, String> catNames = new HashMap<>();
+        incomeCatRepo.findByUserIdOrderByNameAsc(userId).forEach(c -> catNames.put(c.getId(), c.getName()));
+        expenseCatRepo.findByUserIdOrderByNameAsc(userId).forEach(c -> catNames.put(c.getId(), c.getName()));
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Document doc = new Document(PageSize.A4, 36, 36, 36, 36);
+            PdfWriter.getInstance(doc, baos);
+            doc.open();
+
+            addBudgetTitle(doc, period);
+            addBudgetKpis(doc, summary);
+            addBudgetCategoryTable(doc, "Income by category", summary.incomeByCategory());
+            addBudgetCategoryTable(doc, "Expense by category", summary.expenseByCategory());
+            addBudgetTransactionsTable(doc, txns, catNames);
+
+            doc.close();
+            log.info("Monthly budget PDF generated: userId={} period={} txns={}", userId, monthKey, txns.size());
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("Failed to generate monthly budget PDF for user {} period {}", userId, monthKey, e);
+            throw new RuntimeException("Monthly budget PDF generation failed", e);
+        }
+    }
+
+    private void addBudgetTitle(Document doc, YearMonth period) throws DocumentException {
+        Paragraph title = new Paragraph("Monthly Budget Report", TITLE_FONT);
+        title.setAlignment(Element.ALIGN_LEFT);
+        doc.add(title);
+
+        String subtitle = period.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH));
+        Paragraph sub = new Paragraph(subtitle, SUBTITLE_FONT);
+        sub.setSpacingAfter(20);
+        doc.add(sub);
+    }
+
+    private void addBudgetKpis(Document doc, BudgetSummaryResponse summary) throws DocumentException {
+        PdfPTable table = new PdfPTable(4);
+        table.setWidthPercentage(100);
+        table.setSpacingAfter(20);
+
+        addSummaryCell(table, "Income", formatTry(summary.totalIncome()) + " TRY");
+        addSummaryCell(table, "Expense", formatTry(summary.totalExpense()) + " TRY");
+        addSummaryCell(table, "Net", formatTry(summary.net()) + " TRY");
+        addSummaryCell(table, "Savings rate",
+                summary.savingsRate().setScale(2, RoundingMode.HALF_UP) + "%");
+
+        doc.add(table);
+    }
+
+    private void addBudgetCategoryTable(Document doc, String heading,
+                                         List<BudgetSummaryResponse.CategoryAmount> rows) throws DocumentException {
+        Paragraph h = new Paragraph(heading, SUMMARY_FONT);
+        h.setSpacingBefore(6);
+        h.setSpacingAfter(6);
+        doc.add(h);
+
+        if (rows.isEmpty()) {
+            Paragraph empty = new Paragraph("No entries.", CELL_FONT);
+            empty.setSpacingAfter(12);
+            doc.add(empty);
+            return;
+        }
+
+        PdfPTable table = new PdfPTable(new float[]{3f, 1.5f, 1f});
+        table.setWidthPercentage(100);
+        table.setSpacingAfter(16);
+
+        for (String header : new String[]{"Category", "Amount (TRY)", "Share"}) {
+            PdfPCell cell = new PdfPCell(new Phrase(header, HEADER_FONT));
+            cell.setBackgroundColor(HEADER_BG);
+            cell.setPadding(6);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(cell);
+        }
+
+        int i = 0;
+        for (BudgetSummaryResponse.CategoryAmount r : rows) {
+            Color bg = (i++ % 2 == 1) ? STRIPE_BG : Color.WHITE;
+            addCell(table, r.categoryName() != null ? r.categoryName() : "Uncategorized", bg, Element.ALIGN_LEFT);
+            addCell(table, formatTry(r.amount()), bg, Element.ALIGN_RIGHT);
+            addCell(table, r.percent().setScale(1, RoundingMode.HALF_UP) + "%", bg, Element.ALIGN_RIGHT);
+        }
+
+        doc.add(table);
+    }
+
+    private void addBudgetTransactionsTable(Document doc, List<BudgetTransaction> txns,
+                                             Map<UUID, String> catNames) throws DocumentException {
+        Paragraph h = new Paragraph("Transactions", SUMMARY_FONT);
+        h.setSpacingBefore(6);
+        h.setSpacingAfter(6);
+        doc.add(h);
+
+        if (txns.isEmpty()) {
+            doc.add(new Paragraph("No transactions for this period.", CELL_FONT));
+            return;
+        }
+
+        PdfPTable table = new PdfPTable(new float[]{1.2f, 1f, 2.5f, 2f, 1.3f});
+        table.setWidthPercentage(100);
+
+        for (String header : new String[]{"Date", "Type", "Description", "Category", "Amount (TRY)"}) {
+            PdfPCell cell = new PdfPCell(new Phrase(header, HEADER_FONT));
+            cell.setBackgroundColor(HEADER_BG);
+            cell.setPadding(6);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(cell);
+        }
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd MMM", Locale.ENGLISH);
+        int i = 0;
+        for (BudgetTransaction t : txns) {
+            Color bg = (i++ % 2 == 1) ? STRIPE_BG : Color.WHITE;
+            addCell(table, t.getTxnDate().format(dateFmt), bg, Element.ALIGN_LEFT);
+            addCell(table, t.getTxnType().name(), bg, Element.ALIGN_CENTER);
+            addCell(table, t.getDescription() != null ? t.getDescription() : "", bg, Element.ALIGN_LEFT);
+            addCell(table, catNames.getOrDefault(t.getCategoryId(), ""), bg, Element.ALIGN_LEFT);
+            addCell(table, formatTry(t.getAmount()), bg, Element.ALIGN_RIGHT);
+        }
+
+        doc.add(table);
     }
 
     private void addTitle(Document doc, Portfolio portfolio) throws DocumentException {
