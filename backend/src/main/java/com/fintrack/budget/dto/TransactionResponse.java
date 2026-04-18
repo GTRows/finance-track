@@ -21,6 +21,7 @@ public record TransactionResponse(
         LocalDate txnDate,
         boolean recurring,
         List<TagRef> tags,
+        boolean hasReceipt,
         Instant createdAt
 ) {
 
@@ -46,6 +47,7 @@ public record TransactionResponse(
                 t.getTxnDate(),
                 t.isRecurring(),
                 tags,
+                t.getReceiptPath() != null && !t.getReceiptPath().isBlank(),
                 t.getCreatedAt()
         );
     }

@@ -65,6 +65,7 @@ fintrack:
     trusted-ips: ${AUTHELIA_TRUSTED_IPS:}
   monthly-report:
     enabled: ${MONTHLY_REPORT_ENABLED:false}
+  receipt-dir: ${RECEIPT_DIR:/var/lib/fintrack/receipts}
 
   # Cache
   cache:

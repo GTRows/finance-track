@@ -59,6 +59,9 @@ public class BudgetTransaction {
     @Column(name = "recurrence_rule", length = 100)
     private String recurrenceRule;
 
+    @Column(name = "receipt_path", length = 512)
+    private String receiptPath;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

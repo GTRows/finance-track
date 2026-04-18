@@ -14,6 +14,7 @@ volumes:
   nginx-html:
   certbot-www:
   app-logs:
+  app-receipts:
   prometheus-data:
   grafana-data:
 
@@ -148,8 +149,10 @@ services:
       - AUTHELIA_HEADER=${AUTHELIA_HEADER:-Remote-User}
       - AUTHELIA_TRUSTED_IPS=${AUTHELIA_TRUSTED_IPS:-}
       - MONTHLY_REPORT_ENABLED=${MONTHLY_REPORT_ENABLED:-false}
+      - RECEIPT_DIR=${RECEIPT_DIR:-/var/lib/fintrack/receipts}
     volumes:
       - app-logs:/var/log/fintrack
+      - app-receipts:/var/lib/fintrack/receipts
     depends_on:
       postgres:
         condition: service_healthy
