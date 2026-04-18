@@ -808,6 +808,52 @@ Removes a single payment. Returns 204.
 
 ---
 
+## FIRE calculator
+
+### GET /api/v1/fire
+Computes financial-independence projection. All inputs have defaults derived
+from the user's portfolios and monthly summaries; any parameter can be
+overridden via query string for what-if scenarios.
+```
+GET /api/v1/fire?withdrawalRate=0.04&expectedReturn=0.07&monthlyContribution=25000
+```
+All query params are optional:
+- `withdrawalRate` -- safe withdrawal rate (default 0.04)
+- `expectedReturn` -- annual real return (default 0.07)
+- `monthlyContribution` -- override computed savings ability
+- `monthlyExpense` -- override rolling average
+- `netWorth` -- override computed live value
+
+```json
+// Response 200
+{
+  "currentNetWorth": 620000.00,
+  "avgMonthlyIncome": 85000.00,
+  "avgMonthlyExpense": 52000.00,
+  "savingsRate": 0.3882,
+  "monthlyContribution": 33000.00,
+  "withdrawalRate": 0.0400,
+  "expectedReturn": 0.0700,
+  "targetNumber": 15600000.00,
+  "progressRatio": 0.0397,
+  "monthsToFi": 234,
+  "yearsToFi": 19.50,
+  "projectedFiDate": "2045-10-18",
+  "samplesUsed": 9,
+  "sufficientData": true,
+  "trajectory": [
+    { "year": 0, "date": "2026-04-18", "netWorth": 620000.00 },
+    { "year": 1, "date": "2027-04-18", "netWorth": 1054000.00 }
+  ]
+}
+```
+`samplesUsed` is the number of monthly data points the averages were built
+from. `sufficientData` flips to `false` below three samples -- the projection
+still returns values but the UI should caution the user. `monthsToFi` is
+`null` when savings rate plus return cannot close the gap within 60 years.
+
+---
+
 ## Reports
 
 ### GET /api/v1/reports/portfolio/{id}?format=pdf&period=2026-04

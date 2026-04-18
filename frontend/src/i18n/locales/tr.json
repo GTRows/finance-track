@@ -318,6 +318,28 @@
       "OTHER": "Diğer"
     }
   },
+  "fire": {
+    "title": "FIRE hesaplayıcı",
+    "subtitle": "Tasarruf oranından ve canlı net servetten bağımsızlık süresi",
+    "withdrawalRate": "Çekim",
+    "expectedReturn": "Getiri",
+    "targetNumber": "FIRE tutarı",
+    "targetHint": "{{rate}} güvenli çekim oranıyla yıllık giderin 25 katı",
+    "timeToFi": "Bağımsızlığa süre",
+    "years": "yıl",
+    "projectedDate": "yaklaşık {{date}}",
+    "financiallyFree": "Ulaşıldı",
+    "financiallyFreeHint": "Net servet bu SWR'de yıllık giderini zaten karşılıyor.",
+    "unreachable": "Katkı artmalı",
+    "unreachableHint": "Mevcut tasarruf oranı yetmiyor -- katkıyı ya da beklenen getiriyi artır.",
+    "netWorth": "Net servet",
+    "monthlyContribution": "Aylık tasarruf",
+    "savingsRate": "Tasarruf oranı",
+    "annualExpenses": "Yıllık gider",
+    "progress": "FI ilerlemesi",
+    "needMoreData_one": "Güvenilir projeksiyon için {{count}} ay daha gelir ve gider kaydı gerekiyor.",
+    "needMoreData_other": "Güvenilir projeksiyon için {{count}} ay daha gelir ve gider kaydı gerekiyor."
+  },
   "risk": {
     "title": "Risk profili",
     "waiting_one": "Günlük anlık görüntüler toplanıyor -- anlamlı risk metriği için {{count}} gün daha gerek.",

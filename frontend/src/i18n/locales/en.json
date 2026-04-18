@@ -318,6 +318,28 @@
       "OTHER": "Other"
     }
   },
+  "fire": {
+    "title": "FIRE calculator",
+    "subtitle": "Time-to-independence from your savings rate and live net worth",
+    "withdrawalRate": "SWR",
+    "expectedReturn": "Return",
+    "targetNumber": "FIRE number",
+    "targetHint": "25x annual expenses at a {{rate}} safe withdrawal rate",
+    "timeToFi": "Time to independence",
+    "years": "years",
+    "projectedDate": "reached around {{date}}",
+    "financiallyFree": "Reached",
+    "financiallyFreeHint": "Net worth already covers your annual expenses at this SWR.",
+    "unreachable": "Needs more contributions",
+    "unreachableHint": "Savings rate alone won't close the gap -- increase contributions or the expected return.",
+    "netWorth": "Net worth",
+    "monthlyContribution": "Monthly savings",
+    "savingsRate": "Savings rate",
+    "annualExpenses": "Annual expenses",
+    "progress": "Progress toward FI",
+    "needMoreData_one": "Log {{count}} more month of income & expenses for a reliable projection.",
+    "needMoreData_other": "Log {{count}} more months of income & expenses for a reliable projection."
+  },
   "risk": {
     "title": "Risk profile",
     "waiting_one": "Collecting daily snapshots -- {{count}} more day needed before risk metrics become meaningful.",
