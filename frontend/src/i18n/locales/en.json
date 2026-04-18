@@ -411,7 +411,19 @@
     "budgetAmount": "Budget",
     "manageCategoryBudgets": "Category Budgets",
     "manageCategoryBudgetsHint": "Set a monthly target per category. Toggle rollover to carry unspent amounts into the next month.",
-    "noExpenseCategories": "No expense categories yet. Create them from Settings."
+    "noExpenseCategories": "No expense categories yet. Create them from Settings.",
+    "bulk": {
+      "selected_one": "{{count}} selected",
+      "selected_other": "{{count}} selected",
+      "select": "Select",
+      "deselect": "Deselect",
+      "selectAll": "Select all on this page",
+      "deselectAll": "Deselect all",
+      "clear": "Clear selection",
+      "addTag": "Add tag",
+      "setCategory": "Set category",
+      "clearCategory": "Clear category"
+    }
   },
   "bills": {
     "title": "Bills",

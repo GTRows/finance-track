@@ -63,6 +63,29 @@ export function useDeleteTransaction(month: string) {
   });
 }
 
+export function useBulkDeleteTransactions(month: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => budgetApi.bulkDelete(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
+      qc.invalidateQueries({ queryKey: summaryKey(month) });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useBulkUpdateTransactions(month: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof budgetApi.bulkUpdate>[0]) => budgetApi.bulkUpdate(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
+      qc.invalidateQueries({ queryKey: summaryKey(month) });
+    },
+  });
+}
+
 export function useCaptureSnapshot(month: string) {
   const qc = useQueryClient();
   return useMutation({

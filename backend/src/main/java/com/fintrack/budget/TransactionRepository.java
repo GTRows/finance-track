@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,6 +19,8 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<BudgetTransaction, UUID> {
 
     Optional<BudgetTransaction> findByIdAndUserId(UUID id, UUID userId);
+
+    List<BudgetTransaction> findByIdInAndUserId(Collection<UUID> ids, UUID userId);
 
     Page<BudgetTransaction> findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(
             UUID userId, LocalDate from, LocalDate to, Pageable pageable);

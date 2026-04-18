@@ -412,7 +412,19 @@
     "budgetAmount": "Bütçe",
     "manageCategoryBudgets": "Kategori Bütçeleri",
     "manageCategoryBudgetsHint": "Her kategori için aylık hedef belirleyin. Harcanmayan tutarın bir sonraki aya aktarılması için devri açın.",
-    "noExpenseCategories": "Henüz gider kategorisi yok. Ayarlar'dan ekleyebilirsiniz."
+    "noExpenseCategories": "Henüz gider kategorisi yok. Ayarlar'dan ekleyebilirsiniz.",
+    "bulk": {
+      "selected_one": "{{count}} seçili",
+      "selected_other": "{{count}} seçili",
+      "select": "Seç",
+      "deselect": "Seçimi kaldır",
+      "selectAll": "Bu sayfadaki tümünü seç",
+      "deselectAll": "Seçimi temizle",
+      "clear": "Seçimi temizle",
+      "addTag": "Etiket ekle",
+      "setCategory": "Kategori ata",
+      "clearCategory": "Kategoriyi temizle"
+    }
   },
   "bills": {
     "title": "Faturalar",

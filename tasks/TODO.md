@@ -274,7 +274,7 @@ email-reminder work in later phases.
 ## Phase 14 -- UX
 
 - [ ] 14.1 Global command palette (Cmd/Ctrl+K over holdings, bills, transactions)
-- [ ] 14.2 Bulk operations (multi-select delete / edit / tag)
+- [x] 14.2 Bulk operations (multi-select delete / edit / tag)
 - [x] 14.3 Pinned holdings (favourites at top of list)
 - [ ] 14.4 First-run onboarding wizard
 - [x] 14.5 PWA manifest + installable + offline shell

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,15 @@ import { BudgetCategoriesDialog } from '@/components/budget/BudgetCategoriesDial
 import { MonthlyLogSection } from '@/components/budget/MonthlyLogSection';
 import { BudgetRulesSection } from '@/components/budget/BudgetRulesSection';
 import { RecurringTemplatesSection } from '@/components/budget/RecurringTemplatesSection';
+import { BulkActionBar } from '@/components/budget/BulkActionBar';
 import {
   useTransactions,
   useBudgetSummary,
   useCategories,
   useCreateTransaction,
   useDeleteTransaction,
+  useBulkDeleteTransactions,
+  useBulkUpdateTransactions,
 } from '@/hooks/useBudget';
 import { formatTRY, formatPercent } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
@@ -60,7 +63,23 @@ export function BudgetPage() {
   const tagsQuery = useTags();
   const createTxn = useCreateTransaction(month);
   const deleteTxn = useDeleteTransaction(month);
+  const bulkDelete = useBulkDeleteTransactions(month);
+  const bulkUpdate = useBulkUpdateTransactions(month);
   const [downloading, setDownloading] = useState<null | 'csv' | 'xlsx'>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const bulkPending = bulkDelete.isPending || bulkUpdate.isPending;
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelected(new Set());
 
   const monthRange = () => {
     const [y, m] = month.split('-').map(Number);
@@ -96,6 +115,44 @@ export function BudgetPage() {
   const expenseCategories = catQuery.data?.expense ?? [];
   const availableTags = tagsQuery.data ?? [];
   const activeTag = availableTags.find((tag) => tag.id === tagFilter) ?? null;
+
+  const visibleIds = useMemo(() => transactions.map((t) => t.id), [transactions]);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
+  const someVisibleSelected = !allVisibleSelected && visibleIds.some((id) => selected.has(id));
+
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      if (allVisibleSelected) {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.delete(id));
+        return next;
+      }
+      const next = new Set(prev);
+      visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const runBulkDelete = async () => {
+    const ids = Array.from(selected);
+    await bulkDelete.mutateAsync(ids);
+    clearSelection();
+  };
+
+  const runBulkAddTag = async (tagId: string) => {
+    const ids = Array.from(selected);
+    await bulkUpdate.mutateAsync({ ids, addTagIds: [tagId] });
+  };
+
+  const runBulkSetCategory = async (categoryId: string) => {
+    const ids = Array.from(selected);
+    await bulkUpdate.mutateAsync({ ids, categoryId });
+  };
+
+  const runBulkClearCategory = async () => {
+    const ids = Array.from(selected);
+    await bulkUpdate.mutateAsync({ ids, clearCategory: true });
+  };
 
   const monthLabel = (() => {
     const [y, m] = month.split('-').map(Number);
@@ -213,7 +270,29 @@ export function BudgetPage() {
         {/* Transaction list */}
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2 flex-row items-center justify-between gap-3 space-y-0">
-            <CardTitle className="text-sm font-medium">{t('budget.recentTransactions')}</CardTitle>
+            <div className="flex items-center gap-2">
+              {transactions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  className={cn(
+                    'w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors shrink-0',
+                    allVisibleSelected
+                      ? 'bg-sky-500/20 border-sky-500/60 text-sky-300'
+                      : someVisibleSelected
+                        ? 'bg-sky-500/10 border-sky-500/40 text-sky-300'
+                        : 'border-border hover:border-sky-500/40',
+                  )}
+                  title={allVisibleSelected ? t('budget.bulk.deselectAll') : t('budget.bulk.selectAll')}
+                >
+                  {allVisibleSelected && <span className="text-[9px] leading-none">✓</span>}
+                  {someVisibleSelected && !allVisibleSelected && (
+                    <span className="w-1.5 h-0.5 bg-sky-400" />
+                  )}
+                </button>
+              )}
+              <CardTitle className="text-sm font-medium">{t('budget.recentTransactions')}</CardTitle>
+            </div>
             {availableTags.length > 0 && (
               <div className="flex items-center gap-1 max-w-[65%] overflow-x-auto scrollbar-thin">
                 <TagIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -244,6 +323,20 @@ export function BudgetPage() {
             )}
           </CardHeader>
           <CardContent className="px-0">
+            {selected.size > 0 && (
+              <BulkActionBar
+                count={selected.size}
+                onClear={clearSelection}
+                onDelete={runBulkDelete}
+                onAddTag={runBulkAddTag}
+                onSetCategory={runBulkSetCategory}
+                onClearCategory={runBulkClearCategory}
+                tags={availableTags}
+                incomeCategories={incomeCategories}
+                expenseCategories={expenseCategories}
+                pending={bulkPending}
+              />
+            )}
             {transactions.length === 0 ? (
               <EmptyState
                 icon={Wallet}
@@ -260,11 +353,32 @@ export function BudgetPage() {
               />
             ) : (
               <div className="divide-y divide-border">
-                {transactions.map((txn) => (
+                {transactions.map((txn) => {
+                  const isSelected = selected.has(txn.id);
+                  const anySelected = selected.size > 0;
+                  return (
                   <div
                     key={txn.id}
-                    className="flex items-center gap-3 px-6 py-3 group hover:bg-accent/30 transition-colors"
+                    className={cn(
+                      'flex items-center gap-3 px-6 py-3 group transition-colors',
+                      isSelected ? 'bg-sky-500/[0.05]' : 'hover:bg-accent/30',
+                    )}
                   >
+                    {/* Selection checkbox — revealed on hover unless any row is selected */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSelect(txn.id)}
+                      className={cn(
+                        'w-4 h-4 rounded border flex items-center justify-center cursor-pointer shrink-0 transition-opacity transition-colors',
+                        anySelected || isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                        isSelected
+                          ? 'bg-sky-500/20 border-sky-500/60 text-sky-300'
+                          : 'border-border hover:border-sky-500/40',
+                      )}
+                      title={t(isSelected ? 'budget.bulk.deselect' : 'budget.bulk.select')}
+                    >
+                      {isSelected && <span className="text-[9px] leading-none">✓</span>}
+                    </button>
                     {/* Category dot */}
                     <span
                       className="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -320,7 +434,8 @@ export function BudgetPage() {
                       <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

@@ -24,6 +24,10 @@ public interface TransactionTagRepository extends JpaRepository<TransactionTag, 
     void deleteByTransactionId(@Param("transactionId") UUID transactionId);
 
     @Modifying
+    @Query("DELETE FROM TransactionTag tt WHERE tt.transactionId = :transactionId AND tt.tagId = :tagId")
+    void deleteByTransactionIdAndTagId(@Param("transactionId") UUID transactionId, @Param("tagId") UUID tagId);
+
+    @Modifying
     @Query("DELETE FROM TransactionTag tt WHERE tt.tagId = :tagId")
     void deleteByTagId(@Param("tagId") UUID tagId);
 

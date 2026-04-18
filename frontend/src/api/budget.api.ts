@@ -41,6 +41,22 @@ export const budgetApi = {
     await client.delete(`/budget/transactions/${id}`);
   },
 
+  bulkDelete: async (ids: string[]): Promise<{ affected: number }> => {
+    const { data } = await client.post<{ affected: number }>('/budget/transactions/bulk-delete', { ids });
+    return data;
+  },
+
+  bulkUpdate: async (payload: {
+    ids: string[];
+    categoryId?: string;
+    clearCategory?: boolean;
+    addTagIds?: string[];
+    removeTagIds?: string[];
+  }): Promise<{ affected: number }> => {
+    const { data } = await client.post<{ affected: number }>('/budget/transactions/bulk-update', payload);
+    return data;
+  },
+
   // -- Summary --
 
   summary: async (month: string): Promise<BudgetSummary> => {

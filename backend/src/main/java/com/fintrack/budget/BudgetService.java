@@ -132,6 +132,75 @@ public class BudgetService {
         log.info("Transaction deleted: id={}", txnId);
     }
 
+    @Transactional
+    public int bulkDelete(UUID userId, List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) return 0;
+        List<BudgetTransaction> owned = txnRepo.findByIdInAndUserId(ids, userId);
+        if (owned.isEmpty()) return 0;
+        txnRepo.deleteAll(owned);
+        log.info("Bulk delete transactions: requested={} deleted={}", ids.size(), owned.size());
+        return owned.size();
+    }
+
+    /**
+     * Apply category swap and/or tag add/remove to every selected transaction the
+     * user owns. Category changes are skipped for transactions whose txn_type does
+     * not match the category's type (validated by looking up the category).
+     */
+    @Transactional
+    public int bulkUpdate(UUID userId,
+                          List<UUID> ids,
+                          UUID categoryId,
+                          boolean clearCategory,
+                          List<UUID> addTagIds,
+                          List<UUID> removeTagIds) {
+        if (ids == null || ids.isEmpty()) return 0;
+        List<BudgetTransaction> owned = txnRepo.findByIdInAndUserId(ids, userId);
+        if (owned.isEmpty()) return 0;
+
+        // Resolve category once for validation; empty if not set.
+        BudgetTransaction.TxnType expectedType = null;
+        if (categoryId != null) {
+            boolean isExpense = expenseRepo.findByIdAndUserId(categoryId, userId).isPresent();
+            boolean isIncome = !isExpense && incomeRepo.findByIdAndUserId(categoryId, userId).isPresent();
+            if (!isExpense && !isIncome) {
+                throw new ResourceNotFoundException("Category not found");
+            }
+            expectedType = isExpense ? BudgetTransaction.TxnType.EXPENSE : BudgetTransaction.TxnType.INCOME;
+        }
+
+        List<UUID> ownedAddTags = tagService.resolveOwnedIds(userId, addTagIds);
+        List<UUID> ownedRemoveTags = tagService.resolveOwnedIds(userId, removeTagIds);
+
+        int affected = 0;
+        for (BudgetTransaction txn : owned) {
+            boolean changed = false;
+            if (clearCategory && categoryId == null) {
+                if (txn.getCategoryId() != null) {
+                    txn.setCategoryId(null);
+                    changed = true;
+                }
+            } else if (categoryId != null && txn.getTxnType() == expectedType) {
+                if (!categoryId.equals(txn.getCategoryId())) {
+                    txn.setCategoryId(categoryId);
+                    changed = true;
+                }
+            }
+            if (changed) txnRepo.save(txn);
+
+            if (!ownedAddTags.isEmpty() || !ownedRemoveTags.isEmpty()) {
+                tagService.mutateTransactionTags(txn.getId(), ownedAddTags, ownedRemoveTags);
+                changed = true;
+            }
+
+            if (changed) affected++;
+        }
+
+        log.info("Bulk update transactions: requested={} affected={} categorySet={} addTags={} removeTags={}",
+                ids.size(), affected, categoryId, ownedAddTags.size(), ownedRemoveTags.size());
+        return affected;
+    }
+
     // -- Summary --
 
     @Transactional(readOnly = true)

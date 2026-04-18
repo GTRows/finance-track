@@ -104,6 +104,35 @@ public class TagService {
         }
     }
 
+    /**
+     * Additive / subtractive change to a transaction's tag set, skipping tags
+     * already in the desired state. Used by bulk-update where the caller wants
+     * "add these, remove these, leave everything else alone".
+     */
+    @Transactional
+    public void mutateTransactionTags(UUID transactionId, List<UUID> addIds, List<UUID> removeIds) {
+        Set<UUID> current = txnTagRepo.findByTransactionId(transactionId).stream()
+                .map(TransactionTag::getTagId)
+                .collect(Collectors.toSet());
+        if (addIds != null) {
+            for (UUID tagId : new LinkedHashSet<>(addIds)) {
+                if (current.add(tagId)) {
+                    txnTagRepo.save(TransactionTag.builder()
+                            .transactionId(transactionId)
+                            .tagId(tagId)
+                            .build());
+                }
+            }
+        }
+        if (removeIds != null && !removeIds.isEmpty()) {
+            for (UUID tagId : removeIds) {
+                if (current.contains(tagId)) {
+                    txnTagRepo.deleteByTransactionIdAndTagId(transactionId, tagId);
+                }
+            }
+        }
+    }
+
     /** Bulk-load tag DTOs indexed by transaction id for a list of transactions. */
     @Transactional(readOnly = true)
     public Map<UUID, List<TagSummary>> loadTagsForTransactions(UUID userId, Collection<UUID> transactionIds) {

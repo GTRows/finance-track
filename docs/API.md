@@ -319,6 +319,36 @@ Record a new investment transaction.
 ### PUT /api/v1/budget/transactions/{id}
 ### DELETE /api/v1/budget/transactions/{id}
 
+### POST /api/v1/budget/transactions/bulk-delete
+Delete many transactions in one request. IDs that don't belong to the caller are
+silently skipped; the response reports how many were actually deleted.
+```json
+// Request
+{ "ids": ["uuid", "uuid", "uuid"] }
+
+// Response 200
+{ "affected": 3 }
+```
+
+### POST /api/v1/budget/transactions/bulk-update
+Apply the same edit to many transactions. All fields except `ids` are optional;
+at least one must be present. `categoryId` is skipped for transactions whose
+`txnType` doesn't match the category's type. Pass `clearCategory: true` (and no
+`categoryId`) to detach the category. `addTagIds` attaches tags (no-op if already
+present), `removeTagIds` detaches them.
+```json
+// Request
+{
+  "ids": ["uuid", "uuid"],
+  "categoryId": "uuid",
+  "addTagIds": ["uuid"],
+  "removeTagIds": ["uuid"]
+}
+
+// Response 200
+{ "affected": 2 }
+```
+
 ### GET /api/v1/budget/summary?month=2026-04
 Each `expenseByCategory` entry carries the category's static `baseBudget`, the
 accumulated `rolloverAmount` carried in from prior months of the same year

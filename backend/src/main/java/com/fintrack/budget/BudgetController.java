@@ -56,6 +56,28 @@ public class BudgetController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/transactions/bulk-delete")
+    public ResponseEntity<BulkResultResponse> bulkDelete(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @Valid @RequestBody BulkDeleteRequest request) {
+        int affected = budgetService.bulkDelete(user.getId(), request.ids());
+        return ResponseEntity.ok(new BulkResultResponse(affected));
+    }
+
+    @PostMapping("/transactions/bulk-update")
+    public ResponseEntity<BulkResultResponse> bulkUpdate(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @Valid @RequestBody BulkUpdateRequest request) {
+        int affected = budgetService.bulkUpdate(
+                user.getId(),
+                request.ids(),
+                request.categoryId(),
+                Boolean.TRUE.equals(request.clearCategory()),
+                request.addTagIds(),
+                request.removeTagIds());
+        return ResponseEntity.ok(new BulkResultResponse(affected));
+    }
+
     @GetMapping("/summary")
     public ResponseEntity<BudgetSummaryResponse> summary(
             @AuthenticationPrincipal FinTrackUserDetails user,
