@@ -263,7 +263,7 @@ email-reminder work in later phases.
 - [x] 12.2 Savings goal tracker (target, current, projected completion)
 - [x] 12.3 Debt tracker with amortization projection
 - [x] 12.4 FIRE calculator (savings rate, withdrawal rate, time-to-independence)
-- [ ] 12.5 Custom date range picker across all analytics views
+- [x] 12.5 Custom date range picker across analytics views (presets + custom range, filters budget + portfolio series)
 
 ## Phase 13 -- Reporting & Portability
 

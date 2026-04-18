@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Area,
@@ -23,6 +23,12 @@ import { usePortfolios } from '@/hooks/usePortfolios';
 import { usePortfolioSnapshotsAggregate } from '@/hooks/useAnalytics';
 import { formatMonth, formatPercent, formatShortDate, formatTRY } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
+import {
+  DateRangePicker,
+  defaultDateRange,
+  filterByRange,
+  type DateRange,
+} from '@/components/ui/date-range-picker';
 
 function compactTRY(value: number): string {
   if (value === 0) return '0 ₺';
@@ -40,6 +46,7 @@ function yearsBetween(startIso: string, endIso: string): number {
 
 export function AnalyticsPage() {
   const { t } = useTranslation();
+  const [range, setRange] = useState<DateRange>(() => defaultDateRange());
   const summariesQuery = useMonthlySummaries();
   const portfoliosQuery = usePortfolios();
   const snapshots = usePortfolioSnapshotsAggregate(portfoliosQuery.data);
@@ -51,7 +58,7 @@ export function AnalyticsPage() {
   }, [summariesQuery.data]);
 
   const budgetSeries = useMemo(() => {
-    return sortedSummaries.map((s) => ({
+    const mapped = sortedSummaries.map((s) => ({
       period: s.period,
       periodLabel: formatMonth(s.period),
       income: s.totalIncome,
@@ -59,7 +66,8 @@ export function AnalyticsPage() {
       net: s.net,
       savingsRate: s.savingsRate,
     }));
-  }, [sortedSummaries]);
+    return filterByRange(mapped, (row) => `${row.period}-01`, range);
+  }, [sortedSummaries, range]);
 
   const expenseGrowth = useMemo(() => {
     if (budgetSeries.length < 2) return null;
@@ -76,11 +84,12 @@ export function AnalyticsPage() {
   }, [budgetSeries]);
 
   const portfolioSeries = useMemo(() => {
-    return snapshots.data.map((p) => ({
+    const mapped = snapshots.data.map((p) => ({
       ...p,
       dateLabel: formatShortDate(p.date),
     }));
-  }, [snapshots.data]);
+    return filterByRange(mapped, (row) => row.date, range);
+  }, [snapshots.data, range]);
 
   const cagr = useMemo(() => {
     if (portfolioSeries.length < 2) return null;
@@ -111,6 +120,7 @@ export function AnalyticsPage() {
       <PageHeader
         title={t('analytics.title')}
         description={t('analytics.description')}
+        actions={<DateRangePicker value={range} onChange={setRange} />}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

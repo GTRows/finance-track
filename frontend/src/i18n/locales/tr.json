@@ -737,6 +737,23 @@
     "detail": "Ayrıntı",
     "pageInfo": "Sayfa {{page}} / {{total}} — {{count}} olay"
   },
+  "dateRange": {
+    "preset": {
+      "3M": "3 ay",
+      "6M": "6 ay",
+      "YTD": "Yıl başından",
+      "1Y": "1 yıl",
+      "ALL": "Tüm zamanlar",
+      "CUSTOM": "Özel"
+    },
+    "custom": "Özel aralık",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "apply": "Uygula",
+    "clear": "Temizle",
+    "since": "{{date}} tarihinden",
+    "until": "{{date}} tarihine kadar"
+  },
   "palette": {
     "title": "Komut paleti",
     "description": "Herhangi bir sayfaya, portföye veya faturaya atla",

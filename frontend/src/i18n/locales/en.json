@@ -736,6 +736,23 @@
     "detail": "Detail",
     "pageInfo": "Page {{page}} of {{total}} — {{count}} events"
   },
+  "dateRange": {
+    "preset": {
+      "3M": "3 months",
+      "6M": "6 months",
+      "YTD": "Year to date",
+      "1Y": "1 year",
+      "ALL": "All time",
+      "CUSTOM": "Custom"
+    },
+    "custom": "Custom range",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "clear": "Clear",
+    "since": "Since {{date}}",
+    "until": "Until {{date}}"
+  },
   "palette": {
     "title": "Command palette",
     "description": "Jump to any page, portfolio, or bill",
