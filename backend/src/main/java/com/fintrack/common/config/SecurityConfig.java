@@ -1,5 +1,6 @@
 package com.fintrack.common.config;
 
+import com.fintrack.auth.AutheliaForwardAuthFilter;
 import com.fintrack.auth.FinTrackUserDetailsService;
 import com.fintrack.auth.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final AutheliaForwardAuthFilter autheliaForwardAuthFilter;
     private final FinTrackUserDetailsService userDetailsService;
 
     private static final String[] PUBLIC_PATHS = {
@@ -69,6 +71,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(autheliaForwardAuthFilter, JwtAuthFilter.class)
                 .build();
     }
 

@@ -59,6 +59,10 @@ fintrack:
     login-rate-limit:
       max-attempts: ${LOGIN_RATE_LIMIT_MAX:5}
       window-seconds: ${LOGIN_RATE_LIMIT_WINDOW_SECONDS:300}
+  authelia:
+    enabled: ${AUTHELIA_ENABLED:false}
+    header: ${AUTHELIA_HEADER:Remote-User}
+    trusted-ips: ${AUTHELIA_TRUSTED_IPS:}
 
   # Cache
   cache:

@@ -246,6 +246,52 @@ Then point `acquis.yaml` at the backend log file (when shipping logs from the
 docker volume) or at the journald unit if you're collecting container logs
 upstream.
 
+## 11a. Authelia ForwardAuth (optional)
+
+If the homelab already authenticates users through Authelia in front of
+Traefik, FinTrack can skip its own login screen for browser traffic. The
+backend trusts a `Remote-User` header when `AUTHELIA_ENABLED=true` and the
+request originates from a configured trusted IP.
+
+1. In `.env`:
+
+   ```env
+   AUTHELIA_ENABLED=true
+   AUTHELIA_HEADER=Remote-User
+   AUTHELIA_TRUSTED_IPS=10.10.0.2           # Traefik container IP
+   ```
+
+   Leaving `AUTHELIA_TRUSTED_IPS` empty disables the IP check and logs a
+   warning at startup -- only do that inside a fully isolated network.
+
+2. Attach the Traefik ForwardAuth middleware to the FinTrack router labels.
+   Example (dynamic config on the Traefik side):
+
+   ```yaml
+   http:
+     middlewares:
+       authelia:
+         forwardAuth:
+           address: "http://authelia:9091/api/verify?rd=https://auth.example.com"
+           trustForwardHeader: true
+           authResponseHeaders:
+             - Remote-User
+             - Remote-Groups
+             - Remote-Name
+             - Remote-Email
+   ```
+
+   Then add `traefik.http.routers.fintrack-ui.middlewares=authelia@file` to
+   the UI router via a Docker label override or through your Traefik
+   dynamic config.
+
+3. The principal forwarded by Authelia must already exist locally -- the
+   filter matches by username first, email second. If nothing matches the
+   request falls through unauthenticated.
+
+JWT auth still works alongside ForwardAuth; a valid `Authorization: Bearer`
+header is respected first so CLI / mobile clients keep functioning.
+
 ## 12. Wazuh integration (optional)
 
 If your SIEM is Wazuh (OSSEC-derived), FinTrack is compatible out of the box:

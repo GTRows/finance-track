@@ -144,6 +144,9 @@ services:
       - LOG_MAX_HISTORY_DAYS=${LOG_MAX_HISTORY_DAYS:-90}
       - LOG_TOTAL_SIZE_CAP=${LOG_TOTAL_SIZE_CAP:-1GB}
       - LOG_ERROR_TOTAL_SIZE_CAP=${LOG_ERROR_TOTAL_SIZE_CAP:-256MB}
+      - AUTHELIA_ENABLED=${AUTHELIA_ENABLED:-false}
+      - AUTHELIA_HEADER=${AUTHELIA_HEADER:-Remote-User}
+      - AUTHELIA_TRUSTED_IPS=${AUTHELIA_TRUSTED_IPS:-}
     volumes:
       - app-logs:/var/log/fintrack
     depends_on:
