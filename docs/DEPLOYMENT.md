@@ -138,6 +138,13 @@ The compose stack includes a metrics stack wired to the backend's
 - The "FinTrack Overview" dashboard is provisioned automatically from
   `monitoring/grafana/dashboards/fintrack-overview.json` — CPU, heap, live threads,
   Hikari connections, HTTP request rate / P95 latency / 4xx-5xx rate, JVM memory.
+- A second dashboard, "FinTrack Business"
+  (`monitoring/grafana/dashboards/fintrack-business.json`), is provisioned from
+  the custom business metrics the backend exposes: portfolio total value,
+  current-month income / expense, computed savings rate, transactions today,
+  and alerts fired per source (`price`, `budget`). Metric names are prefixed
+  `fintrack_` so they sit in their own namespace in Prometheus. Gauges refresh
+  every 60 seconds (see `BusinessMetrics`).
 
 To keep Grafana private, leave `GRAFANA_PORT` bound to localhost in Docker Desktop
 (default behaviour) and don't add an Nginx route for it.

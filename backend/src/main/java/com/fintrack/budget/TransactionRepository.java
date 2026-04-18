@@ -63,4 +63,10 @@ public interface TransactionRepository extends JpaRepository<BudgetTransaction, 
            "AND t.txnType = com.fintrack.common.entity.BudgetTransaction.TxnType.EXPENSE " +
            "AND t.txnDate BETWEEN :from AND :to")
     BigDecimal sumByUserIdAndCategoryAndDateRange(UUID userId, UUID categoryId, LocalDate from, LocalDate to);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM BudgetTransaction t " +
+           "WHERE t.txnType = :txnType AND t.txnDate BETWEEN :from AND :to")
+    BigDecimal sumByTypeAndDateRange(BudgetTransaction.TxnType txnType, LocalDate from, LocalDate to);
+
+    long countByTxnDate(LocalDate txnDate);
 }

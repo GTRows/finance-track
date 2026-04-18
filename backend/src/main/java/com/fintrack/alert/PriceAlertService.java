@@ -7,6 +7,7 @@ import com.fintrack.common.entity.AlertNotification;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.PriceAlert;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.metrics.BusinessMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class PriceAlertService {
     private final PriceAlertRepository alertRepo;
     private final AlertNotificationRepository notificationRepo;
     private final AssetRepository assetRepo;
+    private final BusinessMetrics businessMetrics;
 
     @Transactional(readOnly = true)
     public List<AlertResponse> listForUser(UUID userId) {
@@ -97,6 +99,7 @@ public class PriceAlertService {
                     .message(buildMessage(alert, price))
                     .build();
             notificationRepo.save(notification);
+            businessMetrics.recordAlertFired("price");
             triggered++;
         }
 

@@ -8,6 +8,7 @@ import com.fintrack.common.entity.BudgetRule;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.metrics.BusinessMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class BudgetRuleService {
     private final ExpenseCategoryRepository expenseRepo;
     private final TransactionRepository txnRepo;
     private final AlertNotificationRepository notificationRepo;
+    private final BusinessMetrics businessMetrics;
 
     @Transactional(readOnly = true)
     public List<BudgetRuleResponse> listForUser(UUID userId) {
@@ -135,6 +137,7 @@ public class BudgetRuleService {
                 .sourceId(rule.getId())
                 .build();
         notificationRepo.save(notification);
+        businessMetrics.recordAlertFired("budget");
 
         rule.setLastAlertedPeriod(period);
         log.info("Budget rule alert raised: rule={} period={} spent={} limit={}",
