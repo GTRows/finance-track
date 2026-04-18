@@ -150,7 +150,34 @@ Common issues:
 - WebSocket does not connect behind HTTPS: check `wss://fatihaciroglu.dev/ws`
   in DevTools. Nginx already proxies `/ws/` with Upgrade/Connection headers.
 
-## 10. Homarr dashboard tile
+## 10. Log shipping to Loki (optional)
+
+If your homelab runs Loki + Grafana for centralised logs, enable the bundled
+Promtail sidecar. It auto-discovers containers via the Docker socket and only
+scrapes ones labelled `com.fintrack.log=true` (only the backend by default).
+
+1. In `.env`, set `LOKI_URL` to the Loki push endpoint
+   (e.g. `http://loki.homelab.lan:3100`).
+2. Start with the `loki` profile:
+
+   ```powershell
+   docker compose --profile loki up -d promtail
+   ```
+
+Labels sent to Loki: `app=fintrack`, `container=fintrack-api`,
+`service=backend`, plus the log `level` parsed from the JSON console output
+(see `logback-spring.xml`). Standard queries:
+
+```logql
+{app="fintrack", level="ERROR"}
+{app="fintrack"} |= "userId=\"abc123\""
+```
+
+The Promtail config lives at `monitoring/promtail.yml`. It reads the `timestamp`,
+`level`, `logger`, `msg`, `userId`, and `requestId` fields from each JSON log
+line; everything else stays in the log body.
+
+## 11. Homarr dashboard tile
 
 If you run Homarr as the homelab launcher, FinTrack drops in as a standard app
 tile. The public-facing URL is `https://fatihaciroglu.dev` and the health
