@@ -290,7 +290,7 @@ applications behind this stack.
 - [ ] 15.2 Trivy image + filesystem scan step in GitHub Actions
 - [ ] 15.3 Grafana business dashboard (portfolio total value, tx/day, savings rate, alerts fired)
 - [ ] 15.4 Dependabot auto-merge on green CI
-- [ ] 15.5 PostgreSQL index audit (Flyway migration for missing indexes)
+- [x] 15.5 PostgreSQL index audit (Flyway migration for missing indexes)
 - [ ] 15.6 Traefik labels on every service; drop bundled Nginx to a fallback `nginx` profile
 - [ ] 15.7 Authelia ForwardAuth pass-through -- trust `Remote-User` header when enabled
 - [ ] 15.8 CrowdSec feed -- expose auth-failure and TOTP-failure events via audit_log format
