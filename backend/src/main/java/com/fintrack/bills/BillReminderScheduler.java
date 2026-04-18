@@ -6,6 +6,7 @@ import com.fintrack.common.entity.BillPayment;
 import com.fintrack.common.entity.User;
 import com.fintrack.notification.MailService;
 import com.fintrack.notification.MailTemplate;
+import com.fintrack.push.PushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,6 +40,7 @@ public class BillReminderScheduler {
     private final BillPaymentRepository paymentRepo;
     private final UserRepository userRepository;
     private final MailService mailService;
+    private final PushService pushService;
 
     /** Runs every day at 08:00 local time. */
     @Scheduled(cron = "0 0 8 * * *")
@@ -85,6 +87,13 @@ public class BillReminderScheduler {
                 delivered += entry.getValue().size();
             } catch (Exception e) {
                 log.warn("Failed to send bill reminder to {}: {}", user.getUsername(), e.getMessage());
+            }
+
+            try {
+                int woken = pushService.sendToUser(user.getId());
+                if (woken > 0) log.debug("Bill reminder push woke {} device(s) for {}", woken, user.getUsername());
+            } catch (Exception e) {
+                log.warn("Push reminder failed for {}: {}", user.getUsername(), e.getMessage());
             }
         }
 
