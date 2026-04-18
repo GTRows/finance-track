@@ -277,7 +277,7 @@ email-reminder work in later phases.
 - [ ] 14.2 Bulk operations (multi-select delete / edit / tag)
 - [x] 14.3 Pinned holdings (favourites at top of list)
 - [ ] 14.4 First-run onboarding wizard
-- [ ] 14.5 PWA manifest + installable + offline shell
+- [x] 14.5 PWA manifest + installable + offline shell
 
 ## Phase 15 -- Infrastructure Integration
 
