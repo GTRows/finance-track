@@ -27,4 +27,12 @@ export const reportApi = {
     });
     triggerDownload(data, `budget-${from}-to-${to}.csv`);
   },
+
+  downloadBudgetXlsx: async (from: string, to: string): Promise<void> => {
+    const { data } = await client.get('/reports/budget/xlsx', {
+      params: { from, to },
+      responseType: 'blob',
+    });
+    triggerDownload(data, `budget-${from}-to-${to}.xlsx`);
+  },
 };

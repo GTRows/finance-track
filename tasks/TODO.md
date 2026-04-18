@@ -268,7 +268,7 @@ email-reminder work in later phases.
 ## Phase 13 -- Reporting & Portability
 
 - [ ] 13.1 Monthly PDF email report (scheduler + email attachment)
-- [ ] 13.2 xlsx export (in addition to existing CSV)
+- [x] 13.2 xlsx export (in addition to existing CSV)
 - [ ] 13.3 Full JSON backup + restore (user-initiated download and upload)
 
 ## Phase 14 -- UX

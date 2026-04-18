@@ -523,7 +523,8 @@
   },
   "reports": {
     "downloadPdf": "PDF raporu indir",
-    "downloadCsv": "CSV dışa aktarımı indir"
+    "downloadCsv": "CSV dışa aktarımı indir",
+    "downloadXlsx": "Excel (xlsx) dışa aktarımı indir"
   },
   "ticker": {
     "label": "Canlı fiyatlar"

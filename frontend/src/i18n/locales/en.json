@@ -522,7 +522,8 @@
   },
   "reports": {
     "downloadPdf": "Download PDF report",
-    "downloadCsv": "Download CSV export"
+    "downloadCsv": "Download CSV export",
+    "downloadXlsx": "Download Excel (xlsx) export"
   },
   "ticker": {
     "label": "Live prices"

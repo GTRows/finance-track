@@ -22,6 +22,16 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,6 +131,80 @@ public class ReportService {
 
         log.info("Budget CSV generated: userId={} from={} to={} rows={}", userId, from, to, txns.size());
         return sb.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateBudgetXlsx(UUID userId, LocalDate from, LocalDate to) {
+        List<BudgetTransaction> txns = txnRepo
+                .findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(userId, from, to, Pageable.unpaged())
+                .getContent();
+
+        Map<UUID, String> catNames = new HashMap<>();
+        incomeCatRepo.findByUserIdOrderByNameAsc(userId).forEach(c -> catNames.put(c.getId(), c.getName()));
+        expenseCatRepo.findByUserIdOrderByNameAsc(userId).forEach(c -> catNames.put(c.getId(), c.getName()));
+
+        Map<UUID, List<TagService.TagSummary>> tagsByTxn = tagService.loadTagsForTransactions(
+                userId, txns.stream().map(BudgetTransaction::getId).toList());
+
+        try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Sheet sheet = wb.createSheet("Transactions");
+
+            CellStyle headerStyle = wb.createCellStyle();
+            org.apache.poi.ss.usermodel.Font hFont = wb.createFont();
+            hFont.setBold(true);
+            hFont.setColor(IndexedColors.WHITE.getIndex());
+            headerStyle.setFont(hFont);
+            headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+
+            CellStyle dateStyle = wb.createCellStyle();
+            dateStyle.setDataFormat(wb.createDataFormat().getFormat("yyyy-mm-dd"));
+
+            CellStyle moneyStyle = wb.createCellStyle();
+            moneyStyle.setDataFormat(wb.createDataFormat().getFormat("#,##0.00"));
+
+            String[] headers = {"Date", "Type", "Amount", "Currency", "Category", "Description", "Recurring", "Tags"};
+            Row header = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell c = header.createCell(i);
+                c.setCellValue(headers[i]);
+                c.setCellStyle(headerStyle);
+            }
+
+            int rowIdx = 1;
+            for (BudgetTransaction t : txns) {
+                Row row = sheet.createRow(rowIdx++);
+                Cell dateCell = row.createCell(0);
+                dateCell.setCellValue(java.sql.Date.valueOf(t.getTxnDate()));
+                dateCell.setCellStyle(dateStyle);
+                row.createCell(1).setCellValue(t.getTxnType().name());
+                Cell amountCell = row.createCell(2);
+                amountCell.setCellValue(t.getAmount().doubleValue());
+                amountCell.setCellStyle(moneyStyle);
+                row.createCell(3).setCellValue(t.getCurrency() != null ? t.getCurrency() : "TRY");
+                row.createCell(4).setCellValue(catNames.getOrDefault(t.getCategoryId(), ""));
+                row.createCell(5).setCellValue(t.getDescription() != null ? t.getDescription() : "");
+                row.createCell(6).setCellValue(t.isRecurring());
+                List<TagService.TagSummary> tagList = tagsByTxn.getOrDefault(t.getId(), List.of());
+                row.createCell(7).setCellValue(tagList.stream()
+                        .map(TagService.TagSummary::name)
+                        .reduce((a, b) -> a + "; " + b).orElse(""));
+            }
+
+            sheet.createFreezePane(0, 1);
+            if (!txns.isEmpty()) {
+                sheet.setAutoFilter(new CellRangeAddress(0, rowIdx - 1, 0, headers.length - 1));
+            }
+            for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);
+
+            wb.write(baos);
+            log.info("Budget XLSX generated: userId={} from={} to={} rows={}", userId, from, to, txns.size());
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("Failed to generate XLSX for user {}", userId, e);
+            throw new RuntimeException("XLSX generation failed", e);
+        }
     }
 
     private void addTitle(Document doc, Portfolio portfolio) throws DocumentException {

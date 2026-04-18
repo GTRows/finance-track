@@ -960,8 +960,14 @@ caller are silently dropped.
 ### GET /api/v1/reports/portfolio/{id}?format=pdf&period=2026-04
 Download PDF portfolio report.
 
-### GET /api/v1/reports/budget?format=csv&from=2026-01-01&to=2026-04-30
-Download CSV of all transactions.
+### GET /api/v1/reports/budget?from=2026-01-01&to=2026-04-30
+Download CSV of all transactions in the range.
+
+### GET /api/v1/reports/budget/xlsx?from=2026-01-01&to=2026-04-30
+Download an Excel (`.xlsx`) export of the same data as the CSV endpoint. The
+workbook has a "Transactions" sheet with header row frozen, auto-filters
+enabled, a date-formatted column, a `#,##0.00` amount column, and tags
+collapsed into a semicolon-separated string.
 
 ---
 

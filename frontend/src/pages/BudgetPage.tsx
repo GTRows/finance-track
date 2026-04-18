@@ -31,6 +31,7 @@ import {
   Tag as TagIcon,
   X,
   RotateCcw,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { reportApi } from '@/api/report.api';
 import { useTags } from '@/hooks/useTags';
@@ -59,18 +60,33 @@ export function BudgetPage() {
   const tagsQuery = useTags();
   const createTxn = useCreateTransaction(month);
   const deleteTxn = useDeleteTransaction(month);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState<null | 'csv' | 'xlsx'>(null);
 
-  const handleDownloadCsv = async () => {
+  const monthRange = () => {
     const [y, m] = month.split('-').map(Number);
     const from = `${month}-01`;
     const lastDay = new Date(y, m, 0).getDate();
     const to = `${month}-${String(lastDay).padStart(2, '0')}`;
+    return { from, to };
+  };
+
+  const handleDownloadCsv = async () => {
+    const { from, to } = monthRange();
     try {
-      setDownloading(true);
+      setDownloading('csv');
       await reportApi.downloadBudgetCsv(from, to);
     } finally {
-      setDownloading(false);
+      setDownloading(null);
+    }
+  };
+
+  const handleDownloadXlsx = async () => {
+    const { from, to } = monthRange();
+    try {
+      setDownloading('xlsx');
+      await reportApi.downloadBudgetXlsx(from, to);
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -100,14 +116,27 @@ export function BudgetPage() {
             <button
               type="button"
               onClick={handleDownloadCsv}
-              disabled={downloading || transactions.length === 0}
+              disabled={downloading !== null || transactions.length === 0}
               title={t('reports.downloadCsv')}
               className="w-9 h-9 rounded-md border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
             >
-              {downloading ? (
+              {downloading === 'csv' ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Download className="w-4 h-4" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadXlsx}
+              disabled={downloading !== null || transactions.length === 0}
+              title={t('reports.downloadXlsx')}
+              className="w-9 h-9 rounded-md border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {downloading === 'xlsx' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="w-4 h-4" />
               )}
             </button>
             <AddTransactionDialog
