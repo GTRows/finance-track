@@ -150,6 +150,44 @@ Common issues:
 - WebSocket does not connect behind HTTPS: check `wss://fatihaciroglu.dev/ws`
   in DevTools. Nginx already proxies `/ws/` with Upgrade/Connection headers.
 
+## 10. Homarr dashboard tile
+
+If you run Homarr as the homelab launcher, FinTrack drops in as a standard app
+tile. The public-facing URL is `https://fatihaciroglu.dev` and the health
+endpoint `/api/v1/health` is unauthenticated (see `SecurityConfig` public paths)
+and returns `{"status":"UP", ...}` -- Homarr's ping integration treats any 2xx
+response as online.
+
+| Field | Value |
+|---|---|
+| Name | FinTrack |
+| Internal address | `http://backend:8080` (from the Homarr container, if on the same compose network) |
+| External address | `https://fatihaciroglu.dev` |
+| Ping URL | `https://fatihaciroglu.dev/api/v1/health` |
+| Icon | `/icons/fintrack.svg` (copy `frontend/public/icon.svg` into Homarr's icons volume) |
+
+Add-as-JSON snippet (Homarr v1 "Add an app" -> Import):
+
+```json
+{
+  "name": "FinTrack",
+  "url": "https://fatihaciroglu.dev",
+  "behaviour": { "openInNewTab": true },
+  "network": {
+    "enabledStatusChecker": true,
+    "statusCodes": ["200"],
+    "statusUrl": "https://fatihaciroglu.dev/api/v1/health"
+  },
+  "appearance": {
+    "iconUrl": "/icons/fintrack.svg"
+  }
+}
+```
+
+If Homarr runs on the same Docker network as FinTrack, point the status checker
+at `http://backend:8080/api/v1/health` instead to avoid bouncing off the public
+hostname and Nginx.
+
 ## Linux host (alternative)
 
 If you ever move off Windows, the repo also ships:

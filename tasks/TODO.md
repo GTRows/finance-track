@@ -297,7 +297,7 @@ applications behind this stack.
         consumable by CrowdSec scenarios
 - [ ] 15.9 Loki log shipping via Promtail sidecar (structured JSON already emitted)
 - [ ] 15.10 Wazuh agent compatibility -- document log paths and action field set
-- [ ] 15.11 Homarr tile snippet (icon, URL, health endpoint) in `docs/`
+- [x] 15.11 Homarr tile snippet (icon, URL, health endpoint) in `docs/`
 
 ## Phase 16 -- Notifications
 
