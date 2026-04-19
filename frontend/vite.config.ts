@@ -22,4 +22,30 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('recharts') || id.includes('d3-')) return 'charts';
+          if (id.includes('@radix-ui')) return 'radix';
+          if (id.includes('react-router')) return 'router';
+          if (id.includes('@tanstack')) return 'query';
+          if (id.includes('axios') || id.includes('zustand')) return 'net';
+          if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n';
+          if (id.includes('lucide-react')) return 'icons';
+          if (id.includes('date-fns') || id.includes('react-day-picker')) return 'dates';
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-dom/') ||
+            id.includes('scheduler')
+          ) {
+            return 'react';
+          }
+          return 'vendor';
+        },
+      },
+    },
+  },
 });
