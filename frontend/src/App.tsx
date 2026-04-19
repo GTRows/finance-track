@@ -41,6 +41,9 @@ const AlertsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
+const CapitalGainsPage = lazy(() =>
+  import('@/pages/CapitalGainsPage').then((m) => ({ default: m.CapitalGainsPage })),
+);
 
 export function App() {
   return (
@@ -62,6 +65,7 @@ export function App() {
           <Route path="/budget" element={<BudgetPage />} />
           <Route path="/bills" element={<BillsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/reports/capital-gains" element={<CapitalGainsPage />} />
           <Route path="/prices" element={<PricesPage />} />
           <Route path="/prices/:id" element={<AssetDetailPage />} />
           <Route path="/alerts" element={<AlertsPage />} />

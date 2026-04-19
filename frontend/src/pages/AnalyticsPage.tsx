@@ -14,10 +14,11 @@ import {
   YAxis,
   Legend,
 } from 'recharts';
-import { Loader2, TrendingUp, PiggyBank, Activity, LineChart as LineIcon } from 'lucide-react';
+import { Loader2, TrendingUp, PiggyBank, Activity, LineChart as LineIcon, ArrowUpRight, Coins } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/layout/EmptyState';
+import { Link } from 'react-router-dom';
 import { useMonthlySummaries } from '@/hooks/useBudget';
 import { usePortfolios } from '@/hooks/usePortfolios';
 import { usePortfolioSnapshotsAggregate } from '@/hooks/useAnalytics';
@@ -344,6 +345,22 @@ export function AnalyticsPage() {
       </Card>
 
       <CashFlowProjectionChart />
+
+      <Link
+        to="/reports/capital-gains"
+        className="group block rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
+      >
+        <div className="flex items-center gap-4 p-5">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Coins className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{t('capitalGains.title')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('capitalGains.description')}</p>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+        </div>
+      </Link>
 
       <Card>
         <CardHeader className="pb-3">
