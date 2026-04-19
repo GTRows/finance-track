@@ -62,6 +62,7 @@ client.interceptors.response.use(
       const refreshToken = useAuthStore.getState().refreshToken;
 
       if (!refreshToken) {
+        isRefreshing = false;
         useAuthStore.getState().clearAuth();
         window.location.href = '/login';
         return Promise.reject(error);
