@@ -24,6 +24,7 @@ import { getPortfolioTypeMeta } from '@/components/portfolio/portfolio-types';
 import { HoldingsTable } from '@/components/portfolio/HoldingsTable';
 import { AddHoldingDialog } from '@/components/portfolio/AddHoldingDialog';
 import { TransactionLog } from '@/components/portfolio/TransactionLog';
+import { DividendLedger } from '@/components/portfolio/DividendLedger';
 import { AllocationChart } from '@/components/portfolio/AllocationChart';
 import { AllocationTargets } from '@/components/portfolio/AllocationTargets';
 import { PortfolioHistoryChart } from '@/components/portfolio/PortfolioHistoryChart';
@@ -270,6 +271,8 @@ export function PortfolioDetailPage() {
       {holdings.length > 0 && <PortfolioRiskMetrics portfolioId={portfolio.id} />}
 
       <TransactionLog portfolioId={portfolio.id} />
+
+      <DividendLedger portfolioId={portfolio.id} />
 
       <AddHoldingDialog
         open={dialogOpen}
