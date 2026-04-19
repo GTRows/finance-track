@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -70,9 +69,4 @@ public class BenchmarkService {
     private record BenchmarkSpec(String code, String symbol, String currency) {}
 
     private record CachedSeries(List<BenchmarkSeries.Point> points, Instant fetchedAt) {}
-
-    public static BigDecimal indexAt100(BigDecimal value, BigDecimal base) {
-        if (base == null || base.signum() <= 0) return BigDecimal.ZERO;
-        return value.multiply(BigDecimal.valueOf(100)).divide(base, 4, java.math.RoundingMode.HALF_UP);
-    }
 }
