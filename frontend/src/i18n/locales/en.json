@@ -688,7 +688,18 @@
     "emptyBudgetTitle": "No captured months yet",
     "emptyBudgetDesc": "Capture at least two monthly snapshots from the Budget page to see trends.",
     "emptyPortfolioTitle": "No portfolio snapshots yet",
-    "emptyPortfolioDesc": "Portfolio snapshots are captured daily. Come back tomorrow to see trends."
+    "emptyPortfolioDesc": "Portfolio snapshots are captured daily. Come back tomorrow to see trends.",
+    "projectionTitle": "12-month cash flow projection",
+    "projectionHint": "Forward-looking estimate built from recent averages, overlaid with scheduled recurring items and bills.",
+    "projectionAvgIncome": "Avg monthly income",
+    "projectionAvgExpense": "Avg monthly expense",
+    "projectionAvgNet": "Avg monthly net",
+    "projectionSamples": "Based on {{count}} sampled month(s)",
+    "projectionInsufficient": "Not enough history to project reliably. Log more transactions.",
+    "projectionEndingBalance": "Projected balance",
+    "projectionNet": "Net",
+    "projectionScheduledIncome": "Scheduled income",
+    "projectionScheduledExpense": "Scheduled expense"
   },
   "transactions": {
     "title": "Transaction log",

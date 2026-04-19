@@ -1,5 +1,6 @@
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { snapshotApi } from '@/api/snapshot.api';
+import { analyticsApi, type CashFlowProjection } from '@/api/analytics.api';
 import type { Portfolio, PortfolioSnapshot } from '@/types/portfolio.types';
 
 export interface AggregatedSnapshotPoint {
@@ -60,4 +61,12 @@ export function usePortfolioSnapshotsAggregate(
     });
 
   return { data, isLoading: false, isError: false };
+}
+
+export function useCashFlowProjection(months = 12, startingBalance?: number) {
+  return useQuery<CashFlowProjection>({
+    queryKey: ['analytics', 'cashFlowProjection', months, startingBalance ?? null],
+    queryFn: () => analyticsApi.projectCashFlow(months, startingBalance),
+    staleTime: 60_000,
+  });
 }

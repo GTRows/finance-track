@@ -689,7 +689,18 @@
     "emptyBudgetTitle": "Henüz aylık kayıt yok",
     "emptyBudgetDesc": "Trendleri görmek için Bütçe sayfasından en az iki ayı kaydedin.",
     "emptyPortfolioTitle": "Henüz portföy kaydı yok",
-    "emptyPortfolioDesc": "Portföy kayıtları günlük alınır. Trendleri görmek için yarın tekrar bakın."
+    "emptyPortfolioDesc": "Portföy kayıtları günlük alınır. Trendleri görmek için yarın tekrar bakın.",
+    "projectionTitle": "12 aylık nakit akışı projeksiyonu",
+    "projectionHint": "Son ay ortalamalarına göre ileriye dönük tahmin; düzenli işlemler ve faturalar üzerine eklenir.",
+    "projectionAvgIncome": "Aylık ort. gelir",
+    "projectionAvgExpense": "Aylık ort. gider",
+    "projectionAvgNet": "Aylık ort. net",
+    "projectionSamples": "{{count}} aylık örnekten hesaplandı",
+    "projectionInsufficient": "Güvenilir projeksiyon için yeterli geçmiş yok. Daha fazla işlem kaydedin.",
+    "projectionEndingBalance": "Projeksiyon bakiye",
+    "projectionNet": "Net",
+    "projectionScheduledIncome": "Planlı gelir",
+    "projectionScheduledExpense": "Planlı gider"
   },
   "transactions": {
     "title": "İşlem geçmişi",

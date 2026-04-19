@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/layout/EmptyState';
 import { useMonthlySummaries } from '@/hooks/useBudget';
 import { usePortfolios } from '@/hooks/usePortfolios';
 import { usePortfolioSnapshotsAggregate } from '@/hooks/useAnalytics';
+import { CashFlowProjectionChart } from '@/components/analytics/CashFlowProjectionChart';
 import { formatMonth, formatPercent, formatShortDate, formatTRY } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 import {
@@ -341,6 +342,8 @@ export function AnalyticsPage() {
           )}
         </CardContent>
       </Card>
+
+      <CashFlowProjectionChart />
 
       <Card>
         <CardHeader className="pb-3">
