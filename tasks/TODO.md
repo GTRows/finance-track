@@ -302,3 +302,24 @@ applications behind this stack.
 ## Phase 16 -- Notifications
 
 - [x] 16.1 Web Push API (VAPID keys, service worker subscription, notification payload)
+- [x] 16.2 Push reminders alongside the daily bills email digest
+
+## Phase 17 -- Onboarding & UX Polish
+
+- [x] 17.1 First-run onboarding wizard with `onboarding_completed` flag + mark-complete endpoint
+- [x] 17.2 Ship backlog UIs -- receipts upload, cash flow allocator preview, push subscription card
+
+## Phase 18 -- Portfolio Depth
+
+- [x] 18.1 Dividend ledger (entity, REST endpoints, per-portfolio table with TRY conversion at payment date)
+- [x] 18.3 TR capital gains report (WAC cost basis walk, by-year aggregates, dividend overlay)
+- [x] 18.4 Benchmark overlay on net worth (BIST 100, S&P 500, gold rebased to 100)
+
+## Phase 19 -- Forecasting
+
+- [x] 19.1 12-month cash flow projection (averages + scheduled recurring/bill overlay)
+- [x] 19.3 FIRE scenario sliders (expense, contribution, balance what-ifs against captured baseline)
+
+## Phase 22 -- Hardening & Polish
+
+- [x] 22.2 Route-level code-splitting with vendor chunk strategy
