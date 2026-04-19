@@ -65,10 +65,9 @@ public class CapitalGainsService {
             if (txn.getTxnType() == TxnType.BUY || txn.getTxnType() == TxnType.BES_CONTRIBUTION) {
                 BigDecimal qty = nullToZero(txn.getQuantity());
                 BigDecimal amount = nullToZero(txn.getAmountTry());
-                BigDecimal fee = nullToZero(txn.getFeeTry());
                 if (qty.signum() > 0) {
                     lot.quantity = lot.quantity.add(qty);
-                    lot.totalCost = lot.totalCost.add(amount).add(fee);
+                    lot.totalCost = lot.totalCost.add(amount);
                 }
             } else if (txn.getTxnType() == TxnType.SELL) {
                 BigDecimal qty = nullToZero(txn.getQuantity());
@@ -81,8 +80,8 @@ public class CapitalGainsService {
                         ? BigDecimal.ZERO
                         : lot.totalCost.divide(lot.quantity, COST_SCALE, RoundingMode.HALF_UP);
                 BigDecimal costBasis = avgCost.multiply(sellQty).setScale(4, RoundingMode.HALF_UP);
-                BigDecimal proceedsGross = amount;
-                BigDecimal proceedsNet = proceedsGross.subtract(fee);
+                BigDecimal proceedsGross = amount.add(fee);
+                BigDecimal proceedsNet = amount;
                 BigDecimal gain = proceedsNet.subtract(costBasis);
 
                 lot.totalCost = lot.totalCost.subtract(costBasis);
@@ -99,9 +98,11 @@ public class CapitalGainsService {
                         id -> assetRepo.findById(id).orElse(null));
                 Portfolio portfolio = portfolioById.get(txn.getPortfolioId());
 
-                BigDecimal pricePerUnit = sellQty.signum() > 0
-                        ? proceedsGross.divide(sellQty, 4, RoundingMode.HALF_UP)
-                        : BigDecimal.ZERO;
+                BigDecimal pricePerUnit = txn.getPriceTry() != null
+                        ? txn.getPriceTry()
+                        : (sellQty.signum() > 0
+                                ? proceedsGross.divide(sellQty, 4, RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO);
 
                 events.add(new CapitalGainsResponse.Event(
                         txn.getId(),
