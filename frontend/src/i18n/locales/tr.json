@@ -340,7 +340,14 @@
     "annualExpenses": "Yıllık gider",
     "progress": "FI ilerlemesi",
     "needMoreData_one": "Güvenilir projeksiyon için {{count}} ay daha gelir ve gider kaydı gerekiyor.",
-    "needMoreData_other": "Güvenilir projeksiyon için {{count}} ay daha gelir ve gider kaydı gerekiyor."
+    "needMoreData_other": "Güvenilir projeksiyon için {{count}} ay daha gelir ve gider kaydı gerekiyor.",
+    "scenario": "Ne olur senaryosu",
+    "scenarioHint": "Farklı aylık tasarruf, gider veya başlangıç bakiyesi için kaydırıcıları oynat.",
+    "scenarioReset": "Gerçek değerlere dön",
+    "scenarioExpense": "Aylık gider",
+    "scenarioContribution": "Aylık tasarruf",
+    "scenarioNetWorth": "Başlangıç bakiye",
+    "scenarioBaseline": "Gerçek: {{value}}"
   },
   "tag": {
     "tags": "Etiketler",

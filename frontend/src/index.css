@@ -137,4 +137,46 @@
     animation: live-pulse 1.8s ease-in-out infinite;
     vertical-align: middle;
   }
+
+  /* Subtle horizontal range input used by FIRE scenario sliders. */
+  .scenario-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 9999px;
+    background: hsl(var(--border) / 0.8);
+    outline: none;
+    cursor: pointer;
+  }
+  .scenario-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background: hsl(48 96% 60%);
+    border: 2px solid hsl(var(--card));
+    box-shadow: 0 0 0 1px hsl(48 96% 60% / 0.4);
+    cursor: grab;
+    transition: transform 120ms ease;
+  }
+  .scenario-slider::-webkit-slider-thumb:active {
+    transform: scale(1.15);
+    cursor: grabbing;
+  }
+  .scenario-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background: hsl(48 96% 60%);
+    border: 2px solid hsl(var(--card));
+    box-shadow: 0 0 0 1px hsl(48 96% 60% / 0.4);
+    cursor: grab;
+  }
+  .scenario-slider::-moz-range-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: hsl(var(--border) / 0.8);
+  }
 }

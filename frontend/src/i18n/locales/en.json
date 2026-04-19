@@ -340,7 +340,14 @@
     "annualExpenses": "Annual expenses",
     "progress": "Progress toward FI",
     "needMoreData_one": "Log {{count}} more month of income & expenses for a reliable projection.",
-    "needMoreData_other": "Log {{count}} more months of income & expenses for a reliable projection."
+    "needMoreData_other": "Log {{count}} more months of income & expenses for a reliable projection.",
+    "scenario": "What-if scenario",
+    "scenarioHint": "Drag the sliders to project a different monthly savings, expense load, or starting balance.",
+    "scenarioReset": "Reset to actuals",
+    "scenarioExpense": "Monthly expense",
+    "scenarioContribution": "Monthly savings",
+    "scenarioNetWorth": "Starting balance",
+    "scenarioBaseline": "Actual: {{value}}"
   },
   "tag": {
     "tags": "Tags",

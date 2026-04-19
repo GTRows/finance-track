@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Area,
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { useFire } from '@/hooks/useFire';
 import { formatTRY } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
-import { Flame, Target, TrendingUp, Wallet, Clock } from 'lucide-react';
+import { Flame, Target, TrendingUp, Wallet, Clock, RotateCcw } from 'lucide-react';
 
 function compact(value: number): string {
   if (value === 0) return '0';
@@ -26,10 +26,25 @@ function compact(value: number): string {
   return value.toFixed(0);
 }
 
+interface Overrides {
+  monthlyExpense?: number;
+  monthlyContribution?: number;
+  netWorth?: number;
+}
+
+interface Baseline {
+  monthlyExpense: number;
+  monthlyContribution: number;
+  netWorth: number;
+}
+
 export function FireCalculatorCard() {
   const { t } = useTranslation();
   const [withdrawalPct, setWithdrawalPct] = useState('4');
   const [returnPct, setReturnPct] = useState('7');
+  const [overrides, setOverrides] = useState<Overrides>({});
+  const baselineRef = useRef<Baseline | null>(null);
+  const [, forceBaselineTick] = useState(0);
 
   const query = useMemo(() => {
     const w = Number(withdrawalPct.replace(',', '.')) / 100;
@@ -37,10 +52,34 @@ export function FireCalculatorCard() {
     return {
       withdrawalRate: Number.isFinite(w) && w > 0 ? w : undefined,
       expectedReturn: Number.isFinite(r) && r >= 0 ? r : undefined,
+      monthlyContribution: overrides.monthlyContribution,
+      monthlyExpense: overrides.monthlyExpense,
+      netWorth: overrides.netWorth,
     };
-  }, [withdrawalPct, returnPct]);
+  }, [withdrawalPct, returnPct, overrides]);
 
   const { data, isLoading } = useFire(query);
+
+  useEffect(() => {
+    if (!data) return;
+    const hasOverride =
+      overrides.monthlyExpense != null ||
+      overrides.monthlyContribution != null ||
+      overrides.netWorth != null;
+    if (baselineRef.current || hasOverride) return;
+    baselineRef.current = {
+      monthlyExpense: data.avgMonthlyExpense,
+      monthlyContribution: data.monthlyContribution,
+      netWorth: data.currentNetWorth,
+    };
+    forceBaselineTick((v) => v + 1);
+  }, [data, overrides]);
+
+  const baseline = baselineRef.current;
+  const hasOverride =
+    overrides.monthlyExpense != null ||
+    overrides.monthlyContribution != null ||
+    overrides.netWorth != null;
 
   const chartData = useMemo(() => {
     if (!data) return [];
@@ -95,6 +134,15 @@ export function FireCalculatorCard() {
               <HeroTile data={data} />
               <TimeTile data={data} />
             </div>
+
+            {baseline && (
+              <ScenarioPanel
+                baseline={baseline}
+                overrides={overrides}
+                onChange={setOverrides}
+                hasOverride={hasOverride}
+              />
+            )}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MiniTile
@@ -293,6 +341,135 @@ function MiniTile({
         <span>{label}</span>
       </div>
       <p className="text-sm font-mono tabular-nums font-semibold">{value}</p>
+    </div>
+  );
+}
+
+interface ScenarioPanelProps {
+  baseline: Baseline;
+  overrides: Overrides;
+  onChange: (next: Overrides) => void;
+  hasOverride: boolean;
+}
+
+function ScenarioPanel({ baseline, overrides, onChange, hasOverride }: ScenarioPanelProps) {
+  const { t } = useTranslation();
+
+  const expense = overrides.monthlyExpense ?? baseline.monthlyExpense;
+  const contribution = overrides.monthlyContribution ?? baseline.monthlyContribution;
+  const netWorth = overrides.netWorth ?? baseline.netWorth;
+
+  const expenseMax = Math.max(Math.ceil(baseline.monthlyExpense * 2), 1000);
+  const contributionMax = Math.max(
+    Math.ceil(Math.max(baseline.monthlyContribution, baseline.monthlyExpense) * 2),
+    1000,
+  );
+  const netWorthMax = Math.max(Math.ceil(baseline.netWorth * 2), 10_000);
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium">{t('fire.scenario')}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {t('fire.scenarioHint')}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onChange({})}
+          disabled={!hasOverride}
+          className={cn(
+            'inline-flex items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-[11px] text-muted-foreground transition-colors',
+            hasOverride
+              ? 'hover:text-foreground hover:border-border'
+              : 'opacity-50 cursor-not-allowed',
+          )}
+        >
+          <RotateCcw className="w-3 h-3" />
+          {t('fire.scenarioReset')}
+        </button>
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        <ScenarioSlider
+          label={t('fire.scenarioExpense')}
+          value={expense}
+          min={0}
+          max={expenseMax}
+          step={100}
+          baseline={baseline.monthlyExpense}
+          onChange={(v) =>
+            onChange({ ...overrides, monthlyExpense: v === baseline.monthlyExpense ? undefined : v })
+          }
+        />
+        <ScenarioSlider
+          label={t('fire.scenarioContribution')}
+          value={contribution}
+          min={0}
+          max={contributionMax}
+          step={100}
+          baseline={baseline.monthlyContribution}
+          onChange={(v) =>
+            onChange({
+              ...overrides,
+              monthlyContribution: v === baseline.monthlyContribution ? undefined : v,
+            })
+          }
+        />
+        <ScenarioSlider
+          label={t('fire.scenarioNetWorth')}
+          value={netWorth}
+          min={0}
+          max={netWorthMax}
+          step={1000}
+          baseline={baseline.netWorth}
+          onChange={(v) =>
+            onChange({ ...overrides, netWorth: v === baseline.netWorth ? undefined : v })
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+interface ScenarioSliderProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  baseline: number;
+  onChange: (value: number) => void;
+}
+
+function ScenarioSlider({ label, value, min, max, step, baseline, onChange }: ScenarioSliderProps) {
+  const { t } = useTranslation();
+  const deviates = value !== baseline;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span
+          className={cn(
+            'text-xs font-mono tabular-nums font-medium',
+            deviates ? 'text-amber-400' : '',
+          )}
+        >
+          {formatTRY(value)}
+        </span>
+      </div>
+      <input
+        type="range"
+        className="scenario-slider"
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+      <p className="text-[10px] text-muted-foreground/80 font-mono tabular-nums">
+        {t('fire.scenarioBaseline', { value: formatTRY(baseline) })}
+      </p>
     </div>
   );
 }
