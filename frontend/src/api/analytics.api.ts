@@ -28,12 +28,35 @@ export interface CashFlowProjection {
   months: CashFlowMonthPoint[];
 }
 
+export interface BenchmarkPoint {
+  date: string;
+  close: number;
+}
+
+export interface BenchmarkSeries {
+  code: string;
+  symbol: string;
+  currency: string;
+  points: BenchmarkPoint[];
+}
+
+export interface BenchmarkResponse {
+  days: number;
+  series: BenchmarkSeries[];
+}
+
 export const analyticsApi = {
   async projectCashFlow(months?: number, startingBalance?: number): Promise<CashFlowProjection> {
     const params: Record<string, string> = {};
     if (months != null) params.months = String(months);
     if (startingBalance != null) params.startingBalance = String(startingBalance);
     const { data } = await client.get<CashFlowProjection>('/analytics/cash-flow-projection', { params });
+    return data;
+  },
+  async fetchBenchmarks(days = 365): Promise<BenchmarkResponse> {
+    const { data } = await client.get<BenchmarkResponse>('/analytics/benchmarks', {
+      params: { days: String(days) },
+    });
     return data;
   },
 };

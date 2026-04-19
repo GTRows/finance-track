@@ -23,6 +23,7 @@ import { useMonthlySummaries } from '@/hooks/useBudget';
 import { usePortfolios } from '@/hooks/usePortfolios';
 import { usePortfolioSnapshotsAggregate } from '@/hooks/useAnalytics';
 import { CashFlowProjectionChart } from '@/components/analytics/CashFlowProjectionChart';
+import { BenchmarkOverlayChart } from '@/components/analytics/BenchmarkOverlayChart';
 import { formatMonth, formatPercent, formatShortDate, formatTRY } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 import {
@@ -451,6 +452,8 @@ export function AnalyticsPage() {
           )}
         </CardContent>
       </Card>
+
+      <BenchmarkOverlayChart snapshots={snapshots.data} />
     </div>
   );
 }

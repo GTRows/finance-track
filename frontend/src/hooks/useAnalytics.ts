@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { snapshotApi } from '@/api/snapshot.api';
-import { analyticsApi, type CashFlowProjection } from '@/api/analytics.api';
+import { analyticsApi, type CashFlowProjection, type BenchmarkResponse } from '@/api/analytics.api';
 import type { Portfolio, PortfolioSnapshot } from '@/types/portfolio.types';
 
 export interface AggregatedSnapshotPoint {
@@ -68,5 +68,13 @@ export function useCashFlowProjection(months = 12, startingBalance?: number) {
     queryKey: ['analytics', 'cashFlowProjection', months, startingBalance ?? null],
     queryFn: () => analyticsApi.projectCashFlow(months, startingBalance),
     staleTime: 60_000,
+  });
+}
+
+export function useBenchmarks(days = 365) {
+  return useQuery<BenchmarkResponse>({
+    queryKey: ['analytics', 'benchmarks', days],
+    queryFn: () => analyticsApi.fetchBenchmarks(days),
+    staleTime: 15 * 60_000,
   });
 }

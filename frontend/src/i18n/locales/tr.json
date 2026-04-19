@@ -709,6 +709,24 @@
     "projectionScheduledIncome": "Planlı gelir",
     "projectionScheduledExpense": "Planlı gider"
   },
+  "benchmarks": {
+    "title": "Portföy ve karşılaştırma endeksleri",
+    "hint": "Portföyünüz en eski anlık görüntüde 100'e normalize edildi; BIST 100, S&P 500 ve altın ile karşılaştırılıyor.",
+    "emptyTitle": "Yeterli anlık görüntü yok",
+    "emptyDesc": "Karşılaştırma için en az iki portföy anlık görüntüsü gerekli.",
+    "unavailableTitle": "Endeksler alınamıyor",
+    "unavailableDesc": "Endeks verileri şu anda yüklenemedi. Birazdan tekrar deneyin.",
+    "footnote": "Endeksler Yahoo Finance günlük kapanışlarını kullanır ve saatte bir yenilenir. Her seri seçilen pencerenin başında 100'e normalize edilir.",
+    "range90": "90g",
+    "range180": "180g",
+    "range365": "1y",
+    "labels": {
+      "PORTFOLIO": "Portföy",
+      "BIST100": "BIST 100",
+      "SP500": "S&P 500",
+      "GOLD": "Altın"
+    }
+  },
   "capitalGains": {
     "title": "Sermaye kazancı raporu",
     "description": "Satış işlemlerinden TRY maliyet tabanı ile yıl ve işlem bazında gerçekleşen kazançlar.",

@@ -708,6 +708,24 @@
     "projectionScheduledIncome": "Scheduled income",
     "projectionScheduledExpense": "Scheduled expense"
   },
+  "benchmarks": {
+    "title": "Portfolio vs. benchmarks",
+    "hint": "Your portfolio rebased to 100 on the earliest snapshot, overlaid with BIST 100, S&P 500 and gold.",
+    "emptyTitle": "Not enough snapshots",
+    "emptyDesc": "Need at least two portfolio snapshots to compare against benchmarks.",
+    "unavailableTitle": "Benchmarks unavailable",
+    "unavailableDesc": "Could not load benchmark data right now. Try again in a moment.",
+    "footnote": "Benchmarks use Yahoo Finance daily closes and refresh hourly. Each series is indexed to 100 at the start of the selected window.",
+    "range90": "90d",
+    "range180": "180d",
+    "range365": "1y",
+    "labels": {
+      "PORTFOLIO": "Portfolio",
+      "BIST100": "BIST 100",
+      "SP500": "S&P 500",
+      "GOLD": "Gold"
+    }
+  },
   "capitalGains": {
     "title": "Capital gains report",
     "description": "Realized gains from sells with TRY cost basis, aggregated by year and event.",
