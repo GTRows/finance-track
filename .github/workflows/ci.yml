@@ -155,7 +155,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=frontend
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -166,7 +166,7 @@ jobs:
           exit-code: "0"
 
       - name: Trivy backend image scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: fintrack-backend:ci
@@ -177,7 +177,7 @@ jobs:
           exit-code: "0"
 
       - name: Trivy frontend image scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: fintrack-frontend:ci
