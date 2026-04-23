@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 ARG VITE_API_BASE_URL=/api/v1
 ARG VITE_WS_URL=ws://localhost/ws
@@ -11,7 +11,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:25-alpine
 WORKDIR /app
 RUN npm install -g serve
 COPY --from=build /app/dist .
