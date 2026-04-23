@@ -131,7 +131,9 @@ public class SavingsGoalService {
                 && progress.monthlyPace != null
                 && progress.monthlyPace.signum() > 0) {
             BigDecimal monthsNeeded = remaining.divide(progress.monthlyPace, 2, RoundingMode.UP);
-            long days = monthsNeeded.multiply(BigDecimal.valueOf(30)).longValueExact();
+            long days = monthsNeeded.multiply(BigDecimal.valueOf(30))
+                    .setScale(0, RoundingMode.CEILING)
+                    .longValueExact();
             projected = LocalDate.now().plusDays(days);
         }
 
