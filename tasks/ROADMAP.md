@@ -23,7 +23,7 @@ user would see.
 | A2 | `@DataJpaTest` + Testcontainers Postgres for all `*Repository` query methods | M | med |
 | A3 | Frontend: add `@testing-library/react` and write hook tests for every `useX` that wraps React Query | M | med |
 | A4 | Frontend: component tests for critical dialogs (`AddTransactionDialog`, `AddPortfolioDialog`, `PayBillDialog`) and pages (`LoginPage`, `DashboardPage`, `BudgetPage`) | L | med |
-| A5 | Enforce JaCoCo line/branch minimums in `pom.xml` (`jacoco:check` in CI, fail below 70%/60%) | S | low |
+| A5 | ~~Enforce JaCoCo line/branch minimums in `pom.xml`~~ Shipped: `jacoco:check` at 60% instruction / 45% branch | S | low |
 | A6 | Fix `FlywayMigrationTest` on Windows hosts: document Docker Desktop socket setup or swap to embedded Postgres via `pg-embedded` | S | low |
 | A7 | Mutation testing with PIT (`pitest-maven`), target 60% mutation score on service layer | M | med |
 | A8 | Contract tests between frontend `*.api.ts` modules and Spring REST endpoints (openapi-generator or Pact) | L | high |
@@ -35,14 +35,14 @@ user would see.
 
 | # | Item | Effort | Impact |
 |---|------|--------|--------|
-| B1 | Spotless + Checkstyle in `pom.xml` with Google Java Format, fail build on violation | S | med |
+| B1 | ~~Spotless in `pom.xml` with Google Java Format, fail build on violation~~ Shipped. Checkstyle still to add. | S | med |
 | B2 | ESLint rules tightening: `no-floating-promises`, `no-unsafe-*`, `consistent-type-imports`; all warnings to errors | S | med |
 | B3 | Pre-commit hooks via Husky: run ESLint, Prettier, typecheck on staged frontend files; `./mvnw -q compile` on staged Java | S | med |
 | B4 | Gitleaks + secret-scanning GitHub Action already present? Add baseline and rotation policy doc | S | high |
 | B5 | Vite bundle-size budgets (`rollup-plugin-visualizer` + threshold CI check) | S | low |
 | B6 | Lighthouse CI job that runs against `npm run preview` build, asserts a11y and performance ceilings | M | med |
 | B7 | Changelog automation: Conventional Commits + `release-please` action to cut versioned releases | M | low |
-| B8 | Document every public API endpoint with `springdoc-openapi`, serve `/v3/api-docs` + Swagger UI at `/api/docs` | M | high |
+| B8 | ~~springdoc-openapi + Swagger UI at `/swagger-ui.html`~~ Shipped. Annotating controllers with `@Operation` descriptions is a follow-up. | M | high |
 | B9 | Type-safe API client generated from OpenAPI spec (eliminates hand-written `*.api.ts` drift) | L | high |
 
 ---
@@ -67,16 +67,16 @@ user would see.
 
 | # | Item | Effort | Impact |
 |---|------|--------|--------|
-| D1 | Full HTTP security-header review: CSP (report-only first), HSTS preload, Referrer-Policy, Permissions-Policy. Add a test that curls `/` and asserts headers | M | high |
+| D1 | ~~HTTP security-header review: CSP, HSTS, Referrer-Policy, Permissions-Policy~~ Shipped via Spring Security headers DSL. Integration test asserting the header set is a follow-up. | M | high |
 | D2 | Argon2id or scrypt password hashing migration from BCrypt (BCrypt is fine, but Argon2 is state of the art and Spring Security 6 has a wired `Argon2PasswordEncoder`) | S | med |
-| D3 | TOTP recovery codes (one-time use, 10 codes shown once on enrollment) - current impl has no lockout escape | M | high |
+| D3 | ~~TOTP recovery codes (one-time use, 10 codes shown once on enrollment)~~ Service layer shipped (V35 migration + TotpRecoveryCodeService). AuthController endpoints (generate, redeem on 2FA flow) still to wire up. | M | high |
 | D4 | WebAuthn / passkeys as alternative sign-in, same `users` table with an `authenticators` child | L | high |
-| D5 | Rate-limit password-reset, email-verification, and refresh endpoints the same way `LoginRateLimiter` covers login | S | high |
+| D5 | ~~Rate-limit password-reset, email-verification, and refresh endpoints~~ Shipped via `LoginRateLimiter.enforceSensitive(category)` + wired into reset/verify flows. | S | high |
 | D6 | Session fingerprint binding: store a hash of user-agent + IP-prefix on refresh token rows, reject refresh if it drifts more than N | M | med |
 | D7 | Audit log retention policy + automatic redaction of PII after configured window (GDPR-aligned) | M | med |
 | D8 | Signed URL scheme for receipt downloads (short-lived HMAC token instead of cookie-authenticated endpoint) | S | low |
 | D9 | OWASP Dependency Check (or Renovate's vulnerability report) in CI; fail PRs on new `CRITICAL` CVEs | S | high |
-| D10 | Replay-attack protection on refresh-token rotation: mark every consumed refresh token as revoked immediately, even if it was also leaked | S | high |
+| D10 | ~~Replay-attack protection on refresh-token rotation~~ Already in place: `RefreshTokenService.rotate` calls `deleteByToken` on the old token before issuing a new one, in the same transaction. | S | high |
 
 ---
 
@@ -154,6 +154,15 @@ Explicitly out of scope for this project. Don't revisit without a good reason.
 - Full accounting ledger (double-entry) - single-user finance tracking is deliberately simpler
 
 ---
+
+## Progress log
+
+Session of 2026-04-24 (this branch):
+- Phase 23 (partial): A5 (JaCoCo gate), B1 (Spotless gate + initial format pass),
+  B8 (springdoc OpenAPI + Swagger UI). Remaining Phase 23: A1, A2, A6, A7, A8, A9.
+- Phase 24 (partial): D1 (security headers), D3 (TOTP recovery codes,
+  service layer only), D5 (rate-limit reset/verify/refresh),
+  D10 (refresh replay protection verified). Remaining Phase 24: D2, D4, D6, D7, D8, D9.
 
 ## Suggested phasing
 
