@@ -37,6 +37,7 @@ class PasswordResetServiceTest {
     @Mock MailProperties mailProperties;
     @Mock PasswordEncoder passwordEncoder;
     @Mock AuditService auditService;
+    @Mock LoginRateLimiter rateLimiter;
 
     @InjectMocks PasswordResetService service;
 

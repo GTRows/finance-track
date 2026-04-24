@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -52,8 +53,30 @@ public class SecurityConfig {
             "/api/v1/health/**",
             "/api/actuator/health",
             "/api/actuator/prometheus",
-            "/ws/**"
+            "/ws/**",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**"
     };
+
+    /**
+     * CSP for the API. The frontend ships as a separate origin, so this only
+     * needs to cover Swagger UI when served directly from the backend.
+     */
+    private static final String CONTENT_SECURITY_POLICY =
+            "default-src 'self'; "
+                    + "img-src 'self' data:; "
+                    + "style-src 'self' 'unsafe-inline'; "
+                    + "script-src 'self' 'unsafe-inline'; "
+                    + "connect-src 'self'; "
+                    + "frame-ancestors 'none'; "
+                    + "base-uri 'self'; "
+                    + "form-action 'self'";
+
+    private static final String PERMISSIONS_POLICY =
+            "accelerometer=(), camera=(), geolocation=(), gyroscope=(), "
+                    + "magnetometer=(), microphone=(), payment=(), usb=()";
 
     /** Configures the security filter chain with JWT authentication. */
     @Bean
@@ -63,6 +86,15 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.deny())
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY))
+                        .referrerPolicy(ref -> ref.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(63072000))
+                        .permissionsPolicy(pp -> pp.policy(PERMISSIONS_POLICY)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

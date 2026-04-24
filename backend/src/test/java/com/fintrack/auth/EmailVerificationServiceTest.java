@@ -35,6 +35,7 @@ class EmailVerificationServiceTest {
     @Mock MailService mailService;
     @Mock MailProperties mailProperties;
     @Mock AuditService auditService;
+    @Mock LoginRateLimiter rateLimiter;
 
     @InjectMocks EmailVerificationService service;
 

@@ -35,11 +35,13 @@ public class PasswordResetService {
     private final MailProperties mailProperties;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+    private final LoginRateLimiter rateLimiter;
     private final SecureRandom random = new SecureRandom();
 
     /** Issues a reset link if the email is known. Always silent to callers. */
     @Transactional
     public void requestReset(String email) {
+        rateLimiter.enforceSensitive("password-reset");
         Optional<User> maybeUser = userRepository.findByEmail(email);
         if (maybeUser.isEmpty()) {
             log.debug("Password reset requested for unknown email");
@@ -70,6 +72,7 @@ public class PasswordResetService {
     /** Consumes a token, sets the new password, and revokes all existing sessions. */
     @Transactional
     public void confirmReset(String token, String newPassword) {
+        rateLimiter.enforceSensitive("password-reset-confirm");
         PasswordReset entry = repository.findByToken(token)
                 .orElseThrow(() -> new BusinessRuleException("Invalid reset link", "RESET_TOKEN_INVALID"));
         if (entry.getConsumedAt() != null) {

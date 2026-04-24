@@ -152,3 +152,10 @@ spring:
 logging:
   file:
     path: ${LOG_DIR:./logs}
+
+# OpenAPI / Swagger UI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

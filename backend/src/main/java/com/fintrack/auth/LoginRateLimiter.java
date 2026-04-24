@@ -30,6 +30,17 @@ public class LoginRateLimiter {
     @Value("${fintrack.auth.login-rate-limit.window-seconds:300}")
     private long windowSeconds;
 
+    /**
+     * Rate limits for sensitive non-login actions (password reset, email verification,
+     * token refresh). Keyed by IP + category so a single bad actor can't burn through
+     * any one flow.
+     */
+    @Value("${fintrack.auth.sensitive-rate-limit.max-attempts:10}")
+    private int sensitiveMaxAttempts;
+
+    @Value("${fintrack.auth.sensitive-rate-limit.window-seconds:600}")
+    private long sensitiveWindowSeconds;
+
     public void enforce(String username) {
         if (!isEnabled()) return;
         String ip = RequestContext.clientIp();
@@ -37,6 +48,34 @@ public class LoginRateLimiter {
             log.warn("Login rate limit hit for user={} ip={}", username, ip);
             throw new LoginRateLimitException(
                     "Too many login attempts. Try again in a few minutes.");
+        }
+    }
+
+    /**
+     * Enforce rate limit for sensitive flows by category (e.g. "password-reset",
+     * "email-verify", "token-refresh"). Uses a per-IP counter so legitimate users on
+     * a different network are unaffected by abuse from a single source.
+     */
+    public void enforceSensitive(String category) {
+        if (!isSensitiveEnabled()) return;
+        String ip = RequestContext.clientIp();
+        if (ip == null) return;
+        String key = "sensitive:" + category + ":ip:" + ip;
+        String raw = redis.opsForValue().get(key);
+        int count = 0;
+        try {
+            if (raw != null) count = Integer.parseInt(raw);
+        } catch (NumberFormatException ignored) {
+            // fall through
+        }
+        if (count >= sensitiveMaxAttempts) {
+            log.warn("Sensitive rate limit hit for category={} ip={}", category, ip);
+            throw new LoginRateLimitException(
+                    "Too many attempts. Try again in a few minutes.");
+        }
+        Long next = redis.opsForValue().increment(key);
+        if (next != null && next == 1L) {
+            redis.expire(key, Duration.ofSeconds(sensitiveWindowSeconds));
         }
     }
 
@@ -73,6 +112,10 @@ public class LoginRateLimiter {
 
     private boolean isEnabled() {
         return maxAttempts > 0 && windowSeconds > 0;
+    }
+
+    private boolean isSensitiveEnabled() {
+        return sensitiveMaxAttempts > 0 && sensitiveWindowSeconds > 0;
     }
 
     private static String normalise(String value) {

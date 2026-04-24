@@ -33,11 +33,13 @@ public class EmailVerificationService {
     private final MailService mailService;
     private final MailProperties mailProperties;
     private final AuditService auditService;
+    private final LoginRateLimiter rateLimiter;
     private final SecureRandom random = new SecureRandom();
 
     /** Issues a fresh verification token for the user and sends the email. Silent if the user is already verified. */
     @Transactional
     public void sendVerification(UUID userId) {
+        rateLimiter.enforceSensitive("email-verify-send");
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (user.isEmailVerified()) {

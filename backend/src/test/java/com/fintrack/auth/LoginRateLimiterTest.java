@@ -31,6 +31,18 @@ class LoginRateLimiterTest {
     void setUp() {
         ReflectionTestUtils.setField(limiter, "maxAttempts", 3);
         ReflectionTestUtils.setField(limiter, "windowSeconds", 60L);
+        ReflectionTestUtils.setField(limiter, "sensitiveMaxAttempts", 10);
+        ReflectionTestUtils.setField(limiter, "sensitiveWindowSeconds", 600L);
+        org.springframework.mock.web.MockHttpServletRequest request =
+                new org.springframework.mock.web.MockHttpServletRequest();
+        request.setRemoteAddr("10.0.0.1");
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                new org.springframework.web.context.request.ServletRequestAttributes(request));
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
     }
 
     @Test
@@ -82,5 +94,37 @@ class LoginRateLimiterTest {
         when(ops.get("login:user:ali")).thenReturn("5");
 
         assertThrows(LoginRateLimitException.class, () -> limiter.enforce("ALI"));
+    }
+
+    @Test
+    void enforceSensitiveAllowsBelowThresholdAndIncrementsCounter() {
+        when(redis.opsForValue()).thenReturn(ops);
+        when(ops.get("sensitive:password-reset:ip:10.0.0.1")).thenReturn("3");
+        when(ops.increment("sensitive:password-reset:ip:10.0.0.1")).thenReturn(4L);
+
+        assertDoesNotThrow(() -> limiter.enforceSensitive("password-reset"));
+
+        verify(ops).increment("sensitive:password-reset:ip:10.0.0.1");
+    }
+
+    @Test
+    void enforceSensitiveSetsExpiryOnFirstIncrement() {
+        when(redis.opsForValue()).thenReturn(ops);
+        when(ops.get("sensitive:email-verify:ip:10.0.0.1")).thenReturn(null);
+        when(ops.increment("sensitive:email-verify:ip:10.0.0.1")).thenReturn(1L);
+
+        limiter.enforceSensitive("email-verify");
+
+        verify(redis).expire(eq("sensitive:email-verify:ip:10.0.0.1"), any(Duration.class));
+    }
+
+    @Test
+    void enforceSensitiveBlocksAtThreshold() {
+        when(redis.opsForValue()).thenReturn(ops);
+        when(ops.get("sensitive:password-reset:ip:10.0.0.1")).thenReturn("10");
+
+        assertThrows(LoginRateLimitException.class,
+                () -> limiter.enforceSensitive("password-reset"));
+        verify(ops, org.mockito.Mockito.never()).increment(any(String.class));
     }
 }

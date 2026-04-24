@@ -124,6 +124,13 @@
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
 
+    <!-- OpenAPI 3 / Swagger UI -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+
     <!-- Utilities -->
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -197,6 +204,32 @@
               <goal>report</goal>
             </goals>
           </execution>
+          <execution>
+            <id>check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.60</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.45</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
         </executions>
         <configuration>
           <excludes>
@@ -207,6 +240,36 @@
             <exclude>com/fintrack/**/*Request*.class</exclude>
           </excludes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.43.0</version>
+        <configuration>
+          <java>
+            <includes>
+              <include>src/main/java/**/*.java</include>
+              <include>src/test/java/**/*.java</include>
+            </includes>
+            <googleJavaFormat>
+              <version>1.22.0</version>
+              <style>AOSP</style>
+              <reflowLongStrings>true</reflowLongStrings>
+            </googleJavaFormat>
+            <removeUnusedImports/>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <id>spotless-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
