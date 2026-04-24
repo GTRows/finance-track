@@ -1,5 +1,12 @@
 package com.fintrack.portfolio;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.entity.Portfolio.PortfolioType;
 import com.fintrack.common.exception.BusinessRuleException;
@@ -7,23 +14,15 @@ import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.dto.CreatePortfolioRequest;
 import com.fintrack.portfolio.dto.PortfolioResponse;
 import com.fintrack.portfolio.dto.UpdatePortfolioRequest;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PortfolioServiceTest {
@@ -67,14 +66,19 @@ class PortfolioServiceTest {
     @Test
     void createTrimsNameAndDescription() {
         when(portfolioRepository.countByUserIdAndActiveTrue(userId)).thenReturn(0L);
-        when(portfolioRepository.save(any())).thenAnswer(inv -> {
-            Portfolio p = inv.getArgument(0);
-            p.setId(UUID.randomUUID());
-            return p;
-        });
+        when(portfolioRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            Portfolio p = inv.getArgument(0);
+                            p.setId(UUID.randomUUID());
+                            return p;
+                        });
 
-        PortfolioResponse res = service.create(userId,
-                new CreatePortfolioRequest("  Main  ", PortfolioType.INDIVIDUAL, "  note  "));
+        PortfolioResponse res =
+                service.create(
+                        userId,
+                        new CreatePortfolioRequest(
+                                "  Main  ", PortfolioType.INDIVIDUAL, "  note  "));
 
         assertThat(res.name()).isEqualTo("Main");
         ArgumentCaptor<Portfolio> captor = ArgumentCaptor.forClass(Portfolio.class);
@@ -100,8 +104,12 @@ class PortfolioServiceTest {
     void createFailsAtLimit() {
         when(portfolioRepository.countByUserIdAndActiveTrue(userId)).thenReturn(20L);
 
-        assertThatThrownBy(() -> service.create(userId,
-                new CreatePortfolioRequest("Main", PortfolioType.INDIVIDUAL, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        userId,
+                                        new CreatePortfolioRequest(
+                                                "Main", PortfolioType.INDIVIDUAL, null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Portfolio limit reached");
 
@@ -111,10 +119,15 @@ class PortfolioServiceTest {
     @Test
     void updateTrimsFieldsAndKeepsType() {
         UUID id = UUID.randomUUID();
-        Portfolio existing = Portfolio.builder()
-                .id(id).userId(userId)
-                .name("Old").portfolioType(PortfolioType.STOCKS)
-                .description("old").active(true).build();
+        Portfolio existing =
+                Portfolio.builder()
+                        .id(id)
+                        .userId(userId)
+                        .name("Old")
+                        .portfolioType(PortfolioType.STOCKS)
+                        .description("old")
+                        .active(true)
+                        .build();
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(id, userId))
                 .thenReturn(Optional.of(existing));
 
@@ -131,8 +144,8 @@ class PortfolioServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(id, userId))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(userId, id,
-                new UpdatePortfolioRequest("New", null)))
+        assertThatThrownBy(
+                        () -> service.update(userId, id, new UpdatePortfolioRequest("New", null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 

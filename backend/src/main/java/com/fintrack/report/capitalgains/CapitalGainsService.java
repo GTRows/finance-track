@@ -8,10 +8,6 @@ import com.fintrack.common.entity.Portfolio;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.dividend.DividendRepository;
 import com.fintrack.portfolio.transaction.InvestmentTransactionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -22,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,10 +35,18 @@ public class CapitalGainsService {
 
     @Transactional(readOnly = true)
     public CapitalGainsResponse compute(UUID userId, Integer yearFilter) {
-        List<Portfolio> portfolios = portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId);
+        List<Portfolio> portfolios =
+                portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId);
         if (portfolios.isEmpty()) {
-            return new CapitalGainsResponse(yearFilter, BigDecimal.ZERO, BigDecimal.ZERO,
-                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, List.of(), List.of());
+            return new CapitalGainsResponse(
+                    yearFilter,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    List.of(),
+                    List.of());
         }
         Map<UUID, Portfolio> portfolioById = new HashMap<>();
         for (Portfolio p : portfolios) portfolioById.put(p.getId(), p);
@@ -48,10 +55,11 @@ public class CapitalGainsService {
         for (Portfolio p : portfolios) {
             allTxns.addAll(txnRepo.findByPortfolioIdOrderByTxnDateDescCreatedAtDesc(p.getId()));
         }
-        allTxns.sort(Comparator
-                .comparing(InvestmentTransaction::getTxnDate)
-                .thenComparing(InvestmentTransaction::getCreatedAt,
-                        Comparator.nullsLast(Comparator.naturalOrder())));
+        allTxns.sort(
+                Comparator.comparing(InvestmentTransaction::getTxnDate)
+                        .thenComparing(
+                                InvestmentTransaction::getCreatedAt,
+                                Comparator.nullsLast(Comparator.naturalOrder())));
 
         Map<UUID, Asset> assetCache = new HashMap<>();
         Map<Key, Lot> lots = new HashMap<>();
@@ -76,9 +84,11 @@ public class CapitalGainsService {
                 if (qty.signum() <= 0 || lot.quantity.signum() <= 0) continue;
 
                 BigDecimal sellQty = qty.min(lot.quantity);
-                BigDecimal avgCost = lot.quantity.signum() == 0
-                        ? BigDecimal.ZERO
-                        : lot.totalCost.divide(lot.quantity, COST_SCALE, RoundingMode.HALF_UP);
+                BigDecimal avgCost =
+                        lot.quantity.signum() == 0
+                                ? BigDecimal.ZERO
+                                : lot.totalCost.divide(
+                                        lot.quantity, COST_SCALE, RoundingMode.HALF_UP);
                 BigDecimal costBasis = avgCost.multiply(sellQty).setScale(4, RoundingMode.HALF_UP);
                 BigDecimal proceedsGross = amount.add(fee);
                 BigDecimal proceedsNet = amount;
@@ -94,31 +104,33 @@ public class CapitalGainsService {
                 int year = txn.getTxnDate().getYear();
                 if (yearFilter != null && yearFilter != year) continue;
 
-                Asset asset = assetCache.computeIfAbsent(txn.getAssetId(),
-                        id -> assetRepo.findById(id).orElse(null));
+                Asset asset =
+                        assetCache.computeIfAbsent(
+                                txn.getAssetId(), id -> assetRepo.findById(id).orElse(null));
                 Portfolio portfolio = portfolioById.get(txn.getPortfolioId());
 
-                BigDecimal pricePerUnit = txn.getPriceTry() != null
-                        ? txn.getPriceTry()
-                        : (sellQty.signum() > 0
-                                ? proceedsGross.divide(sellQty, 4, RoundingMode.HALF_UP)
-                                : BigDecimal.ZERO);
+                BigDecimal pricePerUnit =
+                        txn.getPriceTry() != null
+                                ? txn.getPriceTry()
+                                : (sellQty.signum() > 0
+                                        ? proceedsGross.divide(sellQty, 4, RoundingMode.HALF_UP)
+                                        : BigDecimal.ZERO);
 
-                events.add(new CapitalGainsResponse.Event(
-                        txn.getId(),
-                        txn.getPortfolioId(),
-                        portfolio != null ? portfolio.getName() : null,
-                        txn.getAssetId(),
-                        asset != null ? asset.getSymbol() : null,
-                        asset != null ? asset.getName() : null,
-                        txn.getTxnDate(),
-                        sellQty,
-                        pricePerUnit,
-                        proceedsGross,
-                        costBasis,
-                        fee,
-                        gain
-                ));
+                events.add(
+                        new CapitalGainsResponse.Event(
+                                txn.getId(),
+                                txn.getPortfolioId(),
+                                portfolio != null ? portfolio.getName() : null,
+                                txn.getAssetId(),
+                                asset != null ? asset.getSymbol() : null,
+                                asset != null ? asset.getName() : null,
+                                txn.getTxnDate(),
+                                sellQty,
+                                pricePerUnit,
+                                proceedsGross,
+                                costBasis,
+                                fee,
+                                gain));
 
                 YearAgg agg = yearAggs.computeIfAbsent(year, y -> new YearAgg());
                 agg.proceeds = agg.proceeds.add(proceedsGross);
@@ -132,8 +144,9 @@ public class CapitalGainsService {
         List<UUID> portfolioIds = portfolios.stream().map(Portfolio::getId).toList();
         for (Map.Entry<Integer, YearAgg> entry : yearAggs.entrySet()) {
             int year = entry.getKey();
-            BigDecimal divNet = dividendRepo.sumNetByPortfoliosAndRange(
-                    portfolioIds, LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
+            BigDecimal divNet =
+                    dividendRepo.sumNetByPortfoliosAndRange(
+                            portfolioIds, LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
             entry.getValue().dividendsNetTry = divNet != null ? divNet : BigDecimal.ZERO;
         }
 
@@ -145,15 +158,15 @@ public class CapitalGainsService {
         List<CapitalGainsResponse.YearSummary> byYear = new ArrayList<>();
         for (Map.Entry<Integer, YearAgg> entry : yearAggs.entrySet()) {
             YearAgg agg = entry.getValue();
-            byYear.add(new CapitalGainsResponse.YearSummary(
-                    entry.getKey(),
-                    agg.proceeds,
-                    agg.costBasis,
-                    agg.fees,
-                    agg.realized,
-                    agg.dividendsNetTry,
-                    agg.count
-            ));
+            byYear.add(
+                    new CapitalGainsResponse.YearSummary(
+                            entry.getKey(),
+                            agg.proceeds,
+                            agg.costBasis,
+                            agg.fees,
+                            agg.realized,
+                            agg.dividendsNetTry,
+                            agg.count));
             totalProceeds = totalProceeds.add(agg.proceeds);
             totalCost = totalCost.add(agg.costBasis);
             totalFees = totalFees.add(agg.fees);
@@ -162,10 +175,11 @@ public class CapitalGainsService {
         }
 
         if (yearFilter != null) {
-            BigDecimal divNet = dividendRepo.sumNetByPortfoliosAndRange(
-                    portfolioIds,
-                    LocalDate.of(yearFilter, 1, 1),
-                    LocalDate.of(yearFilter, 12, 31));
+            BigDecimal divNet =
+                    dividendRepo.sumNetByPortfoliosAndRange(
+                            portfolioIds,
+                            LocalDate.of(yearFilter, 1, 1),
+                            LocalDate.of(yearFilter, 12, 31));
             totalDividendsTry = divNet != null ? divNet : BigDecimal.ZERO;
         }
 
@@ -179,8 +193,7 @@ public class CapitalGainsService {
                 totalRealized,
                 totalDividendsTry,
                 byYear,
-                events
-        );
+                events);
     }
 
     private static BigDecimal nullToZero(BigDecimal value) {

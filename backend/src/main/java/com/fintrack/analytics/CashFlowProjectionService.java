@@ -11,10 +11,6 @@ import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.MonthlySummary;
 import com.fintrack.common.entity.RecurringTemplate;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -22,6 +18,9 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +37,8 @@ public class CashFlowProjectionService {
     private final BillRepository billRepo;
 
     @Transactional(readOnly = true)
-    public CashFlowProjectionResponse project(UUID userId, Integer horizonMonths, BigDecimal startingBalance) {
+    public CashFlowProjectionResponse project(
+            UUID userId, Integer horizonMonths, BigDecimal startingBalance) {
         int horizon = clampHorizon(horizonMonths);
         BigDecimal start = startingBalance != null ? startingBalance : BigDecimal.ZERO;
 
@@ -48,8 +48,10 @@ public class CashFlowProjectionService {
         BigDecimal avgExpense = avg.expense;
         BigDecimal avgNet = avgIncome.subtract(avgExpense);
 
-        List<RecurringTemplate> templates = recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)
-                .stream().filter(RecurringTemplate::isActive).toList();
+        List<RecurringTemplate> templates =
+                recurringRepo.findByUserIdOrderByCreatedAtAsc(userId).stream()
+                        .filter(RecurringTemplate::isActive)
+                        .toList();
         List<Bill> bills = billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId);
 
         YearMonth cursor = YearMonth.now().plusMonths(1);
@@ -63,11 +65,14 @@ public class CashFlowProjectionService {
             List<ScheduledItem> items = new ArrayList<>();
 
             for (RecurringTemplate t : templates) {
-                ScheduledItem item = new ScheduledItem(
-                        "recurring",
-                        t.getDescription() != null && !t.getDescription().isBlank() ? t.getDescription() : "Recurring",
-                        t.getTxnType().name(),
-                        t.getAmount());
+                ScheduledItem item =
+                        new ScheduledItem(
+                                "recurring",
+                                t.getDescription() != null && !t.getDescription().isBlank()
+                                        ? t.getDescription()
+                                        : "Recurring",
+                                t.getTxnType().name(),
+                                t.getAmount());
                 items.add(item);
                 if (t.getTxnType() == BudgetTransaction.TxnType.INCOME) {
                     scheduledIncome = scheduledIncome.add(t.getAmount());
@@ -85,15 +90,16 @@ public class CashFlowProjectionService {
             BigDecimal net = projIncome.subtract(projExpense);
             balance = balance.add(net);
 
-            points.add(new MonthPoint(
-                    ym.toString(),
-                    round(projIncome),
-                    round(projExpense),
-                    round(net),
-                    round(balance),
-                    round(scheduledIncome),
-                    round(scheduledExpense),
-                    items));
+            points.add(
+                    new MonthPoint(
+                            ym.toString(),
+                            round(projIncome),
+                            round(projExpense),
+                            round(net),
+                            round(balance),
+                            round(scheduledIncome),
+                            round(scheduledExpense),
+                            items));
         }
 
         return new CashFlowProjectionResponse(
@@ -111,7 +117,8 @@ public class CashFlowProjectionService {
     private Averages averagesFromSummaries(UUID userId) {
         List<MonthlySummary> summaries = summaryRepo.findByUserIdOrderByPeriodDesc(userId);
         if (summaries.size() < MIN_SAMPLES) return null;
-        List<MonthlySummary> window = summaries.subList(0, Math.min(SAMPLE_MONTHS, summaries.size()));
+        List<MonthlySummary> window =
+                summaries.subList(0, Math.min(SAMPLE_MONTHS, summaries.size()));
         BigDecimal incomeSum = BigDecimal.ZERO;
         BigDecimal expenseSum = BigDecimal.ZERO;
         for (MonthlySummary s : window) {
@@ -134,10 +141,14 @@ public class CashFlowProjectionService {
             YearMonth ym = current.minusMonths(i);
             LocalDate from = ym.atDay(1);
             LocalDate to = ym.atEndOfMonth();
-            BigDecimal inc = nvl(txnRepo.sumByUserIdAndTypeAndDateRange(
-                    userId, BudgetTransaction.TxnType.INCOME, from, to));
-            BigDecimal exp = nvl(txnRepo.sumByUserIdAndTypeAndDateRange(
-                    userId, BudgetTransaction.TxnType.EXPENSE, from, to));
+            BigDecimal inc =
+                    nvl(
+                            txnRepo.sumByUserIdAndTypeAndDateRange(
+                                    userId, BudgetTransaction.TxnType.INCOME, from, to));
+            BigDecimal exp =
+                    nvl(
+                            txnRepo.sumByUserIdAndTypeAndDateRange(
+                                    userId, BudgetTransaction.TxnType.EXPENSE, from, to));
             if (inc.signum() == 0 && exp.signum() == 0) continue;
             incomeSum = incomeSum.add(inc);
             expenseSum = expenseSum.add(exp);

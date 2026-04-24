@@ -1,23 +1,19 @@
 package com.fintrack.health;
 
+import java.lang.management.ManagementFactory;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.sql.DataSource;
-import java.lang.management.ManagementFactory;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-/**
- * Enhanced health endpoint providing system component status.
- */
+/** Enhanced health endpoint providing system component status. */
 @RestController
 @RequestMapping("/api/v1/health")
 @RequiredArgsConstructor

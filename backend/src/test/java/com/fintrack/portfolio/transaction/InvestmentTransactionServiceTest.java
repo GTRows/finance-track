@@ -1,5 +1,12 @@
 package com.fintrack.portfolio.transaction;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.InvestmentTransaction;
@@ -12,25 +19,17 @@ import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.HoldingRepository;
 import com.fintrack.portfolio.transaction.dto.RecordTransactionRequest;
 import com.fintrack.portfolio.transaction.dto.TransactionResponse;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InvestmentTransactionServiceTest {
@@ -56,9 +55,13 @@ class InvestmentTransactionServiceTest {
 
     private RecordTransactionRequest req(TxnType type, String qty, String price, String fee) {
         return new RecordTransactionRequest(
-                assetId, type, new BigDecimal(qty), new BigDecimal(price),
+                assetId,
+                type,
+                new BigDecimal(qty),
+                new BigDecimal(price),
                 fee == null ? null : new BigDecimal(fee),
-                LocalDate.of(2026, 4, 1), "note");
+                LocalDate.of(2026, 4, 1),
+                "note");
     }
 
     @Test
@@ -70,8 +73,8 @@ class InvestmentTransactionServiceTest {
                 .thenReturn(Optional.empty());
         when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        TransactionResponse res = service.record(userId, portfolioId,
-                req(TxnType.BUY, "2", "100", "10"));
+        TransactionResponse res =
+                service.record(userId, portfolioId, req(TxnType.BUY, "2", "100", "10"));
 
         assertThat(res.amountTry()).isEqualByComparingTo("210");
         ArgumentCaptor<PortfolioHolding> captor = ArgumentCaptor.forClass(PortfolioHolding.class);
@@ -86,11 +89,13 @@ class InvestmentTransactionServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        PortfolioHolding existing = PortfolioHolding.builder()
-                .portfolioId(portfolioId).assetId(assetId)
-                .quantity(new BigDecimal("1"))
-                .avgCostTry(new BigDecimal("100"))
-                .build();
+        PortfolioHolding existing =
+                PortfolioHolding.builder()
+                        .portfolioId(portfolioId)
+                        .assetId(assetId)
+                        .quantity(new BigDecimal("1"))
+                        .avgCostTry(new BigDecimal("100"))
+                        .build();
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.of(existing));
         when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -109,17 +114,19 @@ class InvestmentTransactionServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        PortfolioHolding existing = PortfolioHolding.builder()
-                .portfolioId(portfolioId).assetId(assetId)
-                .quantity(new BigDecimal("5"))
-                .avgCostTry(new BigDecimal("100"))
-                .build();
+        PortfolioHolding existing =
+                PortfolioHolding.builder()
+                        .portfolioId(portfolioId)
+                        .assetId(assetId)
+                        .quantity(new BigDecimal("5"))
+                        .avgCostTry(new BigDecimal("100"))
+                        .build();
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.of(existing));
         when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        TransactionResponse res = service.record(userId, portfolioId,
-                req(TxnType.SELL, "2", "150", "5"));
+        TransactionResponse res =
+                service.record(userId, portfolioId, req(TxnType.SELL, "2", "150", "5"));
 
         assertThat(res.amountTry()).isEqualByComparingTo("295");
         ArgumentCaptor<PortfolioHolding> captor = ArgumentCaptor.forClass(PortfolioHolding.class);
@@ -133,11 +140,13 @@ class InvestmentTransactionServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        PortfolioHolding existing = PortfolioHolding.builder()
-                .portfolioId(portfolioId).assetId(assetId)
-                .quantity(new BigDecimal("2"))
-                .avgCostTry(new BigDecimal("100"))
-                .build();
+        PortfolioHolding existing =
+                PortfolioHolding.builder()
+                        .portfolioId(portfolioId)
+                        .assetId(assetId)
+                        .quantity(new BigDecimal("2"))
+                        .avgCostTry(new BigDecimal("100"))
+                        .build();
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.of(existing));
         when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -153,17 +162,21 @@ class InvestmentTransactionServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        PortfolioHolding existing = PortfolioHolding.builder()
-                .portfolioId(portfolioId).assetId(assetId)
-                .quantity(new BigDecimal("1"))
-                .avgCostTry(new BigDecimal("100"))
-                .build();
+        PortfolioHolding existing =
+                PortfolioHolding.builder()
+                        .portfolioId(portfolioId)
+                        .assetId(assetId)
+                        .quantity(new BigDecimal("1"))
+                        .avgCostTry(new BigDecimal("100"))
+                        .build();
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.of(existing));
         when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() ->
-                service.record(userId, portfolioId, req(TxnType.SELL, "5", "120", null)))
+        assertThatThrownBy(
+                        () ->
+                                service.record(
+                                        userId, portfolioId, req(TxnType.SELL, "5", "120", null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("exceeds");
     }
@@ -177,8 +190,10 @@ class InvestmentTransactionServiceTest {
                 .thenReturn(Optional.empty());
         when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() ->
-                service.record(userId, portfolioId, req(TxnType.SELL, "1", "120", null)))
+        assertThatThrownBy(
+                        () ->
+                                service.record(
+                                        userId, portfolioId, req(TxnType.SELL, "1", "120", null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("not in the portfolio");
     }
@@ -219,8 +234,8 @@ class InvestmentTransactionServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() ->
-                service.record(userId, portfolioId, req(TxnType.BUY, "1", "1", null)))
+        assertThatThrownBy(
+                        () -> service.record(userId, portfolioId, req(TxnType.BUY, "1", "1", null)))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(transactionRepository, never()).save(any());
@@ -241,10 +256,17 @@ class InvestmentTransactionServiceTest {
     @Test
     void deleteSucceedsWhenOwnedAndFound() {
         UUID txnId = UUID.randomUUID();
-        InvestmentTransaction txn = InvestmentTransaction.builder()
-                .id(txnId).portfolioId(portfolioId).assetId(assetId).txnType(TxnType.BUY)
-                .quantity(new BigDecimal("1")).priceTry(new BigDecimal("1"))
-                .amountTry(new BigDecimal("1")).txnDate(LocalDate.now()).build();
+        InvestmentTransaction txn =
+                InvestmentTransaction.builder()
+                        .id(txnId)
+                        .portfolioId(portfolioId)
+                        .assetId(assetId)
+                        .txnType(TxnType.BUY)
+                        .quantity(new BigDecimal("1"))
+                        .priceTry(new BigDecimal("1"))
+                        .amountTry(new BigDecimal("1"))
+                        .txnDate(LocalDate.now())
+                        .build();
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(transactionRepository.findByIdAndPortfolioId(txnId, portfolioId))

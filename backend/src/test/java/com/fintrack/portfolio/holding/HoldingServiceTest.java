@@ -1,5 +1,12 @@
 package com.fintrack.portfolio.holding;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Asset.AssetType;
@@ -10,23 +17,15 @@ import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.dto.AddHoldingRequest;
 import com.fintrack.portfolio.holding.dto.HoldingResponse;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HoldingServiceTest {
@@ -72,15 +71,33 @@ class HoldingServiceTest {
         Asset eth = asset("ETH");
         Asset ada = asset("ADA");
 
-        PortfolioHolding hBtc = PortfolioHolding.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId).assetId(btc.getId())
-                .quantity(BigDecimal.ONE).avgCostTry(BigDecimal.TEN).pinned(false).build();
-        PortfolioHolding hEth = PortfolioHolding.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId).assetId(eth.getId())
-                .quantity(BigDecimal.ONE).avgCostTry(BigDecimal.TEN).pinned(true).build();
-        PortfolioHolding hAda = PortfolioHolding.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId).assetId(ada.getId())
-                .quantity(BigDecimal.ONE).avgCostTry(BigDecimal.TEN).pinned(false).build();
+        PortfolioHolding hBtc =
+                PortfolioHolding.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(btc.getId())
+                        .quantity(BigDecimal.ONE)
+                        .avgCostTry(BigDecimal.TEN)
+                        .pinned(false)
+                        .build();
+        PortfolioHolding hEth =
+                PortfolioHolding.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(eth.getId())
+                        .quantity(BigDecimal.ONE)
+                        .avgCostTry(BigDecimal.TEN)
+                        .pinned(true)
+                        .build();
+        PortfolioHolding hAda =
+                PortfolioHolding.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(ada.getId())
+                        .quantity(BigDecimal.ONE)
+                        .avgCostTry(BigDecimal.TEN)
+                        .pinned(false)
+                        .build();
 
         when(holdingRepository.findByPortfolioId(portfolioId))
                 .thenReturn(List.of(hBtc, hEth, hAda));
@@ -88,7 +105,8 @@ class HoldingServiceTest {
 
         List<HoldingResponse> res = service.listForPortfolio(userId, portfolioId);
 
-        assertThat(res).extracting(HoldingResponse::assetSymbol)
+        assertThat(res)
+                .extracting(HoldingResponse::assetSymbol)
                 .containsExactly("ETH", "ADA", "BTC");
     }
 
@@ -96,9 +114,14 @@ class HoldingServiceTest {
     void listThrowsIfAssetMissingForHolding() {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
-        PortfolioHolding orphan = PortfolioHolding.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId).assetId(UUID.randomUUID())
-                .quantity(BigDecimal.ONE).avgCostTry(BigDecimal.TEN).build();
+        PortfolioHolding orphan =
+                PortfolioHolding.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(UUID.randomUUID())
+                        .quantity(BigDecimal.ONE)
+                        .avgCostTry(BigDecimal.TEN)
+                        .build();
         when(holdingRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orphan));
         when(assetRepository.findAllById(any())).thenReturn(List.of());
 
@@ -117,8 +140,12 @@ class HoldingServiceTest {
                 .thenReturn(Optional.empty());
         when(holdingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        HoldingResponse res = service.add(userId, portfolioId,
-                new AddHoldingRequest(btc.getId(), new BigDecimal("2"), new BigDecimal("100")));
+        HoldingResponse res =
+                service.add(
+                        userId,
+                        portfolioId,
+                        new AddHoldingRequest(
+                                btc.getId(), new BigDecimal("2"), new BigDecimal("100")));
 
         assertThat(res.assetSymbol()).isEqualTo("BTC");
         assertThat(res.quantity()).isEqualByComparingTo("2");
@@ -131,12 +158,23 @@ class HoldingServiceTest {
         Asset btc = asset("BTC");
         when(assetRepository.findById(btc.getId())).thenReturn(Optional.of(btc));
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, btc.getId()))
-                .thenReturn(Optional.of(PortfolioHolding.builder()
-                        .id(UUID.randomUUID()).portfolioId(portfolioId).assetId(btc.getId())
-                        .quantity(BigDecimal.ONE).avgCostTry(BigDecimal.TEN).build()));
+                .thenReturn(
+                        Optional.of(
+                                PortfolioHolding.builder()
+                                        .id(UUID.randomUUID())
+                                        .portfolioId(portfolioId)
+                                        .assetId(btc.getId())
+                                        .quantity(BigDecimal.ONE)
+                                        .avgCostTry(BigDecimal.TEN)
+                                        .build()));
 
-        assertThatThrownBy(() -> service.add(userId, portfolioId,
-                new AddHoldingRequest(btc.getId(), BigDecimal.ONE, BigDecimal.TEN)))
+        assertThatThrownBy(
+                        () ->
+                                service.add(
+                                        userId,
+                                        portfolioId,
+                                        new AddHoldingRequest(
+                                                btc.getId(), BigDecimal.ONE, BigDecimal.TEN)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("already in the portfolio");
 
@@ -150,8 +188,13 @@ class HoldingServiceTest {
         UUID assetId = UUID.randomUUID();
         when(assetRepository.findById(assetId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.add(userId, portfolioId,
-                new AddHoldingRequest(assetId, BigDecimal.ONE, BigDecimal.TEN)))
+        assertThatThrownBy(
+                        () ->
+                                service.add(
+                                        userId,
+                                        portfolioId,
+                                        new AddHoldingRequest(
+                                                assetId, BigDecimal.ONE, BigDecimal.TEN)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -160,9 +203,15 @@ class HoldingServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         Asset btc = asset("BTC");
-        PortfolioHolding h = PortfolioHolding.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId).assetId(btc.getId())
-                .quantity(BigDecimal.ONE).avgCostTry(BigDecimal.TEN).pinned(false).build();
+        PortfolioHolding h =
+                PortfolioHolding.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(btc.getId())
+                        .quantity(BigDecimal.ONE)
+                        .avgCostTry(BigDecimal.TEN)
+                        .pinned(false)
+                        .build();
         when(holdingRepository.findByIdAndPortfolioId(h.getId(), portfolioId))
                 .thenReturn(Optional.of(h));
         when(assetRepository.findById(btc.getId())).thenReturn(Optional.of(btc));
@@ -190,11 +239,15 @@ class HoldingServiceTest {
         UUID id = UUID.randomUUID();
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
-        PortfolioHolding h = PortfolioHolding.builder()
-                .id(id).portfolioId(portfolioId).assetId(UUID.randomUUID())
-                .quantity(BigDecimal.ONE).avgCostTry(BigDecimal.TEN).build();
-        when(holdingRepository.findByIdAndPortfolioId(id, portfolioId))
-                .thenReturn(Optional.of(h));
+        PortfolioHolding h =
+                PortfolioHolding.builder()
+                        .id(id)
+                        .portfolioId(portfolioId)
+                        .assetId(UUID.randomUUID())
+                        .quantity(BigDecimal.ONE)
+                        .avgCostTry(BigDecimal.TEN)
+                        .build();
+        when(holdingRepository.findByIdAndPortfolioId(id, portfolioId)).thenReturn(Optional.of(h));
 
         service.delete(userId, portfolioId, id);
 

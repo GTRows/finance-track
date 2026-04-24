@@ -4,18 +4,15 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.portfolio.holding.dto.AddHoldingRequest;
 import com.fintrack.portfolio.holding.dto.HoldingResponse;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
-
-/**
- * REST endpoints for managing the holdings inside a portfolio.
- */
+/** REST endpoints for managing the holdings inside a portfolio. */
 @RestController
 @RequestMapping("/api/v1/portfolios/{portfolioId}/holdings")
 @RequiredArgsConstructor
@@ -26,8 +23,7 @@ public class HoldingController {
     /** Lists all holdings inside a portfolio. */
     @GetMapping
     public ResponseEntity<List<HoldingResponse>> list(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID portfolioId) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID portfolioId) {
         return ResponseEntity.ok(holdingService.listForPortfolio(user.getId(), portfolioId));
     }
 

@@ -1,7 +1,6 @@
 package com.fintrack.budget.dto;
 
 import com.fintrack.common.entity.MonthlySummary;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -12,8 +11,7 @@ public record MonthlySummaryResponse(
         BigDecimal net,
         BigDecimal savingsRate,
         String notes,
-        Instant createdAt
-) {
+        Instant createdAt) {
 
     public static MonthlySummaryResponse from(MonthlySummary s) {
         BigDecimal net = s.getTotalIncome().subtract(s.getTotalExpense());
@@ -24,7 +22,6 @@ public record MonthlySummaryResponse(
                 net,
                 s.getSavingsRate(),
                 s.getNotes(),
-                s.getCreatedAt()
-        );
+                s.getCreatedAt());
     }
 }

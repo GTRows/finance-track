@@ -2,18 +2,17 @@ package com.fintrack.websocket;
 
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-
 /**
- * Pushes the latest asset prices to every connected STOMP client. Called by
- * the price scheduler after a successful refresh cycle.
+ * Pushes the latest asset prices to every connected STOMP client. Called by the price scheduler
+ * after a successful refresh cycle.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,27 +30,26 @@ public class PriceBroadcaster {
             String assetType,
             BigDecimal price,
             BigDecimal priceUsd,
-            Instant updatedAt
-    ) {
-    }
+            Instant updatedAt) {}
 
     /** Envelope so clients can cheaply tell messages apart. */
-    public record PriceBatch(Instant publishedAt, int count, List<PriceUpdate> prices) {
-    }
+    public record PriceBatch(Instant publishedAt, int count, List<PriceUpdate> prices) {}
 
     /** Fetches every priced asset and broadcasts a single batch frame. */
     public void broadcastAll() {
         List<Asset> assets = assetRepository.findAllByOrderBySymbolAsc();
-        List<PriceUpdate> updates = assets.stream()
-                .filter(a -> a.getPrice() != null)
-                .map(a -> new PriceUpdate(
-                        a.getSymbol(),
-                        a.getAssetType().name(),
-                        a.getPrice(),
-                        a.getPriceUsd(),
-                        a.getPriceUpdatedAt()
-                ))
-                .toList();
+        List<PriceUpdate> updates =
+                assets.stream()
+                        .filter(a -> a.getPrice() != null)
+                        .map(
+                                a ->
+                                        new PriceUpdate(
+                                                a.getSymbol(),
+                                                a.getAssetType().name(),
+                                                a.getPrice(),
+                                                a.getPriceUsd(),
+                                                a.getPriceUpdatedAt()))
+                        .toList();
 
         if (updates.isEmpty()) {
             return;

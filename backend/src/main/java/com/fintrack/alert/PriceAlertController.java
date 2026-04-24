@@ -4,14 +4,13 @@ import com.fintrack.alert.dto.AlertResponse;
 import com.fintrack.alert.dto.CreateAlertRequest;
 import com.fintrack.auth.FinTrackUserDetails;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/alerts")
@@ -36,16 +35,14 @@ public class PriceAlertController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         alertService.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/disable")
     public ResponseEntity<AlertResponse> disable(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         return ResponseEntity.ok(alertService.disable(user.getId(), id));
     }
 }

@@ -2,7 +2,6 @@ package com.fintrack.budget.dto;
 
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.tag.TagService;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,8 +23,7 @@ public record TransactionResponse(
         boolean recurring,
         List<TagRef> tags,
         boolean hasReceipt,
-        Instant createdAt
-) {
+        Instant createdAt) {
 
     public record TagRef(UUID id, String name, String color) {
         public static TagRef from(TagService.TagSummary s) {
@@ -33,10 +31,8 @@ public record TransactionResponse(
         }
     }
 
-    public static TransactionResponse from(BudgetTransaction t,
-                                            String categoryName,
-                                            String categoryColor,
-                                            List<TagRef> tags) {
+    public static TransactionResponse from(
+            BudgetTransaction t, String categoryName, String categoryColor, List<TagRef> tags) {
         return new TransactionResponse(
                 t.getId(),
                 t.getTxnType(),
@@ -52,7 +48,6 @@ public record TransactionResponse(
                 t.isRecurring(),
                 tags,
                 t.getReceiptPath() != null && !t.getReceiptPath().isBlank(),
-                t.getCreatedAt()
-        );
+                t.getCreatedAt());
     }
 }

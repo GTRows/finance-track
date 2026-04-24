@@ -1,5 +1,11 @@
 package com.fintrack.bills;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.bills.dto.BillResponse;
 import com.fintrack.bills.dto.BillVarianceDto;
 import com.fintrack.bills.dto.CreateBillRequest;
@@ -9,13 +15,6 @@ import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
 import com.fintrack.common.entity.BillPayment.PaymentStatus;
 import com.fintrack.common.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -23,12 +22,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class BillServiceTest {
@@ -58,9 +57,17 @@ class BillServiceTest {
     void createPersistsRequestedFields() {
         when(billRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        BillResponse res = service.create(userId, new CreateBillRequest(
-                "Electric", new BigDecimal("350"), 15,
-                "utilities", 3, false, "note"));
+        BillResponse res =
+                service.create(
+                        userId,
+                        new CreateBillRequest(
+                                "Electric",
+                                new BigDecimal("350"),
+                                15,
+                                "utilities",
+                                3,
+                                false,
+                                "note"));
 
         assertThat(res.name()).isEqualTo("Electric");
         assertThat(res.amount()).isEqualByComparingTo("350");
@@ -77,8 +84,13 @@ class BillServiceTest {
         UUID id = UUID.randomUUID();
         when(billRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(userId, id,
-                new CreateBillRequest("x", BigDecimal.ONE, 1, "", 3, false, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        userId,
+                                        id,
+                                        new CreateBillRequest(
+                                                "x", BigDecimal.ONE, 1, "", 3, false, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -86,8 +98,7 @@ class BillServiceTest {
     void payRecordsNewPaymentAtBillAmountWhenAmountOmitted() {
         Bill b = bill("Electric", "350", 15);
         when(billRepo.findByIdAndUserId(b.getId(), userId)).thenReturn(Optional.of(b));
-        when(paymentRepo.findByBillIdAndPeriod(b.getId(), "2026-04"))
-                .thenReturn(Optional.empty());
+        when(paymentRepo.findByBillIdAndPeriod(b.getId(), "2026-04")).thenReturn(Optional.empty());
         when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
                 .thenReturn(List.of());
 
@@ -105,16 +116,23 @@ class BillServiceTest {
     @Test
     void payOverridesExistingPaymentForThePeriod() {
         Bill b = bill("Electric", "350", 15);
-        BillPayment existing = BillPayment.builder()
-                .id(UUID.randomUUID()).billId(b.getId()).period("2026-04")
-                .amount(new BigDecimal("300")).status(PaymentStatus.PENDING).build();
+        BillPayment existing =
+                BillPayment.builder()
+                        .id(UUID.randomUUID())
+                        .billId(b.getId())
+                        .period("2026-04")
+                        .amount(new BigDecimal("300"))
+                        .status(PaymentStatus.PENDING)
+                        .build();
         when(billRepo.findByIdAndUserId(b.getId(), userId)).thenReturn(Optional.of(b));
         when(paymentRepo.findByBillIdAndPeriod(b.getId(), "2026-04"))
                 .thenReturn(Optional.of(existing));
         when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
                 .thenReturn(List.of());
 
-        service.pay(userId, b.getId(),
+        service.pay(
+                userId,
+                b.getId(),
                 new PayBillRequest("2026-04", new BigDecimal("375.50"), "paid online"));
 
         assertThat(existing.getStatus()).isEqualTo(PaymentStatus.PAID);
@@ -136,10 +154,17 @@ class BillServiceTest {
     void historyReturnsMappedRowsForOwnedBill() {
         Bill b = bill("Gym", "200", 10);
         when(billRepo.findByIdAndUserId(b.getId(), userId)).thenReturn(Optional.of(b));
-        when(paymentRepo.findByBillIdOrderByPeriodDesc(b.getId())).thenReturn(List.of(
-                BillPayment.builder().id(UUID.randomUUID()).billId(b.getId()).period("2026-03")
-                        .amount(new BigDecimal("200")).status(PaymentStatus.PAID)
-                        .paidAt(Instant.now()).build()));
+        when(paymentRepo.findByBillIdOrderByPeriodDesc(b.getId()))
+                .thenReturn(
+                        List.of(
+                                BillPayment.builder()
+                                        .id(UUID.randomUUID())
+                                        .billId(b.getId())
+                                        .period("2026-03")
+                                        .amount(new BigDecimal("200"))
+                                        .status(PaymentStatus.PAID)
+                                        .paidAt(Instant.now())
+                                        .build()));
 
         assertThat(service.history(userId, b.getId())).hasSize(1);
     }
@@ -173,11 +198,20 @@ class BillServiceTest {
         when(billRepo.findByUserIdOrderByDueDayAsc(userId)).thenReturn(List.of(b));
         when(paymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
         when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
-                .thenReturn(List.of(
-                        BillPayment.builder().billId(b.getId()).period("2026-03")
-                                .amount(new BigDecimal("420")).status(PaymentStatus.PAID).build(),
-                        BillPayment.builder().billId(b.getId()).period("2026-02")
-                                .amount(new BigDecimal("300")).status(PaymentStatus.PAID).build()));
+                .thenReturn(
+                        List.of(
+                                BillPayment.builder()
+                                        .billId(b.getId())
+                                        .period("2026-03")
+                                        .amount(new BigDecimal("420"))
+                                        .status(PaymentStatus.PAID)
+                                        .build(),
+                                BillPayment.builder()
+                                        .billId(b.getId())
+                                        .period("2026-02")
+                                        .amount(new BigDecimal("300"))
+                                        .status(PaymentStatus.PAID)
+                                        .build()));
 
         List<BillResponse> res = service.listForUser(userId);
 
@@ -194,11 +228,20 @@ class BillServiceTest {
         when(billRepo.findByUserIdOrderByDueDayAsc(userId)).thenReturn(List.of(b));
         when(paymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
         when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
-                .thenReturn(List.of(
-                        BillPayment.builder().billId(b.getId()).period("2026-03")
-                                .amount(new BigDecimal("121")).status(PaymentStatus.PAID).build(),
-                        BillPayment.builder().billId(b.getId()).period("2026-02")
-                                .amount(new BigDecimal("120")).status(PaymentStatus.PAID).build()));
+                .thenReturn(
+                        List.of(
+                                BillPayment.builder()
+                                        .billId(b.getId())
+                                        .period("2026-03")
+                                        .amount(new BigDecimal("121"))
+                                        .status(PaymentStatus.PAID)
+                                        .build(),
+                                BillPayment.builder()
+                                        .billId(b.getId())
+                                        .period("2026-02")
+                                        .amount(new BigDecimal("120"))
+                                        .status(PaymentStatus.PAID)
+                                        .build()));
 
         List<BillResponse> res = service.listForUser(userId);
 
@@ -211,9 +254,14 @@ class BillServiceTest {
         when(billRepo.findByUserIdOrderByDueDayAsc(userId)).thenReturn(List.of(b));
         when(paymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
         when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
-                .thenReturn(List.of(
-                        BillPayment.builder().billId(b.getId()).period("2026-03")
-                                .amount(new BigDecimal("200")).status(PaymentStatus.PAID).build()));
+                .thenReturn(
+                        List.of(
+                                BillPayment.builder()
+                                        .billId(b.getId())
+                                        .period("2026-03")
+                                        .amount(new BigDecimal("200"))
+                                        .status(PaymentStatus.PAID)
+                                        .build()));
 
         assertThat(service.listForUser(userId).get(0).variance()).isNull();
     }
@@ -247,7 +295,8 @@ class BillServiceTest {
 
         SubscriptionAuditDto audit = service.audit(userId);
 
-        assertThat(audit.candidates()).extracting(SubscriptionAuditDto.Candidate::name)
+        assertThat(audit.candidates())
+                .extracting(SubscriptionAuditDto.Candidate::name)
                 .containsExactly("Old Magazine");
         assertThat(audit.candidates().get(0).reason()).isEqualTo("STALE");
     }
@@ -256,8 +305,7 @@ class BillServiceTest {
     void auditIgnoresBillsNewerThanMinimumAge() {
         Bill young = bill("Brand New", "100", 1);
         young.setCreatedAt(Instant.now().minus(30, ChronoUnit.DAYS));
-        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId))
-                .thenReturn(List.of(young));
+        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of(young));
 
         SubscriptionAuditDto audit = service.audit(userId);
 

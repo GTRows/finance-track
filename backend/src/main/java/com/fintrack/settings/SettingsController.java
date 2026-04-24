@@ -17,8 +17,7 @@ public class SettingsController {
     private final SettingsService settingsService;
 
     @GetMapping
-    public ResponseEntity<SettingsResponse> get(
-            @AuthenticationPrincipal FinTrackUserDetails user) {
+    public ResponseEntity<SettingsResponse> get(@AuthenticationPrincipal FinTrackUserDetails user) {
         return ResponseEntity.ok(settingsService.get(user.getId()));
     }
 

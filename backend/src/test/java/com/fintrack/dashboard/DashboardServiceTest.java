@@ -1,5 +1,10 @@
 package com.fintrack.dashboard;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.bills.BillPaymentRepository;
 import com.fintrack.bills.BillRepository;
@@ -16,23 +21,17 @@ import com.fintrack.common.entity.PortfolioHolding;
 import com.fintrack.dashboard.dto.DashboardResponse;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.HoldingRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
@@ -50,32 +49,52 @@ class DashboardServiceTest {
 
     private Portfolio portfolio(String name, PortfolioType type) {
         return Portfolio.builder()
-                .id(UUID.randomUUID()).userId(userId).name(name).portfolioType(type).active(true).build();
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .portfolioType(type)
+                .active(true)
+                .build();
     }
 
     private Asset asset(String symbol, String price) {
         return Asset.builder()
-                .id(UUID.randomUUID()).symbol(symbol).name(symbol)
-                .assetType(AssetType.CRYPTO).currency("TRY")
-                .price(new BigDecimal(price)).build();
+                .id(UUID.randomUUID())
+                .symbol(symbol)
+                .name(symbol)
+                .assetType(AssetType.CRYPTO)
+                .currency("TRY")
+                .price(new BigDecimal(price))
+                .build();
     }
 
     private PortfolioHolding holding(UUID portfolioId, UUID assetId, String qty, String cost) {
         return PortfolioHolding.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId).assetId(assetId)
-                .quantity(new BigDecimal(qty)).avgCostTry(new BigDecimal(cost)).build();
+                .id(UUID.randomUUID())
+                .portfolioId(portfolioId)
+                .assetId(assetId)
+                .quantity(new BigDecimal(qty))
+                .avgCostTry(new BigDecimal(cost))
+                .build();
     }
 
     private Bill bill(String name, String amount, int dueDay) {
-        return Bill.builder().id(UUID.randomUUID()).userId(userId)
-                .name(name).amount(new BigDecimal(amount))
-                .dueDay(dueDay).active(true).build();
+        return Bill.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .amount(new BigDecimal(amount))
+                .dueDay(dueDay)
+                .active(true)
+                .build();
     }
 
     @Test
     void buildsEmptyDashboardWhenNoData() {
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
         DashboardResponse res = service.build(userId);
@@ -92,12 +111,16 @@ class DashboardServiceTest {
         Portfolio p = portfolio("Main", PortfolioType.INDIVIDUAL);
         Asset btc = asset("BTC", "100");
         Asset eth = asset("ETH", "50");
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId())).thenReturn(List.of(
-                holding(p.getId(), btc.getId(), "2", "80"),
-                holding(p.getId(), eth.getId(), "3", "40")));
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of(p));
+        when(holdingRepo.findByPortfolioId(p.getId()))
+                .thenReturn(
+                        List.of(
+                                holding(p.getId(), btc.getId(), "2", "80"),
+                                holding(p.getId(), eth.getId(), "3", "40")));
         when(assetRepo.findAllById(any())).thenReturn(List.of(btc, eth));
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
         DashboardResponse res = service.build(userId);
@@ -114,11 +137,13 @@ class DashboardServiceTest {
     void pnlPercentNullWhenCostIsZero() {
         Portfolio p = portfolio("New", PortfolioType.CRYPTO);
         Asset btc = asset("BTC", "100");
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId())).thenReturn(List.of(
-                holding(p.getId(), btc.getId(), "1", "0")));
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of(p));
+        when(holdingRepo.findByPortfolioId(p.getId()))
+                .thenReturn(List.of(holding(p.getId(), btc.getId(), "1", "0")));
         when(assetRepo.findAllById(any())).thenReturn(List.of(btc));
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
         DashboardResponse res = service.build(userId);
@@ -130,15 +155,26 @@ class DashboardServiceTest {
     void skipsHoldingsWithMissingAssetOrNullPrice() {
         Portfolio p = portfolio("Main", PortfolioType.INDIVIDUAL);
         Asset btc = asset("BTC", "100");
-        Asset priceless = Asset.builder().id(UUID.randomUUID()).symbol("NP").name("NP")
-                .assetType(AssetType.CRYPTO).currency("TRY").price(null).build();
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId())).thenReturn(List.of(
-                holding(p.getId(), btc.getId(), "1", "90"),
-                holding(p.getId(), priceless.getId(), "5", "10"),
-                holding(p.getId(), UUID.randomUUID(), "7", "3")));
+        Asset priceless =
+                Asset.builder()
+                        .id(UUID.randomUUID())
+                        .symbol("NP")
+                        .name("NP")
+                        .assetType(AssetType.CRYPTO)
+                        .currency("TRY")
+                        .price(null)
+                        .build();
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of(p));
+        when(holdingRepo.findByPortfolioId(p.getId()))
+                .thenReturn(
+                        List.of(
+                                holding(p.getId(), btc.getId(), "1", "90"),
+                                holding(p.getId(), priceless.getId(), "5", "10"),
+                                holding(p.getId(), UUID.randomUUID(), "7", "3")));
         when(assetRepo.findAllById(any())).thenReturn(List.of(btc, priceless));
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
         DashboardResponse res = service.build(userId);
@@ -150,7 +186,8 @@ class DashboardServiceTest {
 
     @Test
     void budgetComputesSavingsRatePercent() {
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
         when(txnRepo.sumByUserIdAndTypeAndDateRange(eq(userId), eq(TxnType.INCOME), any(), any()))
                 .thenReturn(new BigDecimal("10000"));
         when(txnRepo.sumByUserIdAndTypeAndDateRange(eq(userId), eq(TxnType.EXPENSE), any(), any()))
@@ -167,7 +204,8 @@ class DashboardServiceTest {
 
     @Test
     void budgetSavingsRateZeroWhenIncomeZero() {
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
         when(txnRepo.sumByUserIdAndTypeAndDateRange(eq(userId), eq(TxnType.INCOME), any(), any()))
                 .thenReturn(BigDecimal.ZERO);
         when(txnRepo.sumByUserIdAndTypeAndDateRange(eq(userId), eq(TxnType.EXPENSE), any(), any()))
@@ -185,12 +223,20 @@ class DashboardServiceTest {
         Bill paid = bill("Rent", "1000", 15);
         Bill pending = bill("Internet", "200", 20);
         String period = YearMonth.now().toString();
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
-        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of(paid, pending));
-        BillPayment paidEntry = BillPayment.builder()
-                .id(UUID.randomUUID()).billId(paid.getId()).period(period)
-                .amount(new BigDecimal("1000")).status(PaymentStatus.PAID).build();
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
+        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId))
+                .thenReturn(List.of(paid, pending));
+        BillPayment paidEntry =
+                BillPayment.builder()
+                        .id(UUID.randomUUID())
+                        .billId(paid.getId())
+                        .period(period)
+                        .amount(new BigDecimal("1000"))
+                        .status(PaymentStatus.PAID)
+                        .build();
         when(billPaymentRepo.findByBillIdAndPeriod(paid.getId(), period))
                 .thenReturn(Optional.of(paidEntry));
         when(billPaymentRepo.findByBillIdAndPeriod(pending.getId(), period))
@@ -205,15 +251,18 @@ class DashboardServiceTest {
 
     @Test
     void upcomingBillsSortByDaysUntilDueAndCapAtFive() {
-        List<Bill> six = List.of(
-                bill("A", "100", 28),
-                bill("B", "100", 2),
-                bill("C", "100", 10),
-                bill("D", "100", 15),
-                bill("E", "100", 20),
-                bill("F", "100", 25));
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
+        List<Bill> six =
+                List.of(
+                        bill("A", "100", 28),
+                        bill("B", "100", 2),
+                        bill("C", "100", 10),
+                        bill("D", "100", 15),
+                        bill("E", "100", 20),
+                        bill("F", "100", 25));
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(six);
         when(billPaymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
 
@@ -226,8 +275,8 @@ class DashboardServiceTest {
                     .isGreaterThanOrEqualTo(res.upcomingBills().get(i - 1).daysUntilDue());
         }
         // sanity: all daysUntilDue are non-negative
-        assertThat(res.upcomingBills()).allSatisfy(b ->
-                assertThat(b.daysUntilDue()).isGreaterThanOrEqualTo(0L));
+        assertThat(res.upcomingBills())
+                .allSatisfy(b -> assertThat(b.daysUntilDue()).isGreaterThanOrEqualTo(0L));
         assertThat(today).isNotNull();
     }
 
@@ -238,8 +287,10 @@ class DashboardServiceTest {
             return; // skip when on the first day; no earlier day to test
         }
         Bill past = bill("Past", "100", todayDay - 1);
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of(past));
         when(billPaymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
 
@@ -252,12 +303,19 @@ class DashboardServiceTest {
     @Test
     void skippedBillStatusPassesThroughButStillIncluded() {
         Bill b = bill("Rent", "1000", 15);
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
-        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(BigDecimal.ZERO);
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of(b));
-        BillPayment skipped = BillPayment.builder()
-                .id(UUID.randomUUID()).billId(b.getId()).period(YearMonth.now().toString())
-                .amount(new BigDecimal("1000")).status(PaymentStatus.SKIPPED).build();
+        BillPayment skipped =
+                BillPayment.builder()
+                        .id(UUID.randomUUID())
+                        .billId(b.getId())
+                        .period(YearMonth.now().toString())
+                        .amount(new BigDecimal("1000"))
+                        .status(PaymentStatus.SKIPPED)
+                        .build();
         when(billPaymentRepo.findByBillIdAndPeriod(b.getId(), YearMonth.now().toString()))
                 .thenReturn(Optional.of(skipped));
 

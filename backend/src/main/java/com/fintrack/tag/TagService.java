@@ -6,13 +6,12 @@ import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.tag.dto.TagResponse;
 import com.fintrack.tag.dto.UpsertTagRequest;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +26,11 @@ public class TagService {
         List<Tag> tags = tagRepo.findByUserIdOrderByNameAsc(userId);
         if (tags.isEmpty()) return List.of();
 
-        Map<UUID, Long> counts = tags.stream()
-                .collect(Collectors.toMap(Tag::getId, t -> txnTagRepo.countByTagId(t.getId())));
+        Map<UUID, Long> counts =
+                tags.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Tag::getId, t -> txnTagRepo.countByTagId(t.getId())));
 
         return tags.stream()
                 .map(t -> TagResponse.from(t, counts.getOrDefault(t.getId(), 0L)))
@@ -38,15 +40,14 @@ public class TagService {
     @Transactional
     public TagResponse create(UUID userId, UpsertTagRequest req) {
         String name = req.name().trim();
-        tagRepo.findByUserIdAndName(userId, name).ifPresent(t -> {
-            throw new BusinessRuleException("Tag with this name already exists", "TAG_DUPLICATE");
-        });
+        tagRepo.findByUserIdAndName(userId, name)
+                .ifPresent(
+                        t -> {
+                            throw new BusinessRuleException(
+                                    "Tag with this name already exists", "TAG_DUPLICATE");
+                        });
 
-        Tag tag = Tag.builder()
-                .userId(userId)
-                .name(name)
-                .color(req.color())
-                .build();
+        Tag tag = Tag.builder().userId(userId).name(name).color(req.color()).build();
         tag = tagRepo.save(tag);
         log.info("Tag created: id={} name={}", tag.getId(), tag.getName());
         return TagResponse.from(tag, 0L);
@@ -54,16 +55,20 @@ public class TagService {
 
     @Transactional
     public TagResponse update(UUID userId, UUID tagId, UpsertTagRequest req) {
-        Tag tag = tagRepo.findByIdAndUserId(tagId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tag not found"));
+        Tag tag =
+                tagRepo.findByIdAndUserId(tagId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Tag not found"));
 
         String name = req.name().trim();
         if (!name.equals(tag.getName())) {
-            tagRepo.findByUserIdAndName(userId, name).ifPresent(existing -> {
-                if (!existing.getId().equals(tagId)) {
-                    throw new BusinessRuleException("Tag with this name already exists", "TAG_DUPLICATE");
-                }
-            });
+            tagRepo.findByUserIdAndName(userId, name)
+                    .ifPresent(
+                            existing -> {
+                                if (!existing.getId().equals(tagId)) {
+                                    throw new BusinessRuleException(
+                                            "Tag with this name already exists", "TAG_DUPLICATE");
+                                }
+                            });
             tag.setName(name);
         }
         tag.setColor(req.color());
@@ -73,8 +78,9 @@ public class TagService {
 
     @Transactional
     public void delete(UUID userId, UUID tagId) {
-        Tag tag = tagRepo.findByIdAndUserId(tagId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tag not found"));
+        Tag tag =
+                tagRepo.findByIdAndUserId(tagId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Tag not found"));
         txnTagRepo.deleteByTagId(tag.getId());
         tagRepo.delete(tag);
         log.info("Tag deleted: id={}", tagId);
@@ -97,30 +103,30 @@ public class TagService {
         txnTagRepo.deleteByTransactionId(transactionId);
         if (tagIds == null || tagIds.isEmpty()) return;
         for (UUID tagId : new LinkedHashSet<>(tagIds)) {
-            txnTagRepo.save(TransactionTag.builder()
-                    .transactionId(transactionId)
-                    .tagId(tagId)
-                    .build());
+            txnTagRepo.save(
+                    TransactionTag.builder().transactionId(transactionId).tagId(tagId).build());
         }
     }
 
     /**
-     * Additive / subtractive change to a transaction's tag set, skipping tags
-     * already in the desired state. Used by bulk-update where the caller wants
-     * "add these, remove these, leave everything else alone".
+     * Additive / subtractive change to a transaction's tag set, skipping tags already in the
+     * desired state. Used by bulk-update where the caller wants "add these, remove these, leave
+     * everything else alone".
      */
     @Transactional
     public void mutateTransactionTags(UUID transactionId, List<UUID> addIds, List<UUID> removeIds) {
-        Set<UUID> current = txnTagRepo.findByTransactionId(transactionId).stream()
-                .map(TransactionTag::getTagId)
-                .collect(Collectors.toSet());
+        Set<UUID> current =
+                txnTagRepo.findByTransactionId(transactionId).stream()
+                        .map(TransactionTag::getTagId)
+                        .collect(Collectors.toSet());
         if (addIds != null) {
             for (UUID tagId : new LinkedHashSet<>(addIds)) {
                 if (current.add(tagId)) {
-                    txnTagRepo.save(TransactionTag.builder()
-                            .transactionId(transactionId)
-                            .tagId(tagId)
-                            .build());
+                    txnTagRepo.save(
+                            TransactionTag.builder()
+                                    .transactionId(transactionId)
+                                    .tagId(tagId)
+                                    .build());
                 }
             }
         }
@@ -135,14 +141,16 @@ public class TagService {
 
     /** Bulk-load tag DTOs indexed by transaction id for a list of transactions. */
     @Transactional(readOnly = true)
-    public Map<UUID, List<TagSummary>> loadTagsForTransactions(UUID userId, Collection<UUID> transactionIds) {
+    public Map<UUID, List<TagSummary>> loadTagsForTransactions(
+            UUID userId, Collection<UUID> transactionIds) {
         if (transactionIds.isEmpty()) return Map.of();
         List<TransactionTag> joins = txnTagRepo.findByTransactionIds(transactionIds);
         if (joins.isEmpty()) return Map.of();
 
         List<UUID> tagIds = joins.stream().map(TransactionTag::getTagId).distinct().toList();
-        Map<UUID, Tag> tagsById = tagRepo.findAllByIdInAndUserId(tagIds, userId).stream()
-                .collect(Collectors.toMap(Tag::getId, t -> t));
+        Map<UUID, Tag> tagsById =
+                tagRepo.findAllByIdInAndUserId(tagIds, userId).stream()
+                        .collect(Collectors.toMap(Tag::getId, t -> t));
 
         Map<UUID, List<TagSummary>> out = new HashMap<>();
         for (TransactionTag tt : joins) {
@@ -151,7 +159,12 @@ public class TagService {
             out.computeIfAbsent(tt.getTransactionId(), k -> new ArrayList<>())
                     .add(new TagSummary(tag.getId(), tag.getName(), tag.getColor()));
         }
-        out.values().forEach(list -> list.sort(Comparator.comparing(TagSummary::name, String.CASE_INSENSITIVE_ORDER)));
+        out.values()
+                .forEach(
+                        list ->
+                                list.sort(
+                                        Comparator.comparing(
+                                                TagSummary::name, String.CASE_INSENSITIVE_ORDER)));
         return out;
     }
 

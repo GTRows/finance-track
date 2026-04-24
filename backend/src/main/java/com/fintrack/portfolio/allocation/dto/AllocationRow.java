@@ -1,7 +1,6 @@
 package com.fintrack.portfolio.allocation.dto;
 
 import com.fintrack.common.entity.Asset;
-
 import java.math.BigDecimal;
 
 public record AllocationRow(
@@ -10,6 +9,4 @@ public record AllocationRow(
         BigDecimal actualPercent,
         BigDecimal actualValueTry,
         BigDecimal driftPercent,
-        BigDecimal driftValueTry
-) {
-}
+        BigDecimal driftValueTry) {}

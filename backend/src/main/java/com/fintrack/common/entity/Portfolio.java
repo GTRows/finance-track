@@ -1,15 +1,12 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.Instant;
-import java.util.UUID;
-
-/**
- * Container for a group of investments. A user can have multiple portfolios.
- */
+/** Container for a group of investments. A user can have multiple portfolios. */
 @Entity
 @Table(name = "portfolios")
 @Getter

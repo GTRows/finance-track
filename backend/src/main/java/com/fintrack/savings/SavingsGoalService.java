@@ -7,17 +7,16 @@ import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.HoldingRepository;
 import com.fintrack.portfolio.snapshot.SnapshotRepository;
 import com.fintrack.savings.dto.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,14 +41,15 @@ public class SavingsGoalService {
     @Transactional
     public GoalResponse create(UUID userId, UpsertGoalRequest req) {
         validatePortfolio(userId, req.linkedPortfolioId());
-        SavingsGoal goal = SavingsGoal.builder()
-                .userId(userId)
-                .name(req.name())
-                .targetAmount(req.targetAmount())
-                .targetDate(req.targetDate())
-                .linkedPortfolioId(req.linkedPortfolioId())
-                .notes(req.notes())
-                .build();
+        SavingsGoal goal =
+                SavingsGoal.builder()
+                        .userId(userId)
+                        .name(req.name())
+                        .targetAmount(req.targetAmount())
+                        .targetDate(req.targetDate())
+                        .linkedPortfolioId(req.linkedPortfolioId())
+                        .notes(req.notes())
+                        .build();
         goal = goalRepo.save(goal);
         log.info("Savings goal created: id={} name={}", goal.getId(), goal.getName());
         return toResponse(userId, goal);
@@ -85,12 +85,13 @@ public class SavingsGoalService {
     @Transactional
     public ContributionResponse addContribution(UUID userId, UUID goalId, ContributionRequest req) {
         requireOwned(userId, goalId);
-        SavingsGoalContribution contribution = SavingsGoalContribution.builder()
-                .goalId(goalId)
-                .contributionDate(req.contributionDate())
-                .amount(req.amount())
-                .note(req.note())
-                .build();
+        SavingsGoalContribution contribution =
+                SavingsGoalContribution.builder()
+                        .goalId(goalId)
+                        .contributionDate(req.contributionDate())
+                        .amount(req.amount())
+                        .note(req.note())
+                        .build();
         contribution = contributionRepo.save(contribution);
         return ContributionResponse.from(contribution);
     }
@@ -98,8 +99,10 @@ public class SavingsGoalService {
     @Transactional
     public void deleteContribution(UUID userId, UUID goalId, UUID contributionId) {
         requireOwned(userId, goalId);
-        SavingsGoalContribution c = contributionRepo.findById(contributionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Contribution not found"));
+        SavingsGoalContribution c =
+                contributionRepo
+                        .findById(contributionId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Contribution not found"));
         if (!c.getGoalId().equals(goalId)) {
             throw new ResourceNotFoundException("Contribution not found");
         }
@@ -113,35 +116,42 @@ public class SavingsGoalService {
 
     private void validatePortfolio(UUID userId, UUID portfolioId) {
         if (portfolioId == null) return;
-        portfolioRepo.findByIdAndUserIdAndActiveTrue(portfolioId, userId)
+        portfolioRepo
+                .findByIdAndUserIdAndActiveTrue(portfolioId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Linked portfolio not found"));
     }
 
     private GoalResponse toResponse(UUID userId, SavingsGoal goal) {
         ProgressData progress = computeProgress(goal);
-        BigDecimal ratio = goal.getTargetAmount().signum() > 0
-                ? progress.current.divide(goal.getTargetAmount(), 4, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        BigDecimal ratio =
+                goal.getTargetAmount().signum() > 0
+                        ? progress.current.divide(goal.getTargetAmount(), 4, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
 
         String status = ratio.compareTo(BigDecimal.ONE) >= 0 ? "REACHED" : "IN_PROGRESS";
 
-        BigDecimal remaining = goal.getTargetAmount().subtract(progress.current).max(BigDecimal.ZERO);
+        BigDecimal remaining =
+                goal.getTargetAmount().subtract(progress.current).max(BigDecimal.ZERO);
         LocalDate projected = null;
         if ("IN_PROGRESS".equals(status)
                 && progress.monthlyPace != null
                 && progress.monthlyPace.signum() > 0) {
             BigDecimal monthsNeeded = remaining.divide(progress.monthlyPace, 2, RoundingMode.UP);
-            long days = monthsNeeded.multiply(BigDecimal.valueOf(30))
-                    .setScale(0, RoundingMode.CEILING)
-                    .longValueExact();
+            long days =
+                    monthsNeeded
+                            .multiply(BigDecimal.valueOf(30))
+                            .setScale(0, RoundingMode.CEILING)
+                            .longValueExact();
             projected = LocalDate.now().plusDays(days);
         }
 
         String linkedName = null;
         if (goal.getLinkedPortfolioId() != null) {
-            linkedName = portfolioRepo.findByIdAndUserIdAndActiveTrue(goal.getLinkedPortfolioId(), userId)
-                    .map(Portfolio::getName)
-                    .orElse(null);
+            linkedName =
+                    portfolioRepo
+                            .findByIdAndUserIdAndActiveTrue(goal.getLinkedPortfolioId(), userId)
+                            .map(Portfolio::getName)
+                            .orElse(null);
         }
 
         return new GoalResponse(
@@ -156,8 +166,7 @@ public class SavingsGoalService {
                 ratio,
                 progress.monthlyPace,
                 projected,
-                status
-        );
+                status);
     }
 
     private ProgressData computeProgress(SavingsGoal goal) {
@@ -178,7 +187,13 @@ public class SavingsGoalService {
             for (PortfolioHolding h : holdings) {
                 Asset a = assets.get(h.getAssetId());
                 if (a == null || a.getPrice() == null) continue;
-                current = current.add(a.getPrice().multiply(h.getQuantity() != null ? h.getQuantity() : BigDecimal.ZERO));
+                current =
+                        current.add(
+                                a.getPrice()
+                                        .multiply(
+                                                h.getQuantity() != null
+                                                        ? h.getQuantity()
+                                                        : BigDecimal.ZERO));
             }
         }
 
@@ -193,7 +208,8 @@ public class SavingsGoalService {
     }
 
     private BigDecimal paceFromSnapshots(UUID portfolioId) {
-        List<PortfolioSnapshot> snapshots = snapshotRepo.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId);
+        List<PortfolioSnapshot> snapshots =
+                snapshotRepo.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId);
         if (snapshots.size() < 2) return null;
 
         LocalDate cutoff = LocalDate.now().minusDays(PACE_WINDOW_DAYS);
@@ -218,7 +234,8 @@ public class SavingsGoalService {
     }
 
     private BigDecimal paceFromContributions(UUID goalId) {
-        List<SavingsGoalContribution> contributions = contributionRepo.findByGoalIdOrderByContributionDateDesc(goalId);
+        List<SavingsGoalContribution> contributions =
+                contributionRepo.findByGoalIdOrderByContributionDateDesc(goalId);
         if (contributions.isEmpty()) return null;
 
         LocalDate cutoff = LocalDate.now().minusDays(PACE_WINDOW_DAYS);

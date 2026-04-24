@@ -1,17 +1,16 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 /**
- * A user-configured price alert on an asset. When the asset's current TRY
- * price crosses the threshold in the requested direction, the alert is
- * flipped to TRIGGERED and a notification row is persisted.
+ * A user-configured price alert on an asset. When the asset's current TRY price crosses the
+ * threshold in the requested direction, the alert is flipped to TRIGGERED and a notification row is
+ * persisted.
  */
 @Entity
 @Table(name = "price_alerts")
@@ -53,10 +52,13 @@ public class PriceAlert {
     private Instant triggeredAt;
 
     public enum Direction {
-        ABOVE, BELOW
+        ABOVE,
+        BELOW
     }
 
     public enum Status {
-        ACTIVE, TRIGGERED, DISABLED
+        ACTIVE,
+        TRIGGERED,
+        DISABLED
     }
 }

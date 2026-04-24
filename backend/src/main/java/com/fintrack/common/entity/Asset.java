@@ -1,21 +1,20 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-
-/**
- * Master list of trackable financial instruments (crypto, funds, currencies).
- */
+/** Master list of trackable financial instruments (crypto, funds, currencies). */
 @Entity
-@Table(name = "assets", uniqueConstraints = @UniqueConstraint(columnNames = {"symbol", "asset_type"}))
+@Table(
+        name = "assets",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"symbol", "asset_type"}))
 @Getter
 @Setter
 @Builder
@@ -59,6 +58,11 @@ public class Asset {
     private Instant createdAt;
 
     public enum AssetType {
-        CRYPTO, STOCK, GOLD, FUND, CURRENCY, OTHER
+        CRYPTO,
+        STOCK,
+        GOLD,
+        FUND,
+        CURRENCY,
+        OTHER
     }
 }

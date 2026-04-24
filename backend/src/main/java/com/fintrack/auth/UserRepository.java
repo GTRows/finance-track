@@ -1,14 +1,11 @@
 package com.fintrack.auth;
 
 import com.fintrack.common.entity.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-/**
- * Repository for user account operations.
- */
+/** Repository for user account operations. */
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     /** Find user by username for login. */

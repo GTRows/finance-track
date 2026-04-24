@@ -9,21 +9,20 @@ import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.dto.AddHoldingRequest;
 import com.fintrack.portfolio.holding.dto.HoldingResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Holdings business logic. Every operation verifies portfolio ownership before
- * touching the underlying rows.
+ * Holdings business logic. Every operation verifies portfolio ownership before touching the
+ * underlying rows.
  */
 @Service
 @RequiredArgsConstructor
@@ -44,24 +43,26 @@ public class HoldingService {
             return List.of();
         }
 
-        Set<UUID> assetIds = holdings.stream()
-                .map(PortfolioHolding::getAssetId)
-                .collect(Collectors.toSet());
+        Set<UUID> assetIds =
+                holdings.stream().map(PortfolioHolding::getAssetId).collect(Collectors.toSet());
         Map<UUID, Asset> assetsById = new HashMap<>();
         assetRepository.findAllById(assetIds).forEach(a -> assetsById.put(a.getId(), a));
 
         return holdings.stream()
-                .map(h -> {
-                    Asset asset = assetsById.get(h.getAssetId());
-                    if (asset == null) {
-                        throw new ResourceNotFoundException("Asset not found for holding " + h.getId());
-                    }
-                    return HoldingResponse.from(h, asset);
-                })
-                .sorted((a, b) -> {
-                    if (a.pinned() != b.pinned()) return a.pinned() ? -1 : 1;
-                    return a.assetSymbol().compareToIgnoreCase(b.assetSymbol());
-                })
+                .map(
+                        h -> {
+                            Asset asset = assetsById.get(h.getAssetId());
+                            if (asset == null) {
+                                throw new ResourceNotFoundException(
+                                        "Asset not found for holding " + h.getId());
+                            }
+                            return HoldingResponse.from(h, asset);
+                        })
+                .sorted(
+                        (a, b) -> {
+                            if (a.pinned() != b.pinned()) return a.pinned() ? -1 : 1;
+                            return a.assetSymbol().compareToIgnoreCase(b.assetSymbol());
+                        })
                 .toList();
     }
 
@@ -70,12 +71,16 @@ public class HoldingService {
     public HoldingResponse togglePin(UUID userId, UUID portfolioId, UUID holdingId) {
         requireOwnedPortfolio(userId, portfolioId);
 
-        PortfolioHolding holding = holdingRepository.findByIdAndPortfolioId(holdingId, portfolioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Holding not found"));
+        PortfolioHolding holding =
+                holdingRepository
+                        .findByIdAndPortfolioId(holdingId, portfolioId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Holding not found"));
         holding.setPinned(!holding.isPinned());
 
-        Asset asset = assetRepository.findById(holding.getAssetId())
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
+        Asset asset =
+                assetRepository
+                        .findById(holding.getAssetId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
 
         log.info("Holding pin toggled: id={} pinned={}", holdingId, holding.isPinned());
         return HoldingResponse.from(holding, asset);
@@ -86,25 +91,34 @@ public class HoldingService {
     public HoldingResponse add(UUID userId, UUID portfolioId, AddHoldingRequest request) {
         requireOwnedPortfolio(userId, portfolioId);
 
-        Asset asset = assetRepository.findById(request.assetId())
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
+        Asset asset =
+                assetRepository
+                        .findById(request.assetId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
 
-        holdingRepository.findByPortfolioIdAndAssetId(portfolioId, request.assetId()).ifPresent(existing -> {
-            throw new BusinessRuleException(
-                    "This asset is already in the portfolio",
-                    "HOLDING_DUPLICATE");
-        });
+        holdingRepository
+                .findByPortfolioIdAndAssetId(portfolioId, request.assetId())
+                .ifPresent(
+                        existing -> {
+                            throw new BusinessRuleException(
+                                    "This asset is already in the portfolio", "HOLDING_DUPLICATE");
+                        });
 
-        PortfolioHolding holding = PortfolioHolding.builder()
-                .portfolioId(portfolioId)
-                .assetId(request.assetId())
-                .quantity(request.quantity())
-                .avgCostTry(request.avgCostTry())
-                .build();
+        PortfolioHolding holding =
+                PortfolioHolding.builder()
+                        .portfolioId(portfolioId)
+                        .assetId(request.assetId())
+                        .quantity(request.quantity())
+                        .avgCostTry(request.avgCostTry())
+                        .build();
 
         holding = holdingRepository.save(holding);
-        log.info("Holding added: id={} portfolioId={} assetId={} qty={}",
-                holding.getId(), portfolioId, request.assetId(), request.quantity());
+        log.info(
+                "Holding added: id={} portfolioId={} assetId={} qty={}",
+                holding.getId(),
+                portfolioId,
+                request.assetId(),
+                request.quantity());
 
         return HoldingResponse.from(holding, asset);
     }
@@ -114,15 +128,18 @@ public class HoldingService {
     public void delete(UUID userId, UUID portfolioId, UUID holdingId) {
         requireOwnedPortfolio(userId, portfolioId);
 
-        PortfolioHolding holding = holdingRepository.findByIdAndPortfolioId(holdingId, portfolioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Holding not found"));
+        PortfolioHolding holding =
+                holdingRepository
+                        .findByIdAndPortfolioId(holdingId, portfolioId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Holding not found"));
 
         holdingRepository.delete(holding);
         log.info("Holding deleted: id={} portfolioId={}", holdingId, portfolioId);
     }
 
     private Portfolio requireOwnedPortfolio(UUID userId, UUID portfolioId) {
-        return portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId)
+        return portfolioRepository
+                .findByIdAndUserIdAndActiveTrue(portfolioId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found"));
     }
 }

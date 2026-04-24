@@ -1,24 +1,23 @@
 package com.fintrack.metrics;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.budget.TransactionRepository;
 import com.fintrack.common.entity.BudgetTransaction.TxnType;
 import com.fintrack.portfolio.snapshot.SnapshotRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessMetricsTest {
@@ -47,9 +46,11 @@ class BusinessMetricsTest {
     @Test
     void refreshPublishesDatabaseValuesToGauges() {
         when(snapshotRepository.sumLatestTotalValueTry()).thenReturn(new BigDecimal("12345.67"));
-        when(transactionRepository.sumByTypeAndDateRange(eq(TxnType.INCOME), any(LocalDate.class), any(LocalDate.class)))
+        when(transactionRepository.sumByTypeAndDateRange(
+                        eq(TxnType.INCOME), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(new BigDecimal("10000"));
-        when(transactionRepository.sumByTypeAndDateRange(eq(TxnType.EXPENSE), any(LocalDate.class), any(LocalDate.class)))
+        when(transactionRepository.sumByTypeAndDateRange(
+                        eq(TxnType.EXPENSE), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(new BigDecimal("4500"));
         when(transactionRepository.countByTxnDate(any(LocalDate.class))).thenReturn(7L);
 

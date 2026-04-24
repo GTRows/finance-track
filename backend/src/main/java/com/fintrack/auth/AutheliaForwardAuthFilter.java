@@ -5,6 +5,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,23 +19,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 /**
- * Trusts an upstream Authelia (or any ForwardAuth-capable proxy) that has
- * already authenticated the user and injected a {@code Remote-User} header.
+ * Trusts an upstream Authelia (or any ForwardAuth-capable proxy) that has already authenticated the
+ * user and injected a {@code Remote-User} header.
  *
- * <p>Disabled by default. Activate only when FinTrack sits behind Traefik +
- * Authelia in the homelab. To avoid header-spoofing, the filter only accepts
- * the header when the request originated from a trusted proxy IP configured
- * via {@code fintrack.authelia.trusted-ips}.
+ * <p>Disabled by default. Activate only when FinTrack sits behind Traefik + Authelia in the
+ * homelab. To avoid header-spoofing, the filter only accepts the header when the request originated
+ * from a trusted proxy IP configured via {@code fintrack.authelia.trusted-ips}.
  *
- * <p>Runs after the JWT filter: if a valid JWT already populated the context
- * the header is ignored, so direct API clients (mobile, scripts) still work.
+ * <p>Runs after the JWT filter: if a valid JWT already populated the context the header is ignored,
+ * so direct API clients (mobile, scripts) still work.
  */
 @Component
 @Slf4j
@@ -56,23 +54,25 @@ public class AutheliaForwardAuthFilter extends OncePerRequestFilter {
     @Override
     protected void initFilterBean() {
         if (!enabled) return;
-        trustedIps = Arrays.stream(trustedIpsCsv.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toUnmodifiableSet());
+        trustedIps =
+                Arrays.stream(trustedIpsCsv.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toUnmodifiableSet());
         if (trustedIps.isEmpty()) {
-            log.warn("Authelia ForwardAuth enabled with no trusted-ips restriction. " +
-                     "Set fintrack.authelia.trusted-ips to your Traefik container IP range " +
-                     "to prevent header spoofing.");
+            log.warn(
+                    "Authelia ForwardAuth enabled with no trusted-ips restriction. Set"
+                            + " fintrack.authelia.trusted-ips to your Traefik container IP range to"
+                            + " prevent header spoofing.");
         } else {
             log.info("Authelia ForwardAuth enabled. Header={} trusted={}", headerName, trustedIps);
         }
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         if (!enabled) {
             filterChain.doFilter(request, response);
             return;
@@ -95,8 +95,10 @@ public class AutheliaForwardAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        Optional<User> maybeUser = userRepository.findByUsername(principal)
-                .or(() -> userRepository.findByEmail(principal));
+        Optional<User> maybeUser =
+                userRepository
+                        .findByUsername(principal)
+                        .or(() -> userRepository.findByEmail(principal));
 
         if (maybeUser.isEmpty()) {
             log.warn("Authelia ForwardAuth principal not found locally: {}", principal);
@@ -105,8 +107,8 @@ public class AutheliaForwardAuthFilter extends OncePerRequestFilter {
         }
 
         FinTrackUserDetails details = new FinTrackUserDetails(maybeUser.get());
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                details, null, details.getAuthorities());
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities());
         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(auth);
 

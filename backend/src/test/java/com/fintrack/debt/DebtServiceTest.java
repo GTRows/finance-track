@@ -1,5 +1,12 @@
 package com.fintrack.debt;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.common.entity.Debt;
 import com.fintrack.common.entity.DebtPayment;
 import com.fintrack.common.exception.ResourceNotFoundException;
@@ -7,25 +14,17 @@ import com.fintrack.debt.dto.DebtPaymentRequest;
 import com.fintrack.debt.dto.DebtPaymentResponse;
 import com.fintrack.debt.dto.DebtResponse;
 import com.fintrack.debt.dto.UpsertDebtRequest;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DebtServiceTest {
@@ -39,8 +38,10 @@ class DebtServiceTest {
 
     private Debt debt(BigDecimal principal, String rate, int term, LocalDate start) {
         return Debt.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .name("Loan").debtType("LOAN")
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name("Loan")
+                .debtType("LOAN")
                 .principal(principal)
                 .annualRate(new BigDecimal(rate))
                 .termMonths(term)
@@ -50,14 +51,22 @@ class DebtServiceTest {
 
     @Test
     void createPersistsRequestFields() {
-        UpsertDebtRequest req = new UpsertDebtRequest(
-                "Car", "CAR", new BigDecimal("120000"), new BigDecimal("0.2000"),
-                24, LocalDate.of(2026, 1, 1), "notes");
-        when(debtRepo.save(any(Debt.class))).thenAnswer(inv -> {
-            Debt d = inv.getArgument(0);
-            d.setId(UUID.randomUUID());
-            return d;
-        });
+        UpsertDebtRequest req =
+                new UpsertDebtRequest(
+                        "Car",
+                        "CAR",
+                        new BigDecimal("120000"),
+                        new BigDecimal("0.2000"),
+                        24,
+                        LocalDate.of(2026, 1, 1),
+                        "notes");
+        when(debtRepo.save(any(Debt.class)))
+                .thenAnswer(
+                        inv -> {
+                            Debt d = inv.getArgument(0);
+                            d.setId(UUID.randomUUID());
+                            return d;
+                        });
 
         DebtResponse res = service.create(userId, req);
 
@@ -76,20 +85,41 @@ class DebtServiceTest {
         UUID id = UUID.randomUUID();
         when(debtRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(userId, id, new UpsertDebtRequest(
-                "x", "LOAN", BigDecimal.TEN, BigDecimal.ZERO, 1, LocalDate.now(), null)))
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        userId,
+                                        id,
+                                        new UpsertDebtRequest(
+                                                "x",
+                                                "LOAN",
+                                                BigDecimal.TEN,
+                                                BigDecimal.ZERO,
+                                                1,
+                                                LocalDate.now(),
+                                                null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void updateMutatesFieldsAndReturnsCurrentPaidTotal() {
         Debt existing = debt(new BigDecimal("10000"), "0.0000", 10, LocalDate.of(2026, 1, 1));
-        when(debtRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(debtRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
         when(paymentRepo.sumByDebtId(existing.getId())).thenReturn(new BigDecimal("3000"));
 
-        DebtResponse res = service.update(userId, existing.getId(), new UpsertDebtRequest(
-                "Updated", "CREDIT", new BigDecimal("12000"), new BigDecimal("0.1000"),
-                12, LocalDate.of(2026, 2, 1), "updated"));
+        DebtResponse res =
+                service.update(
+                        userId,
+                        existing.getId(),
+                        new UpsertDebtRequest(
+                                "Updated",
+                                "CREDIT",
+                                new BigDecimal("12000"),
+                                new BigDecimal("0.1000"),
+                                12,
+                                LocalDate.of(2026, 2, 1),
+                                "updated"));
 
         assertThat(existing.getName()).isEqualTo("Updated");
         assertThat(existing.getPrincipal()).isEqualByComparingTo("12000");
@@ -100,7 +130,8 @@ class DebtServiceTest {
     @Test
     void archiveSetsTimestamp() {
         Debt existing = debt(new BigDecimal("1000"), "0.0000", 12, LocalDate.now());
-        when(debtRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(debtRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
         service.archive(userId, existing.getId());
 
@@ -185,14 +216,20 @@ class DebtServiceTest {
     void addPaymentSavesAndRequiresOwnership() {
         Debt d = debt(new BigDecimal("1000"), "0.0000", 12, LocalDate.of(2026, 1, 1));
         when(debtRepo.findByIdAndUserId(d.getId(), userId)).thenReturn(Optional.of(d));
-        when(paymentRepo.save(any(DebtPayment.class))).thenAnswer(inv -> {
-            DebtPayment p = inv.getArgument(0);
-            p.setId(UUID.randomUUID());
-            return p;
-        });
+        when(paymentRepo.save(any(DebtPayment.class)))
+                .thenAnswer(
+                        inv -> {
+                            DebtPayment p = inv.getArgument(0);
+                            p.setId(UUID.randomUUID());
+                            return p;
+                        });
 
-        DebtPaymentResponse res = service.addPayment(userId, d.getId(),
-                new DebtPaymentRequest(LocalDate.of(2026, 2, 1), new BigDecimal("250"), "feb"));
+        DebtPaymentResponse res =
+                service.addPayment(
+                        userId,
+                        d.getId(),
+                        new DebtPaymentRequest(
+                                LocalDate.of(2026, 2, 1), new BigDecimal("250"), "feb"));
 
         ArgumentCaptor<DebtPayment> captor = ArgumentCaptor.forClass(DebtPayment.class);
         verify(paymentRepo).save(captor.capture());
@@ -206,8 +243,13 @@ class DebtServiceTest {
         UUID debtId = UUID.randomUUID();
         when(debtRepo.findByIdAndUserId(debtId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.addPayment(userId, debtId,
-                new DebtPaymentRequest(LocalDate.now(), BigDecimal.TEN, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.addPayment(
+                                        userId,
+                                        debtId,
+                                        new DebtPaymentRequest(
+                                                LocalDate.now(), BigDecimal.TEN, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(paymentRepo, never()).save(any());
     }
@@ -216,9 +258,13 @@ class DebtServiceTest {
     void deletePaymentRejectsWhenPaymentBelongsToAnotherDebt() {
         Debt d = debt(new BigDecimal("1000"), "0.0000", 12, LocalDate.of(2026, 1, 1));
         when(debtRepo.findByIdAndUserId(d.getId(), userId)).thenReturn(Optional.of(d));
-        DebtPayment foreign = DebtPayment.builder()
-                .id(UUID.randomUUID()).debtId(UUID.randomUUID())
-                .paymentDate(LocalDate.now()).amount(BigDecimal.TEN).build();
+        DebtPayment foreign =
+                DebtPayment.builder()
+                        .id(UUID.randomUUID())
+                        .debtId(UUID.randomUUID())
+                        .paymentDate(LocalDate.now())
+                        .amount(BigDecimal.TEN)
+                        .build();
         when(paymentRepo.findById(foreign.getId())).thenReturn(Optional.of(foreign));
 
         assertThatThrownBy(() -> service.deletePayment(userId, d.getId(), foreign.getId()))
@@ -230,9 +276,13 @@ class DebtServiceTest {
     void deletePaymentRemovesWhenMatch() {
         Debt d = debt(new BigDecimal("1000"), "0.0000", 12, LocalDate.of(2026, 1, 1));
         when(debtRepo.findByIdAndUserId(d.getId(), userId)).thenReturn(Optional.of(d));
-        DebtPayment p = DebtPayment.builder()
-                .id(UUID.randomUUID()).debtId(d.getId())
-                .paymentDate(LocalDate.now()).amount(BigDecimal.TEN).build();
+        DebtPayment p =
+                DebtPayment.builder()
+                        .id(UUID.randomUUID())
+                        .debtId(d.getId())
+                        .paymentDate(LocalDate.now())
+                        .amount(BigDecimal.TEN)
+                        .build();
         when(paymentRepo.findById(p.getId())).thenReturn(Optional.of(p));
 
         service.deletePayment(userId, d.getId(), p.getId());
@@ -253,10 +303,14 @@ class DebtServiceTest {
     void listPaymentsReturnsMappedRows() {
         Debt d = debt(new BigDecimal("1000"), "0.0000", 12, LocalDate.of(2026, 1, 1));
         when(debtRepo.findByIdAndUserId(d.getId(), userId)).thenReturn(Optional.of(d));
-        DebtPayment p = DebtPayment.builder()
-                .id(UUID.randomUUID()).debtId(d.getId())
-                .paymentDate(LocalDate.of(2026, 3, 1))
-                .amount(new BigDecimal("77")).note("partial").build();
+        DebtPayment p =
+                DebtPayment.builder()
+                        .id(UUID.randomUUID())
+                        .debtId(d.getId())
+                        .paymentDate(LocalDate.of(2026, 3, 1))
+                        .amount(new BigDecimal("77"))
+                        .note("partial")
+                        .build();
         when(paymentRepo.findByDebtIdOrderByPaymentDateAsc(d.getId())).thenReturn(List.of(p));
 
         List<DebtPaymentResponse> res = service.listPayments(userId, d.getId());

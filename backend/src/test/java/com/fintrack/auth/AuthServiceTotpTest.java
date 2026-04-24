@@ -1,5 +1,12 @@
 package com.fintrack.auth;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.audit.AuditService;
 import com.fintrack.auth.dto.TotpDisableRequest;
 import com.fintrack.auth.dto.TotpEnableRequest;
@@ -9,6 +16,8 @@ import com.fintrack.auth.dto.TotpVerifyRequest;
 import com.fintrack.common.entity.User;
 import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.settings.UserSettingsRepository;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,16 +26,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTotpTest {
@@ -49,14 +48,15 @@ class AuthServiceTotpTest {
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-        user = User.builder()
-                .id(userId)
-                .username("ali")
-                .email("ali@example.com")
-                .password("bcrypt-hash")
-                .role(User.Role.USER)
-                .totpEnabled(false)
-                .build();
+        user =
+                User.builder()
+                        .id(userId)
+                        .username("ali")
+                        .email("ali@example.com")
+                        .password("bcrypt-hash")
+                        .role(User.Role.USER)
+                        .totpEnabled(false)
+                        .build();
     }
 
     @Test
@@ -80,8 +80,8 @@ class AuthServiceTotpTest {
         user.setTotpEnabled(true);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        BusinessRuleException ex = assertThrows(BusinessRuleException.class,
-                () -> authService.totpSetup(userId));
+        BusinessRuleException ex =
+                assertThrows(BusinessRuleException.class, () -> authService.totpSetup(userId));
         assertEquals("TOTP_ALREADY_ENABLED", ex.getCode());
         verify(userRepository, never()).save(any());
     }
@@ -105,8 +105,10 @@ class AuthServiceTotpTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(totpService.verify("secret", "999999")).thenReturn(false);
 
-        BusinessRuleException ex = assertThrows(BusinessRuleException.class,
-                () -> authService.totpEnable(userId, new TotpEnableRequest("999999")));
+        BusinessRuleException ex =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> authService.totpEnable(userId, new TotpEnableRequest("999999")));
         assertEquals("TOTP_INVALID", ex.getCode());
         assertFalse(user.isTotpEnabled());
         verify(auditService).failure("TOTP_ENABLE", userId, "ali", "invalid code");
@@ -116,8 +118,10 @@ class AuthServiceTotpTest {
     void enableFailsWhenNoSecretProvisioned() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        BusinessRuleException ex = assertThrows(BusinessRuleException.class,
-                () -> authService.totpEnable(userId, new TotpEnableRequest("123456")));
+        BusinessRuleException ex =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> authService.totpEnable(userId, new TotpEnableRequest("123456")));
         assertEquals("TOTP_NOT_STARTED", ex.getCode());
     }
 
@@ -142,8 +146,10 @@ class AuthServiceTotpTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
-        BusinessRuleException ex = assertThrows(BusinessRuleException.class,
-                () -> authService.totpDisable(userId, new TotpDisableRequest("wrong")));
+        BusinessRuleException ex =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> authService.totpDisable(userId, new TotpDisableRequest("wrong")));
         assertEquals("PASSWORD_INVALID", ex.getCode());
         assertTrue(user.isTotpEnabled());
         verify(auditService).failure("TOTP_DISABLE", userId, "ali", "wrong password");
@@ -162,8 +168,10 @@ class AuthServiceTotpTest {
     void verifyTotpRejectsInvalidChallengeToken() {
         when(jwtUtil.validateTotpChallenge("bad-token")).thenReturn(null);
 
-        BusinessRuleException ex = assertThrows(BusinessRuleException.class,
-                () -> authService.verifyTotp(new TotpVerifyRequest("bad-token", "123456")));
+        BusinessRuleException ex =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> authService.verifyTotp(new TotpVerifyRequest("bad-token", "123456")));
         assertEquals("TOTP_CHALLENGE_INVALID", ex.getCode());
         verify(auditService).failure("TOTP_VERIFY", (String) null, "invalid challenge token");
     }

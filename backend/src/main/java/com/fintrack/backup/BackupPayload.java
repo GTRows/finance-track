@@ -1,13 +1,12 @@
 package com.fintrack.backup;
 
 import com.fintrack.common.entity.*;
-
 import java.time.Instant;
 import java.util.List;
 
 /**
- * Versioned envelope for a user's exported data. Each field is a straight list
- * of entities; cross-references are preserved as UUIDs.
+ * Versioned envelope for a user's exported data. Each field is a straight list of entities;
+ * cross-references are preserved as UUIDs.
  */
 public record BackupPayload(
         BackupMeta meta,
@@ -31,7 +30,6 @@ public record BackupPayload(
         List<SavingsGoalContribution> savingsContributions,
         List<Debt> debts,
         List<DebtPayment> debtPayments,
-        List<NetWorthEvent> netWorthEvents
-) {
+        List<NetWorthEvent> netWorthEvents) {
     public record BackupMeta(int version, Instant exportedAt, String userEmail) {}
 }

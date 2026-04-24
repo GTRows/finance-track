@@ -1,23 +1,5 @@
 package com.fintrack.tag;
 
-import com.fintrack.common.entity.Tag;
-import com.fintrack.common.entity.TransactionTag;
-import com.fintrack.common.exception.BusinessRuleException;
-import com.fintrack.common.exception.ResourceNotFoundException;
-import com.fintrack.tag.dto.TagResponse;
-import com.fintrack.tag.dto.UpsertTagRequest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +7,23 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.common.entity.Tag;
+import com.fintrack.common.entity.TransactionTag;
+import com.fintrack.common.exception.BusinessRuleException;
+import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.tag.dto.TagResponse;
+import com.fintrack.tag.dto.UpsertTagRequest;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class TagServiceTest {
@@ -67,11 +66,13 @@ class TagServiceTest {
     @Test
     void createTrimsNameAndPersists() {
         when(tagRepo.findByUserIdAndName(eq(userId), eq("food"))).thenReturn(Optional.empty());
-        when(tagRepo.save(any(Tag.class))).thenAnswer(inv -> {
-            Tag in = inv.getArgument(0);
-            in.setId(UUID.randomUUID());
-            return in;
-        });
+        when(tagRepo.save(any(Tag.class)))
+                .thenAnswer(
+                        inv -> {
+                            Tag in = inv.getArgument(0);
+                            in.setId(UUID.randomUUID());
+                            return in;
+                        });
 
         TagResponse res = service.create(userId, new UpsertTagRequest("  food  ", "#abc"));
 
@@ -85,7 +86,8 @@ class TagServiceTest {
 
     @Test
     void createRejectsDuplicateName() {
-        when(tagRepo.findByUserIdAndName(userId, "food")).thenReturn(Optional.of(tag("food", null)));
+        when(tagRepo.findByUserIdAndName(userId, "food"))
+                .thenReturn(Optional.of(tag("food", null)));
 
         assertThatThrownBy(() -> service.create(userId, new UpsertTagRequest("food", null)))
                 .isInstanceOf(BusinessRuleException.class)
@@ -102,7 +104,8 @@ class TagServiceTest {
         when(tagRepo.save(existing)).thenReturn(existing);
         when(txnTagRepo.countByTagId(existing.getId())).thenReturn(2L);
 
-        TagResponse res = service.update(userId, existing.getId(), new UpsertTagRequest("new", "#222"));
+        TagResponse res =
+                service.update(userId, existing.getId(), new UpsertTagRequest("new", "#222"));
 
         assertThat(existing.getName()).isEqualTo("new");
         assertThat(existing.getColor()).isEqualTo("#222");
@@ -128,7 +131,12 @@ class TagServiceTest {
         when(tagRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
         when(tagRepo.findByUserIdAndName(userId, "new")).thenReturn(Optional.of(other));
 
-        assertThatThrownBy(() -> service.update(userId, existing.getId(), new UpsertTagRequest("new", null)))
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        userId,
+                                        existing.getId(),
+                                        new UpsertTagRequest("new", null)))
                 .isInstanceOf(BusinessRuleException.class);
 
         verify(tagRepo, never()).save(any());
@@ -192,7 +200,9 @@ class TagServiceTest {
         verify(txnTagRepo).deleteByTransactionId(txnId);
         ArgumentCaptor<TransactionTag> captor = ArgumentCaptor.forClass(TransactionTag.class);
         verify(txnTagRepo, org.mockito.Mockito.times(2)).save(captor.capture());
-        assertThat(captor.getAllValues()).extracting(TransactionTag::getTagId).containsExactly(t1, t2);
+        assertThat(captor.getAllValues())
+                .extracting(TransactionTag::getTagId)
+                .containsExactly(t1, t2);
     }
 
     @Test
@@ -212,10 +222,12 @@ class TagServiceTest {
         UUID toAdd = UUID.randomUUID();
         UUID notPresent = UUID.randomUUID();
 
-        TransactionTag current = TransactionTag.builder().transactionId(txnId).tagId(existing).build();
+        TransactionTag current =
+                TransactionTag.builder().transactionId(txnId).tagId(existing).build();
         when(txnTagRepo.findByTransactionId(txnId)).thenReturn(List.of(current));
 
-        service.mutateTransactionTags(txnId, List.of(toAdd, existing), List.of(existing, notPresent));
+        service.mutateTransactionTags(
+                txnId, List.of(toAdd, existing), List.of(existing, notPresent));
 
         ArgumentCaptor<TransactionTag> saved = ArgumentCaptor.forClass(TransactionTag.class);
         verify(txnTagRepo).save(saved.capture());
@@ -238,18 +250,21 @@ class TagServiceTest {
         Tag apple = tag("Apple", "#0f0");
         Tag travel = tag("travel", "#00f");
 
-        List<TransactionTag> joins = List.of(
-                TransactionTag.builder().transactionId(txnA).tagId(food.getId()).build(),
-                TransactionTag.builder().transactionId(txnA).tagId(apple.getId()).build(),
-                TransactionTag.builder().transactionId(txnB).tagId(travel.getId()).build()
-        );
+        List<TransactionTag> joins =
+                List.of(
+                        TransactionTag.builder().transactionId(txnA).tagId(food.getId()).build(),
+                        TransactionTag.builder().transactionId(txnA).tagId(apple.getId()).build(),
+                        TransactionTag.builder().transactionId(txnB).tagId(travel.getId()).build());
         when(txnTagRepo.findByTransactionIds(List.of(txnA, txnB))).thenReturn(joins);
         when(tagRepo.findAllByIdInAndUserId(any(), eq(userId)))
                 .thenReturn(List.of(food, apple, travel));
 
-        Map<UUID, List<TagService.TagSummary>> out = service.loadTagsForTransactions(userId, List.of(txnA, txnB));
+        Map<UUID, List<TagService.TagSummary>> out =
+                service.loadTagsForTransactions(userId, List.of(txnA, txnB));
 
-        assertThat(out.get(txnA)).extracting(TagService.TagSummary::name).containsExactly("Apple", "food");
+        assertThat(out.get(txnA))
+                .extracting(TagService.TagSummary::name)
+                .containsExactly("Apple", "food");
         assertThat(out.get(txnB)).extracting(TagService.TagSummary::name).containsExactly("travel");
     }
 
@@ -259,14 +274,15 @@ class TagServiceTest {
         Tag food = tag("food", "#f00");
         UUID orphanTagId = UUID.randomUUID();
 
-        List<TransactionTag> joins = List.of(
-                TransactionTag.builder().transactionId(txn).tagId(food.getId()).build(),
-                TransactionTag.builder().transactionId(txn).tagId(orphanTagId).build()
-        );
+        List<TransactionTag> joins =
+                List.of(
+                        TransactionTag.builder().transactionId(txn).tagId(food.getId()).build(),
+                        TransactionTag.builder().transactionId(txn).tagId(orphanTagId).build());
         when(txnTagRepo.findByTransactionIds(List.of(txn))).thenReturn(joins);
         when(tagRepo.findAllByIdInAndUserId(any(), eq(userId))).thenReturn(List.of(food));
 
-        Map<UUID, List<TagService.TagSummary>> out = service.loadTagsForTransactions(userId, List.of(txn));
+        Map<UUID, List<TagService.TagSummary>> out =
+                service.loadTagsForTransactions(userId, List.of(txn));
 
         assertThat(out.get(txn)).hasSize(1);
         assertThat(out.get(txn).get(0).name()).isEqualTo("food");

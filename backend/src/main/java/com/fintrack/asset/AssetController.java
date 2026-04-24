@@ -7,6 +7,11 @@ import com.fintrack.price.PriceHistoryRepository;
 import com.fintrack.price.client.CoinGeckoClient;
 import com.fintrack.price.client.TefasClient;
 import com.fintrack.price.client.YahooFinanceClient;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,15 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.UUID;
-
-/**
- * REST endpoints for browsing the asset master list.
- */
+/** REST endpoints for browsing the asset master list. */
 @RestController
 @RequestMapping("/api/v1/assets")
 @RequiredArgsConstructor
@@ -41,25 +38,26 @@ public class AssetController {
     @GetMapping
     public ResponseEntity<List<AssetResponse>> list(
             @RequestParam(value = "type", required = false) Asset.AssetType type) {
-        List<Asset> assets = (type == null)
-                ? assetRepository.findAllByOrderBySymbolAsc()
-                : assetRepository.findByAssetTypeOrderBySymbolAsc(type);
+        List<Asset> assets =
+                (type == null)
+                        ? assetRepository.findAllByOrderBySymbolAsc()
+                        : assetRepository.findByAssetTypeOrderBySymbolAsc(type);
         return ResponseEntity.ok(assets.stream().map(AssetResponse::from).toList());
     }
 
     /** Returns a single asset by id. */
     @GetMapping("/{assetId}")
     public ResponseEntity<AssetResponse> get(@PathVariable UUID assetId) {
-        return assetRepository.findById(assetId)
+        return assetRepository
+                .findById(assetId)
                 .map(AssetResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     /**
-     * Returns price history for an asset over the last N days. Prefers the upstream
-     * provider for FUND (TEFAS) and CRYPTO (CoinGecko); otherwise falls back to
-     * locally recorded points.
+     * Returns price history for an asset over the last N days. Prefers the upstream provider for
+     * FUND (TEFAS) and CRYPTO (CoinGecko); otherwise falls back to locally recorded points.
      */
     @GetMapping("/{assetId}/history")
     public ResponseEntity<List<PricePoint>> history(
@@ -77,9 +75,10 @@ public class AssetController {
 
         Instant since = Instant.now().minus(window, ChronoUnit.DAYS);
         List<PriceHistory> rows = priceHistoryRepository.findSeries(assetId, since);
-        return ResponseEntity.ok(rows.stream()
-                .map(p -> new PricePoint(p.getRecordedAt(), p.getPrice(), p.getPriceUsd()))
-                .toList());
+        return ResponseEntity.ok(
+                rows.stream()
+                        .map(p -> new PricePoint(p.getRecordedAt(), p.getPrice(), p.getPriceUsd()))
+                        .toList());
     }
 
     private List<PricePoint> fetchUpstreamHistory(Asset asset, int days) {
@@ -89,9 +88,10 @@ public class AssetController {
                 id = metadataString(asset, "tefasCode");
                 if (id == null) return List.of();
                 String typeCode = metadataString(asset, "tefasType");
-                TefasClient.FundType type = "EMK".equalsIgnoreCase(typeCode)
-                        ? TefasClient.FundType.EMK
-                        : TefasClient.FundType.YAT;
+                TefasClient.FundType type =
+                        "EMK".equalsIgnoreCase(typeCode)
+                                ? TefasClient.FundType.EMK
+                                : TefasClient.FundType.YAT;
                 return tefasClient.fetchHistory(id, type, days).stream()
                         .map(p -> new PricePoint(p.at(), p.price(), null))
                         .toList();

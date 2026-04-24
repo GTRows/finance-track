@@ -8,8 +8,7 @@ public record DashboardResponse(
         BigDecimal totalNetWorth,
         List<PortfolioSummary> portfolios,
         BudgetOverview budget,
-        List<UpcomingBill> upcomingBills
-) {
+        List<UpcomingBill> upcomingBills) {
 
     public record PortfolioSummary(
             UUID id,
@@ -18,18 +17,14 @@ public record DashboardResponse(
             BigDecimal valueTry,
             BigDecimal costTry,
             BigDecimal pnlTry,
-            BigDecimal pnlPercent
-    ) {
-    }
+            BigDecimal pnlPercent) {}
 
     public record BudgetOverview(
             String period,
             BigDecimal income,
             BigDecimal expense,
             BigDecimal net,
-            BigDecimal savingsRate
-    ) {
-    }
+            BigDecimal savingsRate) {}
 
     public record UpcomingBill(
             UUID id,
@@ -37,7 +32,5 @@ public record DashboardResponse(
             BigDecimal amount,
             int dueDay,
             long daysUntilDue,
-            String status
-    ) {
-    }
+            String status) {}
 }

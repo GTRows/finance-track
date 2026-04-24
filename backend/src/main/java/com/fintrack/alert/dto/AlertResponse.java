@@ -2,7 +2,6 @@ package com.fintrack.alert.dto;
 
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.PriceAlert;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -18,8 +17,7 @@ public record AlertResponse(
         BigDecimal thresholdTry,
         PriceAlert.Status status,
         Instant createdAt,
-        Instant triggeredAt
-) {
+        Instant triggeredAt) {
 
     public static AlertResponse from(PriceAlert alert) {
         Asset asset = alert.getAsset();
@@ -34,7 +32,6 @@ public record AlertResponse(
                 alert.getThresholdTry(),
                 alert.getStatus(),
                 alert.getCreatedAt(),
-                alert.getTriggeredAt()
-        );
+                alert.getTriggeredAt());
     }
 }

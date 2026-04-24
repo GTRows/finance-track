@@ -8,11 +8,6 @@ import com.fintrack.price.client.ExchangeRateClient;
 import com.fintrack.price.client.PreciousMetalsClient;
 import com.fintrack.price.client.TefasClient;
 import com.fintrack.price.client.YahooFinanceClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -24,11 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Orchestrates price refreshes across all configured providers. Each provider
- * failure is isolated: the service always returns a summary of how many assets
- * were updated per source, regardless of individual errors.
+ * Orchestrates price refreshes across all configured providers. Each provider failure is isolated:
+ * the service always returns a summary of how many assets were updated per source, regardless of
+ * individual errors.
  */
 @Service
 @RequiredArgsConstructor
@@ -52,9 +51,7 @@ public class PriceSyncService {
             int fundUpdated,
             int metalUpdated,
             int stockUpdated,
-            Instant runAt
-    ) {
-    }
+            Instant runAt) {}
 
     /** Runs a full refresh across all providers, including slow fund lookups. */
     @Transactional
@@ -68,9 +65,9 @@ public class PriceSyncService {
     }
 
     /**
-     * Fast refresh: crypto + currency + metals + stocks. Used by the 30 second
-     * scheduler since those sources are rate-limit friendly. Fund prices come
-     * from TEFAS which only changes once per day and runs on its own schedule.
+     * Fast refresh: crypto + currency + metals + stocks. Used by the 30 second scheduler since
+     * those sources are rate-limit friendly. Fund prices come from TEFAS which only changes once
+     * per day and runs on its own schedule.
      */
     @Transactional
     public SyncResult refreshLive() {
@@ -84,7 +81,8 @@ public class PriceSyncService {
     /** Updates all CRYPTO assets that carry a {@code coingeckoId} in metadata. */
     @Transactional
     public int refreshCrypto() {
-        List<Asset> cryptoAssets = assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.CRYPTO);
+        List<Asset> cryptoAssets =
+                assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.CRYPTO);
 
         Map<String, Asset> byCoingeckoId = new HashMap<>();
         for (Asset a : cryptoAssets) {
@@ -97,7 +95,8 @@ public class PriceSyncService {
             return 0;
         }
 
-        Map<String, CoinGeckoClient.PricePair> prices = coinGeckoClient.fetchPrices(byCoingeckoId.keySet());
+        Map<String, CoinGeckoClient.PricePair> prices =
+                coinGeckoClient.fetchPrices(byCoingeckoId.keySet());
         Instant now = Instant.now();
         int updated = 0;
         for (Map.Entry<String, CoinGeckoClient.PricePair> entry : prices.entrySet()) {
@@ -121,7 +120,8 @@ public class PriceSyncService {
     /** Updates all CURRENCY assets using exchangerate-api.com. */
     @Transactional
     public int refreshCurrencies() {
-        List<Asset> currencyAssets = assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.CURRENCY);
+        List<Asset> currencyAssets =
+                assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.CURRENCY);
         if (currencyAssets.isEmpty()) {
             return 0;
         }
@@ -155,11 +155,10 @@ public class PriceSyncService {
     }
 
     /**
-     * Updates FUND and GOLD assets that carry a {@code tefasCode} in metadata.
-     * TEFAS has no batch endpoint, so this iterates one fund at a time with
-     * a small delay between requests to stay friendly to the public server.
-     * GOLD assets carrying a {@code metalsSymbol} are skipped here and handled
-     * by {@link #refreshMetals()} instead.
+     * Updates FUND and GOLD assets that carry a {@code tefasCode} in metadata. TEFAS has no batch
+     * endpoint, so this iterates one fund at a time with a small delay between requests to stay
+     * friendly to the public server. GOLD assets carrying a {@code metalsSymbol} are skipped here
+     * and handled by {@link #refreshMetals()} instead.
      */
     @Transactional
     public int refreshFunds() {
@@ -178,9 +177,10 @@ public class PriceSyncService {
             total++;
 
             String typeCode = readMetadataString(asset, "tefasType");
-            TefasClient.FundType type = "EMK".equalsIgnoreCase(typeCode)
-                    ? TefasClient.FundType.EMK
-                    : TefasClient.FundType.YAT;
+            TefasClient.FundType type =
+                    "EMK".equalsIgnoreCase(typeCode)
+                            ? TefasClient.FundType.EMK
+                            : TefasClient.FundType.YAT;
 
             BigDecimal price = tefasClient.fetchPrice(code, type);
             if (price != null && price.signum() > 0) {
@@ -205,14 +205,14 @@ public class PriceSyncService {
     }
 
     /**
-     * Updates GOLD assets that carry a {@code metalsSymbol} (XAU/XAG/XPT/XPD).
-     * Fetches USD-per-ounce from the metals client, multiplies by the current
-     * USD/TRY rate, and optionally scales to a gram price when the asset has
-     * {@code metalsUnit=gram} in its metadata.
+     * Updates GOLD assets that carry a {@code metalsSymbol} (XAU/XAG/XPT/XPD). Fetches
+     * USD-per-ounce from the metals client, multiplies by the current USD/TRY rate, and optionally
+     * scales to a gram price when the asset has {@code metalsUnit=gram} in its metadata.
      */
     @Transactional
     public int refreshMetals() {
-        List<Asset> goldAssets = assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.GOLD);
+        List<Asset> goldAssets =
+                assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.GOLD);
         List<Asset> metalAssets = new ArrayList<>();
         Set<String> symbols = new HashSet<>();
         for (Asset a : goldAssets) {
@@ -244,9 +244,10 @@ public class PriceSyncService {
             if (usd == null || usd.signum() <= 0) continue;
 
             String unit = readMetadataString(asset, "metalsUnit");
-            BigDecimal usdForUnit = "gram".equalsIgnoreCase(unit)
-                    ? usd.divide(GRAMS_PER_OUNCE, 6, RoundingMode.HALF_UP)
-                    : usd;
+            BigDecimal usdForUnit =
+                    "gram".equalsIgnoreCase(unit)
+                            ? usd.divide(GRAMS_PER_OUNCE, 6, RoundingMode.HALF_UP)
+                            : usd;
             BigDecimal tryPrice = usdForUnit.multiply(usdTry).setScale(4, RoundingMode.HALF_UP);
 
             asset.setPrice(tryPrice);
@@ -261,14 +262,15 @@ public class PriceSyncService {
     }
 
     /**
-     * Updates STOCK assets that carry a {@code yahooSymbol} in metadata (BIST
-     * tickers use the {@code .IS} suffix, e.g. {@code THYAO.IS}). Prices are
-     * returned in the asset's native currency; USD quotes are converted to TRY
-     * using the live FX rate and also recorded on {@code priceUsd}.
+     * Updates STOCK assets that carry a {@code yahooSymbol} in metadata (BIST tickers use the
+     * {@code .IS} suffix, e.g. {@code THYAO.IS}). Prices are returned in the asset's native
+     * currency; USD quotes are converted to TRY using the live FX rate and also recorded on {@code
+     * priceUsd}.
      */
     @Transactional
     public int refreshStocks() {
-        List<Asset> stockAssets = assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.STOCK);
+        List<Asset> stockAssets =
+                assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.STOCK);
         Map<String, Asset> bySymbol = new HashMap<>();
         for (Asset a : stockAssets) {
             String sym = readMetadataString(a, "yahooSymbol");
@@ -276,12 +278,14 @@ public class PriceSyncService {
         }
         if (bySymbol.isEmpty()) return 0;
 
-        Map<String, YahooFinanceClient.Quote> quotes = yahooFinanceClient.fetchQuotes(bySymbol.keySet());
+        Map<String, YahooFinanceClient.Quote> quotes =
+                yahooFinanceClient.fetchQuotes(bySymbol.keySet());
         if (quotes.isEmpty()) return 0;
 
         BigDecimal usdTry = null;
-        boolean needsFx = quotes.values().stream()
-                .anyMatch(q -> q != null && "USD".equalsIgnoreCase(q.currency()));
+        boolean needsFx =
+                quotes.values().stream()
+                        .anyMatch(q -> q != null && "USD".equalsIgnoreCase(q.currency()));
         if (needsFx) {
             Map<String, BigDecimal> fx = exchangeRateClient.fetchTryRates(Set.of("USD"));
             usdTry = fx.get("USD");
@@ -330,7 +334,8 @@ public class PriceSyncService {
             case CRYPTO -> {
                 String id = readMetadataString(asset, "coingeckoId");
                 if (id == null) return false;
-                Map<String, CoinGeckoClient.PricePair> prices = coinGeckoClient.fetchPrices(List.of(id));
+                Map<String, CoinGeckoClient.PricePair> prices =
+                        coinGeckoClient.fetchPrices(List.of(id));
                 CoinGeckoClient.PricePair pair = prices.get(id);
                 if (pair == null) return false;
                 if (pair.priceTry() != null) asset.setPrice(pair.priceTry());
@@ -353,8 +358,8 @@ public class PriceSyncService {
             case FUND, GOLD -> {
                 String metalsSymbol = readMetadataString(asset, "metalsSymbol");
                 if (metalsSymbol != null) {
-                    Map<String, BigDecimal> usdPerOunce = preciousMetalsClient
-                            .fetchUsdPerOunce(List.of(metalsSymbol));
+                    Map<String, BigDecimal> usdPerOunce =
+                            preciousMetalsClient.fetchUsdPerOunce(List.of(metalsSymbol));
                     BigDecimal usd = usdPerOunce.get(metalsSymbol.toUpperCase());
                     if (usd == null || usd.signum() <= 0) return false;
 
@@ -363,9 +368,10 @@ public class PriceSyncService {
                     if (usdTry == null || usdTry.signum() <= 0) return false;
 
                     String unit = readMetadataString(asset, "metalsUnit");
-                    BigDecimal usdForUnit = "gram".equalsIgnoreCase(unit)
-                            ? usd.divide(GRAMS_PER_OUNCE, 6, RoundingMode.HALF_UP)
-                            : usd;
+                    BigDecimal usdForUnit =
+                            "gram".equalsIgnoreCase(unit)
+                                    ? usd.divide(GRAMS_PER_OUNCE, 6, RoundingMode.HALF_UP)
+                                    : usd;
                     asset.setPrice(usdForUnit.multiply(usdTry).setScale(4, RoundingMode.HALF_UP));
                     asset.setPriceUsd(usdForUnit.setScale(4, RoundingMode.HALF_UP));
                     asset.setPriceUpdatedAt(now);
@@ -375,9 +381,10 @@ public class PriceSyncService {
                 String code = readMetadataString(asset, "tefasCode");
                 if (code == null) return false;
                 String typeCode = readMetadataString(asset, "tefasType");
-                TefasClient.FundType type = "EMK".equalsIgnoreCase(typeCode)
-                        ? TefasClient.FundType.EMK
-                        : TefasClient.FundType.YAT;
+                TefasClient.FundType type =
+                        "EMK".equalsIgnoreCase(typeCode)
+                                ? TefasClient.FundType.EMK
+                                : TefasClient.FundType.YAT;
                 BigDecimal price = tefasClient.fetchPrice(code, type);
                 if (price == null || price.signum() <= 0) return false;
                 asset.setPrice(price);
@@ -388,7 +395,8 @@ public class PriceSyncService {
             case STOCK -> {
                 String sym = readMetadataString(asset, "yahooSymbol");
                 if (sym == null) return false;
-                Map<String, YahooFinanceClient.Quote> quotes = yahooFinanceClient.fetchQuotes(List.of(sym));
+                Map<String, YahooFinanceClient.Quote> quotes =
+                        yahooFinanceClient.fetchQuotes(List.of(sym));
                 YahooFinanceClient.Quote quote = quotes.get(sym);
                 if (quote == null || quote.price() == null) return false;
 
@@ -421,12 +429,13 @@ public class PriceSyncService {
     /** Appends a history row capturing the current price of an asset. */
     private void recordHistory(Asset asset, Instant at) {
         if (asset.getPrice() == null) return;
-        priceHistoryRepository.save(PriceHistory.builder()
-                .assetId(asset.getId())
-                .price(asset.getPrice())
-                .priceUsd(asset.getPriceUsd())
-                .recordedAt(at)
-                .build());
+        priceHistoryRepository.save(
+                PriceHistory.builder()
+                        .assetId(asset.getId())
+                        .price(asset.getPrice())
+                        .priceUsd(asset.getPriceUsd())
+                        .recordedAt(at)
+                        .build());
     }
 
     /** Reads a string field from an asset's metadata JSON, or null if missing. */

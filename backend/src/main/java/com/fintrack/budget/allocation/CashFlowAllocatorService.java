@@ -6,27 +6,26 @@ import com.fintrack.budget.allocation.AllocationDtos.BucketResponse;
 import com.fintrack.budget.allocation.AllocationDtos.PreviewRequest;
 import com.fintrack.budget.allocation.AllocationDtos.PreviewResponse;
 import com.fintrack.common.entity.AllocationBucket;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Keeps each user's ordered list of allocation buckets and produces a
- * cash-flow preview:
+ * Keeps each user's ordered list of allocation buckets and produces a cash-flow preview:
+ *
  * <ol>
- *   <li>Discretionary = income - obligations (never negative)</li>
- *   <li>Each bucket = discretionary * percent/100, rounded to 2dp</li>
- *   <li>Unassigned = discretionary - sum(bucket amounts)</li>
+ *   <li>Discretionary = income - obligations (never negative)
+ *   <li>Each bucket = discretionary * percent/100, rounded to 2dp
+ *   <li>Unassigned = discretionary - sum(bucket amounts)
  * </ol>
- * The controller is a pure suggestion engine — nothing is booked against the
- * ledger automatically.
+ *
+ * The controller is a pure suggestion engine — nothing is booked against the ledger automatically.
  */
 @Service
 @RequiredArgsConstructor
@@ -45,11 +44,10 @@ public class CashFlowAllocatorService {
     }
 
     /**
-     * Replace a user's bucket list in one shot. Ordinal is derived from the
-     * position of each entry in the input, so the frontend can reorder by
-     * resubmitting. Percent totals above 100 are allowed but logged — the user
-     * may have obligations they want to over-target; under 100 leaves an
-     * unassigned residual.
+     * Replace a user's bucket list in one shot. Ordinal is derived from the position of each entry
+     * in the input, so the frontend can reorder by resubmitting. Percent totals above 100 are
+     * allowed but logged — the user may have obligations they want to over-target; under 100 leaves
+     * an unassigned residual.
      */
     @Transactional
     public List<BucketResponse> replaceBuckets(UUID userId, List<BucketInput> inputs) {
@@ -60,13 +58,14 @@ public class CashFlowAllocatorService {
         List<AllocationBucket> toSave = new ArrayList<>(inputs.size());
         for (int i = 0; i < inputs.size(); i++) {
             BucketInput in = inputs.get(i);
-            AllocationBucket bucket = AllocationBucket.builder()
-                    .userId(userId)
-                    .name(in.name().trim())
-                    .percent(in.percent())
-                    .categoryId(in.categoryId())
-                    .ordinal(i)
-                    .build();
+            AllocationBucket bucket =
+                    AllocationBucket.builder()
+                            .userId(userId)
+                            .name(in.name().trim())
+                            .percent(in.percent())
+                            .categoryId(in.categoryId())
+                            .ordinal(i)
+                            .build();
             toSave.add(bucket);
             total = total.add(in.percent());
         }
@@ -82,9 +81,10 @@ public class CashFlowAllocatorService {
     @Transactional(readOnly = true)
     public PreviewResponse preview(UUID userId, PreviewRequest req) {
         BigDecimal income = req.income().setScale(SCALE, RoundingMode.HALF_UP);
-        BigDecimal obligations = req.obligations() == null
-                ? BigDecimal.ZERO
-                : req.obligations().setScale(SCALE, RoundingMode.HALF_UP);
+        BigDecimal obligations =
+                req.obligations() == null
+                        ? BigDecimal.ZERO
+                        : req.obligations().setScale(SCALE, RoundingMode.HALF_UP);
 
         BigDecimal discretionary = income.subtract(obligations);
         if (discretionary.signum() < 0) discretionary = BigDecimal.ZERO;
@@ -93,8 +93,10 @@ public class CashFlowAllocatorService {
         List<AllocatedBucket> out = new ArrayList<>(buckets.size());
         BigDecimal assigned = BigDecimal.ZERO;
         for (AllocationBucket b : buckets) {
-            BigDecimal share = discretionary.multiply(b.getPercent())
-                    .divide(BigDecimal.valueOf(100), SCALE, RoundingMode.HALF_UP);
+            BigDecimal share =
+                    discretionary
+                            .multiply(b.getPercent())
+                            .divide(BigDecimal.valueOf(100), SCALE, RoundingMode.HALF_UP);
             assigned = assigned.add(share);
             out.add(new AllocatedBucket(b.getName(), b.getCategoryId(), b.getPercent(), share));
         }

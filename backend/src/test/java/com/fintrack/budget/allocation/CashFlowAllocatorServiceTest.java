@@ -1,24 +1,23 @@
 package com.fintrack.budget.allocation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.budget.allocation.AllocationDtos.BucketInput;
 import com.fintrack.budget.allocation.AllocationDtos.PreviewRequest;
 import com.fintrack.budget.allocation.AllocationDtos.PreviewResponse;
 import com.fintrack.common.entity.AllocationBucket;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CashFlowAllocatorServiceTest {
@@ -43,8 +42,10 @@ class CashFlowAllocatorServiceTest {
     void previewWithoutBucketsLeavesAllDiscretionaryUnassigned() {
         when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId)).thenReturn(List.of());
 
-        PreviewResponse res = service.preview(userId,
-                new PreviewRequest(new BigDecimal("10000"), new BigDecimal("3000")));
+        PreviewResponse res =
+                service.preview(
+                        userId,
+                        new PreviewRequest(new BigDecimal("10000"), new BigDecimal("3000")));
 
         assertThat(res.income()).isEqualByComparingTo("10000");
         assertThat(res.obligations()).isEqualByComparingTo("3000");
@@ -56,13 +57,15 @@ class CashFlowAllocatorServiceTest {
 
     @Test
     void previewSplitsDiscretionaryAcrossBucketsByPercent() {
-        when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId)).thenReturn(List.of(
-                bucket("Savings", new BigDecimal("60"), 0),
-                bucket("Investments", new BigDecimal("40"), 1)
-        ));
+        when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId))
+                .thenReturn(
+                        List.of(
+                                bucket("Savings", new BigDecimal("60"), 0),
+                                bucket("Investments", new BigDecimal("40"), 1)));
 
-        PreviewResponse res = service.preview(userId,
-                new PreviewRequest(new BigDecimal("8000"), new BigDecimal("3000")));
+        PreviewResponse res =
+                service.preview(
+                        userId, new PreviewRequest(new BigDecimal("8000"), new BigDecimal("3000")));
 
         assertThat(res.discretionary()).isEqualByComparingTo("5000");
         assertThat(res.buckets()).hasSize(2);
@@ -74,13 +77,15 @@ class CashFlowAllocatorServiceTest {
 
     @Test
     void previewWithBucketsUnder100LeavesResidualUnassigned() {
-        when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId)).thenReturn(List.of(
-                bucket("Savings", new BigDecimal("30"), 0),
-                bucket("Investments", new BigDecimal("20"), 1)
-        ));
+        when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId))
+                .thenReturn(
+                        List.of(
+                                bucket("Savings", new BigDecimal("30"), 0),
+                                bucket("Investments", new BigDecimal("20"), 1)));
 
-        PreviewResponse res = service.preview(userId,
-                new PreviewRequest(new BigDecimal("1000"), BigDecimal.ZERO));
+        PreviewResponse res =
+                service.preview(
+                        userId, new PreviewRequest(new BigDecimal("1000"), BigDecimal.ZERO));
 
         assertThat(res.discretionary()).isEqualByComparingTo("1000");
         assertThat(res.assigned()).isEqualByComparingTo("500");
@@ -89,12 +94,12 @@ class CashFlowAllocatorServiceTest {
 
     @Test
     void previewClampsDiscretionaryAtZeroWhenObligationsExceedIncome() {
-        when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId)).thenReturn(List.of(
-                bucket("Savings", new BigDecimal("50"), 0)
-        ));
+        when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId))
+                .thenReturn(List.of(bucket("Savings", new BigDecimal("50"), 0)));
 
-        PreviewResponse res = service.preview(userId,
-                new PreviewRequest(new BigDecimal("2000"), new BigDecimal("2500")));
+        PreviewResponse res =
+                service.preview(
+                        userId, new PreviewRequest(new BigDecimal("2000"), new BigDecimal("2500")));
 
         assertThat(res.discretionary()).isEqualByComparingTo("0");
         assertThat(res.buckets().get(0).amount()).isEqualByComparingTo("0");
@@ -106,8 +111,8 @@ class CashFlowAllocatorServiceTest {
     void previewTreatsNullObligationsAsZero() {
         when(bucketRepo.findByUserIdOrderByOrdinalAsc(userId)).thenReturn(List.of());
 
-        PreviewResponse res = service.preview(userId,
-                new PreviewRequest(new BigDecimal("1500"), null));
+        PreviewResponse res =
+                service.preview(userId, new PreviewRequest(new BigDecimal("1500"), null));
 
         assertThat(res.obligations()).isEqualByComparingTo("0");
         assertThat(res.discretionary()).isEqualByComparingTo("1500");
@@ -118,10 +123,11 @@ class CashFlowAllocatorServiceTest {
     void replaceBucketsPersistsTrimmedNamesAndAssignsOrdinals() {
         when(bucketRepo.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
 
-        service.replaceBuckets(userId, List.of(
-                new BucketInput("  Savings  ", new BigDecimal("40"), null),
-                new BucketInput("Investments", new BigDecimal("60"), null)
-        ));
+        service.replaceBuckets(
+                userId,
+                List.of(
+                        new BucketInput("  Savings  ", new BigDecimal("40"), null),
+                        new BucketInput("Investments", new BigDecimal("60"), null)));
 
         verify(bucketRepo).deleteByUserId(userId);
         verify(bucketRepo).flush();
@@ -144,10 +150,11 @@ class CashFlowAllocatorServiceTest {
     void replaceBucketsAllowsTotalsOver100() {
         when(bucketRepo.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
 
-        service.replaceBuckets(userId, List.of(
-                new BucketInput("Savings", new BigDecimal("60"), null),
-                new BucketInput("Investments", new BigDecimal("60"), null)
-        ));
+        service.replaceBuckets(
+                userId,
+                List.of(
+                        new BucketInput("Savings", new BigDecimal("60"), null),
+                        new BucketInput("Investments", new BigDecimal("60"), null)));
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<AllocationBucket>> captor = ArgumentCaptor.forClass(List.class);

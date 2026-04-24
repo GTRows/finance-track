@@ -1,23 +1,5 @@
 package com.fintrack.auth;
 
-import com.fintrack.audit.AuditService;
-import com.fintrack.common.entity.EmailVerification;
-import com.fintrack.common.entity.User;
-import com.fintrack.common.exception.BusinessRuleException;
-import com.fintrack.common.exception.ResourceNotFoundException;
-import com.fintrack.notification.MailProperties;
-import com.fintrack.notification.MailService;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,6 +8,23 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.audit.AuditService;
+import com.fintrack.common.entity.EmailVerification;
+import com.fintrack.common.entity.User;
+import com.fintrack.common.exception.BusinessRuleException;
+import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.notification.MailProperties;
+import com.fintrack.notification.MailService;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class EmailVerificationServiceTest {
@@ -101,10 +100,14 @@ class EmailVerificationServiceTest {
 
     @Test
     void confirmThrowsWhenTokenAlreadyUsed() {
-        EmailVerification entry = EmailVerification.builder()
-                .id(UUID.randomUUID()).userId(UUID.randomUUID()).token("t")
-                .expiresAt(Instant.now().plusSeconds(60))
-                .consumedAt(Instant.now().minusSeconds(10)).build();
+        EmailVerification entry =
+                EmailVerification.builder()
+                        .id(UUID.randomUUID())
+                        .userId(UUID.randomUUID())
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .consumedAt(Instant.now().minusSeconds(10))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
 
         assertThatThrownBy(() -> service.confirm("t"))
@@ -114,9 +117,13 @@ class EmailVerificationServiceTest {
 
     @Test
     void confirmThrowsWhenExpired() {
-        EmailVerification entry = EmailVerification.builder()
-                .id(UUID.randomUUID()).userId(UUID.randomUUID()).token("t")
-                .expiresAt(Instant.now().minusSeconds(10)).build();
+        EmailVerification entry =
+                EmailVerification.builder()
+                        .id(UUID.randomUUID())
+                        .userId(UUID.randomUUID())
+                        .token("t")
+                        .expiresAt(Instant.now().minusSeconds(10))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
 
         assertThatThrownBy(() -> service.confirm("t"))
@@ -127,9 +134,13 @@ class EmailVerificationServiceTest {
     @Test
     void confirmMarksUserVerifiedAndConsumesToken() {
         User u = user(false);
-        EmailVerification entry = EmailVerification.builder()
-                .id(UUID.randomUUID()).userId(u.getId()).token("t")
-                .expiresAt(Instant.now().plusSeconds(3600)).build();
+        EmailVerification entry =
+                EmailVerification.builder()
+                        .id(UUID.randomUUID())
+                        .userId(u.getId())
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(3600))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
         when(userRepository.findById(u.getId())).thenReturn(Optional.of(u));
 
@@ -145,9 +156,13 @@ class EmailVerificationServiceTest {
     @Test
     void confirmDoesNotDoubleWriteUserWhenAlreadyVerified() {
         User u = user(true);
-        EmailVerification entry = EmailVerification.builder()
-                .id(UUID.randomUUID()).userId(u.getId()).token("t")
-                .expiresAt(Instant.now().plusSeconds(3600)).build();
+        EmailVerification entry =
+                EmailVerification.builder()
+                        .id(UUID.randomUUID())
+                        .userId(u.getId())
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(3600))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
         when(userRepository.findById(u.getId())).thenReturn(Optional.of(u));
 

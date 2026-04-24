@@ -1,18 +1,17 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
- * User-anchored note on the combined net worth timeline
- * (big purchases, bonus payouts, milestones, general notes).
+ * User-anchored note on the combined net worth timeline (big purchases, bonus payouts, milestones,
+ * general notes).
  */
 @Entity
 @Table(name = "net_worth_events")

@@ -8,9 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Authentication endpoints: register, login, refresh, logout, and profile.
- */
+/** Authentication endpoints: register, login, refresh, logout, and profile. */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -45,7 +43,8 @@ public class AuthController {
 
     /** Returns the authenticated user's profile. */
     @GetMapping("/me")
-    public ResponseEntity<UserProfileResponse> me(@AuthenticationPrincipal FinTrackUserDetails user) {
+    public ResponseEntity<UserProfileResponse> me(
+            @AuthenticationPrincipal FinTrackUserDetails user) {
         return ResponseEntity.ok(authService.getProfile(user.getId()));
     }
 
@@ -57,13 +56,15 @@ public class AuthController {
 
     /** Reports whether the current user has TOTP enabled. */
     @GetMapping("/2fa/status")
-    public ResponseEntity<TotpStatusResponse> totpStatus(@AuthenticationPrincipal FinTrackUserDetails user) {
+    public ResponseEntity<TotpStatusResponse> totpStatus(
+            @AuthenticationPrincipal FinTrackUserDetails user) {
         return ResponseEntity.ok(authService.totpStatus(user.getId()));
     }
 
     /** Starts TOTP enrolment: generates (or rotates) a secret and returns the otpauth URL. */
     @PostMapping("/2fa/setup")
-    public ResponseEntity<TotpSetupResponse> totpSetup(@AuthenticationPrincipal FinTrackUserDetails user) {
+    public ResponseEntity<TotpSetupResponse> totpSetup(
+            @AuthenticationPrincipal FinTrackUserDetails user) {
         return ResponseEntity.ok(authService.totpSetup(user.getId()));
     }
 

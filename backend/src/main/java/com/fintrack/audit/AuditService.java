@@ -2,13 +2,12 @@ package com.fintrack.audit;
 
 import com.fintrack.common.entity.AuditLog;
 import com.fintrack.common.web.RequestContext;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,27 +20,30 @@ public class AuditService {
     private final AuditLogRepository repository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void record(String action, AuditLog.Status status, UUID userId, String username, String detail) {
+    public void record(
+            String action, AuditLog.Status status, UUID userId, String username, String detail) {
         String ip = RequestContext.clientIp();
         String ua = truncate(RequestContext.userAgent(), USER_AGENT_MAX);
         String safeDetail = truncate(detail, DETAIL_MAX);
 
-        AuditLog entry = AuditLog.builder()
-                .action(action)
-                .status(status)
-                .userId(userId)
-                .username(username)
-                .detail(safeDetail)
-                .ipAddress(ip)
-                .userAgent(ua)
-                .build();
+        AuditLog entry =
+                AuditLog.builder()
+                        .action(action)
+                        .status(status)
+                        .userId(userId)
+                        .username(username)
+                        .detail(safeDetail)
+                        .ipAddress(ip)
+                        .userAgent(ua)
+                        .build();
         try {
             repository.save(entry);
         } catch (Exception e) {
             log.warn("Audit log write failed for action={}: {}", action, e.getMessage());
         }
 
-        log.info("AUDIT action={} status={} user=\"{}\" ip={} detail=\"{}\"",
+        log.info(
+                "AUDIT action={} status={} user=\"{}\" ip={} detail=\"{}\"",
                 action,
                 status,
                 username == null ? "" : username,

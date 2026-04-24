@@ -4,27 +4,27 @@ import com.fintrack.auth.UserRepository;
 import com.fintrack.common.entity.User;
 import com.fintrack.notification.MailService;
 import com.fintrack.notification.MailTemplate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
-
 /**
- * First-of-month pass that emails each user a PDF digest of the previous month.
- * Gated on {@code fintrack.monthly-report.enabled}; defaults to off so existing
- * deployments do not start mailing unannounced after upgrade.
+ * First-of-month pass that emails each user a PDF digest of the previous month. Gated on {@code
+ * fintrack.monthly-report.enabled}; defaults to off so existing deployments do not start mailing
+ * unannounced after upgrade.
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class MonthlyReportScheduler {
 
-    private static final DateTimeFormatter SUBJECT_FMT = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
+    private static final DateTimeFormatter SUBJECT_FMT =
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
     private static final DateTimeFormatter FILE_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     private final UserRepository userRepository;
@@ -58,11 +58,14 @@ public class MonthlyReportScheduler {
                 String subject = "FinTrack Pro monthly report - " + monthLabel;
                 String body = buildBody(user, monthLabel);
                 String filename = "fintrack-" + fileStem + ".pdf";
-                mailService.sendHtmlWithAttachment(user.getEmail(), subject, body,
-                        filename, pdf, "application/pdf");
+                mailService.sendHtmlWithAttachment(
+                        user.getEmail(), subject, body, filename, pdf, "application/pdf");
                 sent++;
             } catch (Exception e) {
-                log.warn("Failed to build monthly report for user {}: {}", user.getUsername(), e.getMessage());
+                log.warn(
+                        "Failed to build monthly report for user {}: {}",
+                        user.getUsername(),
+                        e.getMessage());
             }
         }
 
@@ -70,15 +73,17 @@ public class MonthlyReportScheduler {
     }
 
     private String buildBody(User user, String monthLabel) {
-        String inner = """
-                <h2 style="margin:0 0 12px;color:#f8fafc;font-size:20px">Your %s report</h2>
-                <p>Hi %s, your monthly FinTrack Pro summary for <strong>%s</strong> is attached as a PDF.</p>
-                <p>It covers income, expenses, net cash flow, savings rate, category breakdown, and the full transaction list for the period.</p>
-                <p style="font-size:12px;color:#64748b">Open FinTrack Pro to explore the live dashboard or adjust category budgets for the new month.</p>
-                """.formatted(
-                MailTemplate.escape(monthLabel),
-                MailTemplate.escape(user.getUsername()),
-                MailTemplate.escape(monthLabel));
+        String inner =
+                """
+<h2 style="margin:0 0 12px;color:#f8fafc;font-size:20px">Your %s report</h2>
+<p>Hi %s, your monthly FinTrack Pro summary for <strong>%s</strong> is attached as a PDF.</p>
+<p>It covers income, expenses, net cash flow, savings rate, category breakdown, and the full transaction list for the period.</p>
+<p style="font-size:12px;color:#64748b">Open FinTrack Pro to explore the live dashboard or adjust category budgets for the new month.</p>
+"""
+                        .formatted(
+                                MailTemplate.escape(monthLabel),
+                                MailTemplate.escape(user.getUsername()),
+                                MailTemplate.escape(monthLabel));
         return MailTemplate.wrap(inner);
     }
 }

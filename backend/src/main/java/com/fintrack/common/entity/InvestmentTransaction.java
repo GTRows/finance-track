@@ -1,17 +1,14 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
-/**
- * Full audit log of every portfolio action (buy, sell, deposit, withdraw, etc.).
- */
+/** Full audit log of every portfolio action (buy, sell, deposit, withdraw, etc.). */
 @Entity
 @Table(name = "investment_transactions")
 @Getter
@@ -59,6 +56,11 @@ public class InvestmentTransaction {
     private Instant createdAt;
 
     public enum TxnType {
-        BUY, SELL, DEPOSIT, WITHDRAW, REBALANCE, BES_CONTRIBUTION
+        BUY,
+        SELL,
+        DEPOSIT,
+        WITHDRAW,
+        REBALANCE,
+        BES_CONTRIBUTION
     }
 }

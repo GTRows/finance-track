@@ -1,17 +1,16 @@
 package com.fintrack.auth;
 
 import com.fintrack.common.entity.User;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
 /**
- * Spring Security UserDetails wrapper around our User entity.
- * Accessible via @AuthenticationPrincipal in controllers.
+ * Spring Security UserDetails wrapper around our User entity. Accessible
+ * via @AuthenticationPrincipal in controllers.
  */
 public class FinTrackUserDetails implements UserDetails {
 

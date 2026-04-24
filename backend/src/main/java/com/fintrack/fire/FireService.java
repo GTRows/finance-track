@@ -7,16 +7,15 @@ import com.fintrack.common.entity.*;
 import com.fintrack.fire.dto.FireResponse;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.HoldingRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,14 +36,16 @@ public class FireService {
     private final AssetRepository assetRepo;
 
     @Transactional(readOnly = true)
-    public FireResponse compute(UUID userId,
-                                BigDecimal withdrawalOverride,
-                                BigDecimal returnOverride,
-                                BigDecimal monthlyContributionOverride,
-                                BigDecimal monthlyExpenseOverride,
-                                BigDecimal netWorthOverride) {
+    public FireResponse compute(
+            UUID userId,
+            BigDecimal withdrawalOverride,
+            BigDecimal returnOverride,
+            BigDecimal monthlyContributionOverride,
+            BigDecimal monthlyExpenseOverride,
+            BigDecimal netWorthOverride) {
 
-        BigDecimal withdrawal = withdrawalOverride != null ? withdrawalOverride : DEFAULT_WITHDRAWAL;
+        BigDecimal withdrawal =
+                withdrawalOverride != null ? withdrawalOverride : DEFAULT_WITHDRAWAL;
         BigDecimal expectedReturn = returnOverride != null ? returnOverride : DEFAULT_RETURN;
 
         BigDecimal netWorth = netWorthOverride != null ? netWorthOverride : sumNetWorth(userId);
@@ -53,29 +54,37 @@ public class FireService {
         if (avg == null) avg = averagesFromTransactions(userId);
 
         BigDecimal avgIncome = avg.income;
-        BigDecimal avgExpense = monthlyExpenseOverride != null ? monthlyExpenseOverride : avg.expense;
-        BigDecimal monthlyContribution = monthlyContributionOverride != null
-                ? monthlyContributionOverride
-                : avgIncome.subtract(avgExpense).max(BigDecimal.ZERO);
+        BigDecimal avgExpense =
+                monthlyExpenseOverride != null ? monthlyExpenseOverride : avg.expense;
+        BigDecimal monthlyContribution =
+                monthlyContributionOverride != null
+                        ? monthlyContributionOverride
+                        : avgIncome.subtract(avgExpense).max(BigDecimal.ZERO);
 
-        BigDecimal savingsRate = avgIncome.signum() > 0
-                ? avgIncome.subtract(avgExpense).divide(avgIncome, 4, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        BigDecimal savingsRate =
+                avgIncome.signum() > 0
+                        ? avgIncome.subtract(avgExpense).divide(avgIncome, 4, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
 
         BigDecimal annualExpense = avgExpense.multiply(BigDecimal.valueOf(12));
-        BigDecimal target = withdrawal.signum() > 0
-                ? annualExpense.divide(withdrawal, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        BigDecimal target =
+                withdrawal.signum() > 0
+                        ? annualExpense.divide(withdrawal, 2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
 
-        BigDecimal progressRatio = target.signum() > 0
-                ? netWorth.divide(target, 4, RoundingMode.HALF_UP).min(BigDecimal.valueOf(4))
-                : BigDecimal.ZERO;
+        BigDecimal progressRatio =
+                target.signum() > 0
+                        ? netWorth.divide(target, 4, RoundingMode.HALF_UP)
+                                .min(BigDecimal.valueOf(4))
+                        : BigDecimal.ZERO;
 
         int months = monthsToTarget(netWorth, target, monthlyContribution, expectedReturn);
         LocalDate projectedDate = months >= 0 ? LocalDate.now().plusMonths(months) : null;
-        BigDecimal yearsToFi = months >= 0
-                ? BigDecimal.valueOf(months).divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP)
-                : null;
+        BigDecimal yearsToFi =
+                months >= 0
+                        ? BigDecimal.valueOf(months)
+                                .divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP)
+                        : null;
 
         List<FireResponse.TrajectoryPoint> trajectory =
                 buildTrajectory(netWorth, monthlyContribution, expectedReturn, months);
@@ -97,12 +106,12 @@ public class FireService {
                 projectedDate,
                 avg.samples,
                 sufficient,
-                trajectory
-        );
+                trajectory);
     }
 
     private BigDecimal sumNetWorth(UUID userId) {
-        List<Portfolio> portfolios = portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId);
+        List<Portfolio> portfolios =
+                portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId);
         if (portfolios.isEmpty()) return BigDecimal.ZERO;
 
         Set<UUID> assetIds = new HashSet<>();
@@ -136,7 +145,8 @@ public class FireService {
         List<MonthlySummary> summaries = summaryRepo.findByUserIdOrderByPeriodDesc(userId);
         if (summaries.size() < MIN_SAMPLES) return null;
 
-        List<MonthlySummary> window = summaries.subList(0, Math.min(SAMPLE_MONTHS, summaries.size()));
+        List<MonthlySummary> window =
+                summaries.subList(0, Math.min(SAMPLE_MONTHS, summaries.size()));
         BigDecimal incomeSum = BigDecimal.ZERO;
         BigDecimal expenseSum = BigDecimal.ZERO;
         for (MonthlySummary s : window) {
@@ -147,8 +157,7 @@ public class FireService {
         return new BudgetAverages(
                 incomeSum.divide(BigDecimal.valueOf(n), 2, RoundingMode.HALF_UP),
                 expenseSum.divide(BigDecimal.valueOf(n), 2, RoundingMode.HALF_UP),
-                n
-        );
+                n);
     }
 
     private BudgetAverages averagesFromTransactions(UUID userId) {
@@ -161,10 +170,14 @@ public class FireService {
             YearMonth ym = current.minusMonths(i);
             LocalDate from = ym.atDay(1);
             LocalDate to = ym.atEndOfMonth();
-            BigDecimal inc = nvl(txnRepo.sumByUserIdAndTypeAndDateRange(
-                    userId, BudgetTransaction.TxnType.INCOME, from, to));
-            BigDecimal exp = nvl(txnRepo.sumByUserIdAndTypeAndDateRange(
-                    userId, BudgetTransaction.TxnType.EXPENSE, from, to));
+            BigDecimal inc =
+                    nvl(
+                            txnRepo.sumByUserIdAndTypeAndDateRange(
+                                    userId, BudgetTransaction.TxnType.INCOME, from, to));
+            BigDecimal exp =
+                    nvl(
+                            txnRepo.sumByUserIdAndTypeAndDateRange(
+                                    userId, BudgetTransaction.TxnType.EXPENSE, from, to));
             if (inc.signum() == 0 && exp.signum() == 0) continue;
             incomeSum = incomeSum.add(inc);
             expenseSum = expenseSum.add(exp);
@@ -175,11 +188,11 @@ public class FireService {
         return new BudgetAverages(
                 incomeSum.divide(BigDecimal.valueOf(samples), 2, RoundingMode.HALF_UP),
                 expenseSum.divide(BigDecimal.valueOf(samples), 2, RoundingMode.HALF_UP),
-                samples
-        );
+                samples);
     }
 
-    private int monthsToTarget(BigDecimal start, BigDecimal target, BigDecimal contribution, BigDecimal annualReturn) {
+    private int monthsToTarget(
+            BigDecimal start, BigDecimal target, BigDecimal contribution, BigDecimal annualReturn) {
         if (target.signum() <= 0) return -1;
         if (start.compareTo(target) >= 0) return 0;
         if (contribution.signum() <= 0 && annualReturn.signum() <= 0) return -1;
@@ -195,14 +208,10 @@ public class FireService {
         return -1;
     }
 
-    private List<FireResponse.TrajectoryPoint> buildTrajectory(BigDecimal start,
-                                                                BigDecimal contribution,
-                                                                BigDecimal annualReturn,
-                                                                int monthsToFi) {
+    private List<FireResponse.TrajectoryPoint> buildTrajectory(
+            BigDecimal start, BigDecimal contribution, BigDecimal annualReturn, int monthsToFi) {
         BigDecimal monthlyReturn = annualReturn.divide(BigDecimal.valueOf(12), MC);
-        int years = monthsToFi > 0
-                ? Math.min(MAX_PROJECTION_YEARS, (monthsToFi / 12) + 2)
-                : 20;
+        int years = monthsToFi > 0 ? Math.min(MAX_PROJECTION_YEARS, (monthsToFi / 12) + 2) : 20;
 
         List<FireResponse.TrajectoryPoint> points = new ArrayList<>();
         BigDecimal balance = start;
@@ -213,7 +222,8 @@ public class FireService {
             for (int m = 0; m < 12; m++) {
                 balance = balance.multiply(BigDecimal.ONE.add(monthlyReturn), MC).add(contribution);
             }
-            points.add(new FireResponse.TrajectoryPoint(year, today.plusYears(year), round(balance)));
+            points.add(
+                    new FireResponse.TrajectoryPoint(year, today.plusYears(year), round(balance)));
         }
         return points;
     }

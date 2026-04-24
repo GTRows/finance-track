@@ -14,15 +14,35 @@ public class MailProperties {
         return enabled != null && !enabled.isBlank();
     }
 
-    public String getEnabled() { return enabled; }
-    public void setEnabled(String enabled) { this.enabled = enabled; }
+    public String getEnabled() {
+        return enabled;
+    }
 
-    public String getFromAddress() { return fromAddress; }
-    public void setFromAddress(String fromAddress) { this.fromAddress = fromAddress; }
+    public void setEnabled(String enabled) {
+        this.enabled = enabled;
+    }
 
-    public String getFromName() { return fromName; }
-    public void setFromName(String fromName) { this.fromName = fromName; }
+    public String getFromAddress() {
+        return fromAddress;
+    }
 
-    public String getBaseUrl() { return baseUrl; }
-    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+    public void setFromAddress(String fromAddress) {
+        this.fromAddress = fromAddress;
+    }
+
+    public String getFromName() {
+        return fromName;
+    }
+
+    public void setFromName(String fromName) {
+        this.fromName = fromName;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
 }

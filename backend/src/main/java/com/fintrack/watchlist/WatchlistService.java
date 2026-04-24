@@ -5,12 +5,11 @@ import com.fintrack.common.entity.WatchlistEntry;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.watchlist.dto.AddWatchlistRequest;
 import com.fintrack.watchlist.dto.WatchlistEntryResponse;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,11 +30,15 @@ public class WatchlistService {
         if (!assetRepository.existsById(request.assetId())) {
             throw new ResourceNotFoundException("Asset not found");
         }
-        WatchlistEntry entry = repository.findByUserIdAndAssetId(userId, request.assetId())
-                .orElseGet(() -> WatchlistEntry.builder()
-                        .userId(userId)
-                        .assetId(request.assetId())
-                        .build());
+        WatchlistEntry entry =
+                repository
+                        .findByUserIdAndAssetId(userId, request.assetId())
+                        .orElseGet(
+                                () ->
+                                        WatchlistEntry.builder()
+                                                .userId(userId)
+                                                .assetId(request.assetId())
+                                                .build());
         entry.setNote(request.note());
         return WatchlistEntryResponse.from(repository.save(entry));
     }

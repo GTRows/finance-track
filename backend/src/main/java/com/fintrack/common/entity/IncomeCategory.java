@@ -1,13 +1,10 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 
-import java.util.UUID;
-
-/**
- * User-defined income categories. Pre-seeded with Turkish defaults.
- */
+/** User-defined income categories. Pre-seeded with Turkish defaults. */
 @Entity
 @Table(name = "income_categories")
 @Getter

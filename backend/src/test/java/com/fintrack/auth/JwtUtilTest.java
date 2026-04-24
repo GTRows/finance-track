@@ -1,14 +1,14 @@
 package com.fintrack.auth;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class JwtUtilTest {
 
-    private static final String SECRET = "test-secret-must-be-at-least-32-bytes-for-hs256-signing-key-ok";
+    private static final String SECRET =
+            "test-secret-must-be-at-least-32-bytes-for-hs256-signing-key-ok";
 
     private JwtUtil util() {
         return new JwtUtil(SECRET, 15, 30);
@@ -51,7 +51,8 @@ class JwtUtilTest {
     @Test
     void validateTotpChallengeRejectsTokenSignedByDifferentKey() {
         JwtUtil a = util();
-        JwtUtil b = new JwtUtil("another-secret-of-sufficient-length-for-hmac-sha256-signing", 15, 30);
+        JwtUtil b =
+                new JwtUtil("another-secret-of-sufficient-length-for-hmac-sha256-signing", 15, 30);
         String token = a.generateTotpChallengeToken(UUID.randomUUID().toString());
 
         assertNull(b.validateTotpChallenge(token));

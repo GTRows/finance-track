@@ -1,14 +1,13 @@
 package com.fintrack.push;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.security.KeyPair;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 class VapidKeyManagerTest {
 
@@ -55,8 +54,10 @@ class VapidKeyManagerTest {
     void generatedPairRoundTripsThroughLoad() {
         VapidKeyManager first = init(new PushProperties(null, null, null));
 
-        VapidKeyManager second = init(new PushProperties(
-                first.getPublicKeyB64Url(), first.getPrivateKeyB64Url(), null));
+        VapidKeyManager second =
+                init(
+                        new PushProperties(
+                                first.getPublicKeyB64Url(), first.getPrivateKeyB64Url(), null));
 
         assertThat(second.getPublicKeyB64Url()).isEqualTo(first.getPublicKeyB64Url());
         assertThat(second.getPrivateKeyB64Url()).isEqualTo(first.getPrivateKeyB64Url());
@@ -103,7 +104,8 @@ class VapidKeyManagerTest {
         VapidKeyManager seed = init(new PushProperties(null, null, null));
         String shortPriv = Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[20]);
 
-        VapidKeyManager m = new VapidKeyManager(new PushProperties(seed.getPublicKeyB64Url(), shortPriv, null));
+        VapidKeyManager m =
+                new VapidKeyManager(new PushProperties(seed.getPublicKeyB64Url(), shortPriv, null));
 
         assertThatThrownBy(m::init)
                 .isInstanceOf(IllegalArgumentException.class)

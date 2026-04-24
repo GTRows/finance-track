@@ -1,11 +1,10 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "transaction_tags")
@@ -36,7 +35,8 @@ public class TransactionTag {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (!(o instanceof PK pk)) return false;
-            return Objects.equals(transactionId, pk.transactionId) && Objects.equals(tagId, pk.tagId);
+            return Objects.equals(transactionId, pk.transactionId)
+                    && Objects.equals(tagId, pk.tagId);
         }
 
         @Override

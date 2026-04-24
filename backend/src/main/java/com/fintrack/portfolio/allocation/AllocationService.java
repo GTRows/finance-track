@@ -12,11 +12,6 @@ import com.fintrack.portfolio.allocation.dto.AllocationSummary;
 import com.fintrack.portfolio.allocation.dto.AllocationTargetInput;
 import com.fintrack.portfolio.allocation.dto.SetAllocationRequest;
 import com.fintrack.portfolio.holding.HoldingRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.EnumMap;
@@ -27,6 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,22 +51,30 @@ public class AllocationService {
         }
 
         Map<Asset.AssetType, BigDecimal> actualValueByType = actualValueByType(portfolioId);
-        BigDecimal totalValue = actualValueByType.values().stream()
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalValue =
+                actualValueByType.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Set<Asset.AssetType> types = new TreeSet<>();
         types.addAll(targetByType.keySet());
         types.addAll(actualValueByType.keySet());
 
-        List<AllocationRow> rows = types.stream()
-                .map(type -> buildRow(type, targetByType.get(type), actualValueByType.get(type), totalValue))
-                .toList();
+        List<AllocationRow> rows =
+                types.stream()
+                        .map(
+                                type ->
+                                        buildRow(
+                                                type,
+                                                targetByType.get(type),
+                                                actualValueByType.get(type),
+                                                totalValue))
+                        .toList();
 
         return new AllocationSummary(totalValue, !targets.isEmpty(), rows);
     }
 
     @Transactional
-    public AllocationSummary replaceTargets(UUID userId, UUID portfolioId, SetAllocationRequest request) {
+    public AllocationSummary replaceTargets(
+            UUID userId, UUID portfolioId, SetAllocationRequest request) {
         requireOwnership(userId, portfolioId);
 
         if (!request.targets().isEmpty()) {
@@ -77,13 +84,17 @@ public class AllocationService {
         targetRepository.deleteByPortfolioId(portfolioId);
         for (AllocationTargetInput input : request.targets()) {
             if (input.targetPercent().signum() == 0) continue;
-            targetRepository.save(PortfolioAllocationTarget.builder()
-                    .portfolioId(portfolioId)
-                    .assetType(input.assetType())
-                    .targetPercent(input.targetPercent())
-                    .build());
+            targetRepository.save(
+                    PortfolioAllocationTarget.builder()
+                            .portfolioId(portfolioId)
+                            .assetType(input.assetType())
+                            .targetPercent(input.targetPercent())
+                            .build());
         }
-        log.info("Allocation targets updated: portfolioId={} count={}", portfolioId, request.targets().size());
+        log.info(
+                "Allocation targets updated: portfolioId={} count={}",
+                portfolioId,
+                request.targets().size());
         return summarize(userId, portfolioId);
     }
 
@@ -93,14 +104,15 @@ public class AllocationService {
         for (AllocationTargetInput t : inputs) {
             if (!seen.add(t.assetType())) {
                 throw new BusinessRuleException(
-                        "Duplicate allocation target: " + t.assetType(),
-                        "ALLOCATION_DUPLICATE");
+                        "Duplicate allocation target: " + t.assetType(), "ALLOCATION_DUPLICATE");
             }
             sum = sum.add(t.targetPercent());
         }
         if (sum.subtract(HUNDRED).abs().compareTo(SUM_TOLERANCE) > 0) {
             throw new BusinessRuleException(
-                    "Allocation targets must sum to 100 (got " + sum.stripTrailingZeros().toPlainString() + ")",
+                    "Allocation targets must sum to 100 (got "
+                            + sum.stripTrailingZeros().toPlainString()
+                            + ")",
                     "ALLOCATION_SUM");
         }
     }
@@ -131,9 +143,10 @@ public class AllocationService {
             BigDecimal totalValue) {
         BigDecimal target = targetPercent != null ? targetPercent : BigDecimal.ZERO;
         BigDecimal value = actualValue != null ? actualValue : BigDecimal.ZERO;
-        BigDecimal actualPercent = totalValue.signum() > 0
-                ? value.multiply(HUNDRED).divide(totalValue, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        BigDecimal actualPercent =
+                totalValue.signum() > 0
+                        ? value.multiply(HUNDRED).divide(totalValue, 2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
         BigDecimal drift = actualPercent.subtract(target);
         BigDecimal driftValue = totalValue.multiply(drift).divide(HUNDRED, 2, RoundingMode.HALF_UP);
         return new AllocationRow(
@@ -142,12 +155,12 @@ public class AllocationService {
                 actualPercent,
                 value.setScale(2, RoundingMode.HALF_UP),
                 drift.setScale(2, RoundingMode.HALF_UP),
-                driftValue
-        );
+                driftValue);
     }
 
     private void requireOwnership(UUID userId, UUID portfolioId) {
-        portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId)
+        portfolioRepository
+                .findByIdAndUserIdAndActiveTrue(portfolioId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found"));
     }
 }

@@ -1,5 +1,13 @@
 package com.fintrack.budget;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.alert.AlertNotificationRepository;
 import com.fintrack.budget.dto.BudgetRuleResponse;
 import com.fintrack.budget.dto.CreateBudgetRuleRequest;
@@ -10,6 +18,12 @@ import com.fintrack.common.entity.BudgetTransaction.TxnType;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.metrics.BusinessMetrics;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,21 +33,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BudgetRuleServiceTest {
@@ -50,12 +49,17 @@ class BudgetRuleServiceTest {
 
     private ExpenseCategory cat(String name, String color) {
         return ExpenseCategory.builder()
-                .id(UUID.randomUUID()).userId(userId).name(name).color(color).build();
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .color(color)
+                .build();
     }
 
     private BudgetRule rule(UUID categoryId, String limit, boolean active, String lastAlerted) {
         return BudgetRule.builder()
-                .id(UUID.randomUUID()).userId(userId)
+                .id(UUID.randomUUID())
+                .userId(userId)
                 .categoryId(categoryId)
                 .monthlyLimitTry(new BigDecimal(limit))
                 .active(active)
@@ -65,11 +69,14 @@ class BudgetRuleServiceTest {
 
     private BudgetTransaction expense(UUID categoryId, String amount, LocalDate date) {
         return BudgetTransaction.builder()
-                .id(UUID.randomUUID()).userId(userId)
+                .id(UUID.randomUUID())
+                .userId(userId)
                 .txnType(TxnType.EXPENSE)
                 .categoryId(categoryId)
                 .amount(new BigDecimal(amount))
-                .txnDate(date).description("x").build();
+                .txnDate(date)
+                .description("x")
+                .build();
     }
 
     @Test
@@ -88,12 +95,14 @@ class BudgetRuleServiceTest {
         when(ruleRepo.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(r));
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(food));
 
-        Page<BudgetTransaction> page = new PageImpl<>(List.of(
-                expense(food.getId(), "250", ym.atDay(10)),
-                expense(food.getId(), "250", ym.atDay(15)),
-                expense(food.getId(), "100", ym.atDay(20))));
+        Page<BudgetTransaction> page =
+                new PageImpl<>(
+                        List.of(
+                                expense(food.getId(), "250", ym.atDay(10)),
+                                expense(food.getId(), "250", ym.atDay(15)),
+                                expense(food.getId(), "100", ym.atDay(20))));
         when(txnRepo.findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(
-                eq(userId), eq(ym.atDay(1)), eq(ym.atEndOfMonth()), any(Pageable.class)))
+                        eq(userId), eq(ym.atDay(1)), eq(ym.atEndOfMonth()), any(Pageable.class)))
                 .thenReturn(page);
 
         BudgetRuleResponse res = service.listForUser(userId).get(0);
@@ -111,7 +120,7 @@ class BudgetRuleServiceTest {
         when(ruleRepo.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(r));
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of());
         when(txnRepo.findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(
-                eq(userId), eq(ym.atDay(1)), eq(ym.atEndOfMonth()), any(Pageable.class)))
+                        eq(userId), eq(ym.atDay(1)), eq(ym.atEndOfMonth()), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         BudgetRuleResponse res = service.listForUser(userId).get(0);
@@ -129,7 +138,7 @@ class BudgetRuleServiceTest {
         when(ruleRepo.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(r));
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(food));
         when(txnRepo.findByUserIdAndTxnDateBetweenOrderByTxnDateDesc(
-                eq(userId), eq(ym.atDay(1)), eq(ym.atEndOfMonth()), any(Pageable.class)))
+                        eq(userId), eq(ym.atDay(1)), eq(ym.atEndOfMonth()), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(expense(food.getId(), "5", ym.atDay(1)))));
 
         BudgetRuleResponse res = service.listForUser(userId).get(0);
@@ -142,7 +151,11 @@ class BudgetRuleServiceTest {
         UUID cid = UUID.randomUUID();
         when(expenseRepo.findByIdAndUserId(cid, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.create(userId, new CreateBudgetRuleRequest(cid, new BigDecimal("500"))))
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        userId,
+                                        new CreateBudgetRuleRequest(cid, new BigDecimal("500"))))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -151,13 +164,17 @@ class BudgetRuleServiceTest {
         ExpenseCategory food = cat("Food", "#f00");
         when(expenseRepo.findByIdAndUserId(food.getId(), userId)).thenReturn(Optional.of(food));
         when(ruleRepo.findByUserIdAndCategoryId(userId, food.getId())).thenReturn(Optional.empty());
-        when(ruleRepo.save(any(BudgetRule.class))).thenAnswer(inv -> {
-            BudgetRule r = inv.getArgument(0);
-            r.setId(UUID.randomUUID());
-            return r;
-        });
+        when(ruleRepo.save(any(BudgetRule.class)))
+                .thenAnswer(
+                        inv -> {
+                            BudgetRule r = inv.getArgument(0);
+                            r.setId(UUID.randomUUID());
+                            return r;
+                        });
 
-        BudgetRuleResponse res = service.create(userId, new CreateBudgetRuleRequest(food.getId(), new BigDecimal("500")));
+        BudgetRuleResponse res =
+                service.create(
+                        userId, new CreateBudgetRuleRequest(food.getId(), new BigDecimal("500")));
 
         ArgumentCaptor<BudgetRule> captor = ArgumentCaptor.forClass(BudgetRule.class);
         verify(ruleRepo).save(captor.capture());
@@ -173,7 +190,8 @@ class BudgetRuleServiceTest {
         ExpenseCategory food = cat("Food", "#f00");
         BudgetRule existing = rule(food.getId(), "300", false, null);
         when(expenseRepo.findByIdAndUserId(food.getId(), userId)).thenReturn(Optional.of(food));
-        when(ruleRepo.findByUserIdAndCategoryId(userId, food.getId())).thenReturn(Optional.of(existing));
+        when(ruleRepo.findByUserIdAndCategoryId(userId, food.getId()))
+                .thenReturn(Optional.of(existing));
         when(ruleRepo.save(existing)).thenReturn(existing);
 
         service.create(userId, new CreateBudgetRuleRequest(food.getId(), new BigDecimal("800")));
@@ -204,10 +222,15 @@ class BudgetRuleServiceTest {
 
     @Test
     void evaluateIgnoresIncomeTransactions() {
-        BudgetTransaction income = BudgetTransaction.builder()
-                .id(UUID.randomUUID()).userId(userId).txnType(TxnType.INCOME)
-                .categoryId(UUID.randomUUID()).amount(new BigDecimal("100"))
-                .txnDate(LocalDate.now()).build();
+        BudgetTransaction income =
+                BudgetTransaction.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .txnType(TxnType.INCOME)
+                        .categoryId(UUID.randomUUID())
+                        .amount(new BigDecimal("100"))
+                        .txnDate(LocalDate.now())
+                        .build();
 
         service.evaluateForTransaction(userId, income);
 
@@ -216,9 +239,14 @@ class BudgetRuleServiceTest {
 
     @Test
     void evaluateIgnoresExpenseWithoutCategory() {
-        BudgetTransaction txn = BudgetTransaction.builder()
-                .id(UUID.randomUUID()).userId(userId).txnType(TxnType.EXPENSE)
-                .amount(new BigDecimal("100")).txnDate(LocalDate.now()).build();
+        BudgetTransaction txn =
+                BudgetTransaction.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .txnType(TxnType.EXPENSE)
+                        .amount(new BigDecimal("100"))
+                        .txnDate(LocalDate.now())
+                        .build();
 
         service.evaluateForTransaction(userId, txn);
 
@@ -265,7 +293,7 @@ class BudgetRuleServiceTest {
         YearMonth ym = YearMonth.now();
         when(ruleRepo.findByUserIdAndCategoryId(userId, catId)).thenReturn(Optional.of(r));
         when(txnRepo.sumByUserIdAndCategoryAndDateRange(
-                eq(userId), eq(catId), eq(ym.atDay(1)), eq(ym.atEndOfMonth())))
+                        eq(userId), eq(catId), eq(ym.atDay(1)), eq(ym.atEndOfMonth())))
                 .thenReturn(new BigDecimal("500"));
 
         service.evaluateForTransaction(userId, expense(catId, "100", ym.atDay(10)));
@@ -280,7 +308,7 @@ class BudgetRuleServiceTest {
         YearMonth ym = YearMonth.now();
         when(ruleRepo.findByUserIdAndCategoryId(userId, food.getId())).thenReturn(Optional.of(r));
         when(txnRepo.sumByUserIdAndCategoryAndDateRange(
-                eq(userId), eq(food.getId()), eq(ym.atDay(1)), eq(ym.atEndOfMonth())))
+                        eq(userId), eq(food.getId()), eq(ym.atDay(1)), eq(ym.atEndOfMonth())))
                 .thenReturn(new BigDecimal("1200"));
         when(expenseRepo.findById(food.getId())).thenReturn(Optional.of(food));
 
@@ -303,7 +331,8 @@ class BudgetRuleServiceTest {
         BudgetRule r = rule(catId, "1000", true, null);
         YearMonth ym = YearMonth.now();
         when(ruleRepo.findByUserIdAndCategoryId(userId, catId)).thenReturn(Optional.of(r));
-        when(txnRepo.sumByUserIdAndCategoryAndDateRange(any(), any(), any(), any())).thenReturn(null);
+        when(txnRepo.sumByUserIdAndCategoryAndDateRange(any(), any(), any(), any()))
+                .thenReturn(null);
 
         service.evaluateForTransaction(userId, expense(catId, "5", ym.atDay(15)));
 

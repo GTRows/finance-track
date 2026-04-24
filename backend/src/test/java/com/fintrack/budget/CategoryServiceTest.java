@@ -1,29 +1,28 @@
 package com.fintrack.budget;
 
-import com.fintrack.budget.dto.CategoriesResponse;
-import com.fintrack.budget.dto.CategoryResponse;
-import com.fintrack.budget.dto.CreateCategoryRequest;
-import com.fintrack.common.entity.ExpenseCategory;
-import com.fintrack.common.entity.IncomeCategory;
-import com.fintrack.common.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.budget.dto.CategoriesResponse;
+import com.fintrack.budget.dto.CategoryResponse;
+import com.fintrack.budget.dto.CreateCategoryRequest;
+import com.fintrack.common.entity.ExpenseCategory;
+import com.fintrack.common.entity.IncomeCategory;
+import com.fintrack.common.exception.ResourceNotFoundException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceTest {
@@ -41,37 +40,45 @@ class CategoryServiceTest {
 
     private ExpenseCategory expense(String name, String budget) {
         return ExpenseCategory.builder()
-                .id(UUID.randomUUID()).userId(userId).name(name)
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
                 .budgetAmount(budget == null ? null : new BigDecimal(budget))
-                .rolloverEnabled(false).build();
+                .rolloverEnabled(false)
+                .build();
     }
 
     @Test
     void listAllPartitionsIncomeAndExpense() {
-        when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(
-                income("Salary"), income("Bonus")));
-        when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(
-                expense("Food", "500"), expense("Rent", "3000")));
+        when(incomeRepo.findByUserIdOrderByNameAsc(userId))
+                .thenReturn(List.of(income("Salary"), income("Bonus")));
+        when(expenseRepo.findByUserIdOrderByNameAsc(userId))
+                .thenReturn(List.of(expense("Food", "500"), expense("Rent", "3000")));
 
         CategoriesResponse res = service.listAll(userId);
 
-        assertThat(res.income()).extracting(CategoryResponse::name)
+        assertThat(res.income())
+                .extracting(CategoryResponse::name)
                 .containsExactly("Salary", "Bonus");
-        assertThat(res.expense()).extracting(CategoryResponse::name)
+        assertThat(res.expense())
+                .extracting(CategoryResponse::name)
                 .containsExactly("Food", "Rent");
         assertThat(res.expense().get(0).budgetAmount()).isEqualByComparingTo("500");
     }
 
     @Test
     void createIncomePersistsWithoutBudgetFields() {
-        when(incomeRepo.save(any(IncomeCategory.class))).thenAnswer(inv -> {
-            IncomeCategory c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        when(incomeRepo.save(any(IncomeCategory.class)))
+                .thenAnswer(
+                        inv -> {
+                            IncomeCategory c = inv.getArgument(0);
+                            c.setId(UUID.randomUUID());
+                            return c;
+                        });
 
-        CategoryResponse res = service.createIncome(userId,
-                new CreateCategoryRequest("Salary", "money", "#0f0", null, null));
+        CategoryResponse res =
+                service.createIncome(
+                        userId, new CreateCategoryRequest("Salary", "money", "#0f0", null, null));
 
         ArgumentCaptor<IncomeCategory> captor = ArgumentCaptor.forClass(IncomeCategory.class);
         verify(incomeRepo).save(captor.capture());
@@ -85,14 +92,19 @@ class CategoryServiceTest {
 
     @Test
     void createExpensePersistsWithBudgetAndRolloverFlag() {
-        when(expenseRepo.save(any(ExpenseCategory.class))).thenAnswer(inv -> {
-            ExpenseCategory c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        when(expenseRepo.save(any(ExpenseCategory.class)))
+                .thenAnswer(
+                        inv -> {
+                            ExpenseCategory c = inv.getArgument(0);
+                            c.setId(UUID.randomUUID());
+                            return c;
+                        });
 
-        CategoryResponse res = service.createExpense(userId,
-                new CreateCategoryRequest("Food", "fork", "#f00", new BigDecimal("500"), Boolean.TRUE));
+        CategoryResponse res =
+                service.createExpense(
+                        userId,
+                        new CreateCategoryRequest(
+                                "Food", "fork", "#f00", new BigDecimal("500"), Boolean.TRUE));
 
         ArgumentCaptor<ExpenseCategory> captor = ArgumentCaptor.forClass(ExpenseCategory.class);
         verify(expenseRepo).save(captor.capture());
@@ -104,11 +116,13 @@ class CategoryServiceTest {
 
     @Test
     void createExpenseTreatsRolloverEnabledNullAsFalse() {
-        when(expenseRepo.save(any(ExpenseCategory.class))).thenAnswer(inv -> {
-            ExpenseCategory c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        when(expenseRepo.save(any(ExpenseCategory.class)))
+                .thenAnswer(
+                        inv -> {
+                            ExpenseCategory c = inv.getArgument(0);
+                            c.setId(UUID.randomUUID());
+                            return c;
+                        });
 
         service.createExpense(userId, new CreateCategoryRequest("Food", null, null, null, null));
 
@@ -122,17 +136,24 @@ class CategoryServiceTest {
         UUID id = UUID.randomUUID();
         when(incomeRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateIncome(userId, id,
-                new CreateCategoryRequest("x", null, null, null, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.updateIncome(
+                                        userId,
+                                        id,
+                                        new CreateCategoryRequest("x", null, null, null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void updateIncomeMutatesFields() {
         IncomeCategory existing = income("Old");
-        when(incomeRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(incomeRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
-        service.updateIncome(userId, existing.getId(),
+        service.updateIncome(
+                userId,
+                existing.getId(),
                 new CreateCategoryRequest("New", "star", "#abc", null, null));
 
         assertThat(existing.getName()).isEqualTo("New");
@@ -145,8 +166,12 @@ class CategoryServiceTest {
         UUID id = UUID.randomUUID();
         when(expenseRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateExpense(userId, id,
-                new CreateCategoryRequest("x", null, null, null, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.updateExpense(
+                                        userId,
+                                        id,
+                                        new CreateCategoryRequest("x", null, null, null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -154,10 +179,14 @@ class CategoryServiceTest {
     void updateExpenseMutatesAllFieldsIncludingBudgetAndRollover() {
         ExpenseCategory existing = expense("Old", "100");
         existing.setRolloverEnabled(false);
-        when(expenseRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(expenseRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
-        service.updateExpense(userId, existing.getId(),
-                new CreateCategoryRequest("New", "icon", "#333", new BigDecimal("750"), Boolean.TRUE));
+        service.updateExpense(
+                userId,
+                existing.getId(),
+                new CreateCategoryRequest(
+                        "New", "icon", "#333", new BigDecimal("750"), Boolean.TRUE));
 
         assertThat(existing.getName()).isEqualTo("New");
         assertThat(existing.getBudgetAmount()).isEqualByComparingTo("750");
@@ -168,10 +197,11 @@ class CategoryServiceTest {
     void updateExpenseRolloverFlagNullTurnsItOff() {
         ExpenseCategory existing = expense("Old", "100");
         existing.setRolloverEnabled(true);
-        when(expenseRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(expenseRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
-        service.updateExpense(userId, existing.getId(),
-                new CreateCategoryRequest("Old", null, null, null, null));
+        service.updateExpense(
+                userId, existing.getId(), new CreateCategoryRequest("Old", null, null, null, null));
 
         assertThat(existing.isRolloverEnabled()).isFalse();
     }
@@ -189,7 +219,8 @@ class CategoryServiceTest {
     @Test
     void deleteIncomeRemovesWhenOwned() {
         IncomeCategory existing = income("Salary");
-        when(incomeRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(incomeRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
         service.deleteIncome(userId, existing.getId());
 
@@ -209,7 +240,8 @@ class CategoryServiceTest {
     @Test
     void deleteExpenseRemovesWhenOwned() {
         ExpenseCategory existing = expense("Food", "500");
-        when(expenseRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(expenseRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
         service.deleteExpense(userId, existing.getId());
 

@@ -10,8 +10,7 @@ public record SubscriptionAuditDto(
         BigDecimal totalMonthlySpend,
         BigDecimal potentialMonthlySavings,
         int candidateCount,
-        List<Candidate> candidates
-) {
+        List<Candidate> candidates) {
     public record Candidate(
             UUID billId,
             String name,
@@ -20,6 +19,5 @@ public record SubscriptionAuditDto(
             String currency,
             LocalDate lastUsedOn,
             Long daysSinceLastUse,
-            String reason
-    ) {}
+            String reason) {}
 }

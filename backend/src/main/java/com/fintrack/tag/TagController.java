@@ -4,14 +4,13 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.tag.dto.TagResponse;
 import com.fintrack.tag.dto.UpsertTagRequest;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/tags")
@@ -44,8 +43,7 @@ public class TagController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         service.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }

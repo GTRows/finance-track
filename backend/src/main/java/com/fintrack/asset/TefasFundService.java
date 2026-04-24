@@ -3,21 +3,18 @@ package com.fintrack.asset;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.price.PriceSyncService;
 import com.fintrack.price.client.TefasClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Search and on-demand import of TEFAS funds into the local asset catalog.
- */
+/** Search and on-demand import of TEFAS funds into the local asset catalog. */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -30,8 +27,8 @@ public class TefasFundService {
     private final PriceSyncService priceSyncService;
 
     /** Minimal search row returned to the client. */
-    public record FundSearchRow(String code, String name, TefasClient.FundType type, boolean imported) {
-    }
+    public record FundSearchRow(
+            String code, String name, TefasClient.FundType type, boolean imported) {}
 
     /** Searches both YAT and EMK catalogs by code or name substring. */
     public List<FundSearchRow> search(String query) {
@@ -49,16 +46,20 @@ public class TefasFundService {
             if (result.size() >= SEARCH_LIMIT) break;
             if (f.code().toLowerCase(Locale.ROOT).contains(q)
                     || f.name().toLowerCase(Locale.ROOT).contains(q)) {
-                result.add(new FundSearchRow(f.code(), f.name(), f.type(),
-                        existingByCode.containsKey(f.code())));
+                result.add(
+                        new FundSearchRow(
+                                f.code(),
+                                f.name(),
+                                f.type(),
+                                existingByCode.containsKey(f.code())));
             }
         }
         return result;
     }
 
     /**
-     * Imports a TEFAS fund into the asset catalog (if not already present) and
-     * triggers an immediate price fetch. Returns the resulting asset.
+     * Imports a TEFAS fund into the asset catalog (if not already present) and triggers an
+     * immediate price fetch. Returns the resulting asset.
      */
     @Transactional
     public Asset importFund(String code, TefasClient.FundType type) {
@@ -81,13 +82,14 @@ public class TefasFundService {
         metadata.put("tefasType", type.name());
         metadata.put("source", "tefas-import");
 
-        Asset asset = Asset.builder()
-                .symbol(normalized)
-                .name(displayName)
-                .assetType(assetType)
-                .currency("TRY")
-                .metadata(metadata)
-                .build();
+        Asset asset =
+                Asset.builder()
+                        .symbol(normalized)
+                        .name(displayName)
+                        .assetType(assetType)
+                        .currency("TRY")
+                        .metadata(metadata)
+                        .build();
 
         Asset saved = assetRepository.save(asset);
         log.info("Imported TEFAS fund code={} type={} assetId={}", normalized, type, saved.getId());
@@ -100,9 +102,10 @@ public class TefasFundService {
         for (TefasClient.FundSummary f : tefasClient.listAll(type)) {
             if (f.code().equalsIgnoreCase(code)) return f.name();
         }
-        TefasClient.FundType other = type == TefasClient.FundType.YAT
-                ? TefasClient.FundType.EMK
-                : TefasClient.FundType.YAT;
+        TefasClient.FundType other =
+                type == TefasClient.FundType.YAT
+                        ? TefasClient.FundType.EMK
+                        : TefasClient.FundType.YAT;
         for (TefasClient.FundSummary f : tefasClient.listAll(other)) {
             if (f.code().equalsIgnoreCase(code)) return f.name();
         }

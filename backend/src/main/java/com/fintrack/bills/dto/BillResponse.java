@@ -2,7 +2,6 @@ package com.fintrack.bills.dto;
 
 import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -24,14 +23,14 @@ public record BillResponse(
         long daysUntilDue,
         LocalDate lastUsedOn,
         Long daysSinceLastUse,
-        BillVarianceDto variance
-) {
+        BillVarianceDto variance) {
 
     public static BillResponse from(Bill bill, BillPayment currentPayment) {
         return from(bill, currentPayment, null);
     }
 
-    public static BillResponse from(Bill bill, BillPayment currentPayment, BillVarianceDto variance) {
+    public static BillResponse from(
+            Bill bill, BillPayment currentPayment, BillVarianceDto variance) {
         LocalDate today = LocalDate.now();
 
         int dueDay = Math.min(bill.getDueDay(), today.lengthOfMonth());
@@ -42,9 +41,7 @@ public record BillResponse(
         }
         long daysUntil = ChronoUnit.DAYS.between(today, dueDate);
 
-        String status = currentPayment != null
-                ? currentPayment.getStatus().name()
-                : "PENDING";
+        String status = currentPayment != null ? currentPayment.getStatus().name() : "PENDING";
 
         LocalDate lastUsed = bill.getLastUsedOn();
         Long daysSinceLastUse = lastUsed == null ? null : ChronoUnit.DAYS.between(lastUsed, today);
@@ -65,7 +62,6 @@ public record BillResponse(
                 daysUntil,
                 lastUsed,
                 daysSinceLastUse,
-                variance
-        );
+                variance);
     }
 }

@@ -4,6 +4,12 @@ import com.fintrack.budget.TransactionRepository;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,18 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Map;
-import java.util.UUID;
-
 /**
- * Persists transaction receipt files under a per-user directory tree. Stored
- * paths are relative to the configured root so the database never sees an
- * absolute host path — makes it safe to move the storage volume between
- * deployments without rewriting rows.
+ * Persists transaction receipt files under a per-user directory tree. Stored paths are relative to
+ * the configured root so the database never sees an absolute host path — makes it safe to move the
+ * storage volume between deployments without rewriting rows.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,12 +28,12 @@ import java.util.UUID;
 public class ReceiptStorageService {
 
     private static final long MAX_BYTES = 5L * 1024 * 1024;
-    private static final Map<String, String> MIME_EXTENSIONS = Map.of(
-            "image/jpeg", "jpg",
-            "image/png", "png",
-            "image/webp", "webp",
-            "application/pdf", "pdf"
-    );
+    private static final Map<String, String> MIME_EXTENSIONS =
+            Map.of(
+                    "image/jpeg", "jpg",
+                    "image/png", "png",
+                    "image/webp", "webp",
+                    "application/pdf", "pdf");
 
     private final TransactionRepository txnRepo;
 
@@ -55,13 +53,13 @@ public class ReceiptStorageService {
         }
     }
 
-    public record StoredReceipt(String relativePath, String mimeType, long bytes) {
-    }
+    public record StoredReceipt(String relativePath, String mimeType, long bytes) {}
 
     @Transactional
     public StoredReceipt store(UUID userId, UUID txnId, MultipartFile file) throws IOException {
-        BudgetTransaction txn = txnRepo.findByIdAndUserId(txnId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        BudgetTransaction txn =
+                txnRepo.findByIdAndUserId(txnId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Empty receipt upload");
@@ -72,7 +70,8 @@ public class ReceiptStorageService {
         String mime = normalizeMime(file.getContentType());
         String ext = MIME_EXTENSIONS.get(mime);
         if (ext == null) {
-            throw new IllegalArgumentException("Unsupported receipt type: " + file.getContentType());
+            throw new IllegalArgumentException(
+                    "Unsupported receipt type: " + file.getContentType());
         }
 
         if (txn.getReceiptPath() != null) {
@@ -93,8 +92,9 @@ public class ReceiptStorageService {
     }
 
     public Loaded load(UUID userId, UUID txnId) throws IOException {
-        BudgetTransaction txn = txnRepo.findByIdAndUserId(txnId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        BudgetTransaction txn =
+                txnRepo.findByIdAndUserId(txnId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         String relative = txn.getReceiptPath();
         if (relative == null || relative.isBlank()) {
             throw new ResourceNotFoundException("No receipt attached");
@@ -108,8 +108,9 @@ public class ReceiptStorageService {
 
     @Transactional
     public void delete(UUID userId, UUID txnId) {
-        BudgetTransaction txn = txnRepo.findByIdAndUserId(txnId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        BudgetTransaction txn =
+                txnRepo.findByIdAndUserId(txnId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         String relative = txn.getReceiptPath();
         if (relative == null) return;
         deleteFile(relative);
@@ -117,8 +118,7 @@ public class ReceiptStorageService {
         txnRepo.save(txn);
     }
 
-    public record Loaded(byte[] bytes, String mimeType) {
-    }
+    public record Loaded(byte[] bytes, String mimeType) {}
 
     private void deleteFile(String relative) {
         try {

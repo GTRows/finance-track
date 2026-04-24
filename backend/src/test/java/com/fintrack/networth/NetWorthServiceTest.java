@@ -1,5 +1,12 @@
 package com.fintrack.networth;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.common.entity.NetWorthEvent;
 import com.fintrack.common.entity.NetWorthEvent.EventType;
 import com.fintrack.common.entity.Portfolio;
@@ -10,25 +17,17 @@ import com.fintrack.networth.dto.NetWorthTimelineResponse;
 import com.fintrack.networth.dto.UpsertEventRequest;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.snapshot.SnapshotRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NetWorthServiceTest {
@@ -42,12 +41,18 @@ class NetWorthServiceTest {
     private final UUID userId = UUID.randomUUID();
 
     private Portfolio portfolio(String name) {
-        return Portfolio.builder().id(UUID.randomUUID()).userId(userId).name(name).active(true).build();
+        return Portfolio.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .active(true)
+                .build();
     }
 
     private PortfolioSnapshot snap(UUID portfolioId, LocalDate date, String value, String cost) {
         return PortfolioSnapshot.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId)
+                .id(UUID.randomUUID())
+                .portfolioId(portfolioId)
                 .snapshotDate(date)
                 .totalValueTry(new BigDecimal(value))
                 .totalCostTry(new BigDecimal(cost))
@@ -56,7 +61,8 @@ class NetWorthServiceTest {
 
     @Test
     void timelineReturnsEmptyWhenNoPortfolios() {
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
         when(eventRepo.findByUserIdOrderByEventDateDesc(userId)).thenReturn(List.of());
 
         NetWorthTimelineResponse res = service.timeline(userId);
@@ -72,13 +78,15 @@ class NetWorthServiceTest {
         when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(p1, p2));
         when(snapshotRepo.findByPortfolioIdOrderBySnapshotDateAsc(p1.getId()))
-                .thenReturn(List.of(
-                        snap(p1.getId(), LocalDate.of(2026, 4, 1), "100", "80"),
-                        snap(p1.getId(), LocalDate.of(2026, 4, 2), "110", "80")));
+                .thenReturn(
+                        List.of(
+                                snap(p1.getId(), LocalDate.of(2026, 4, 1), "100", "80"),
+                                snap(p1.getId(), LocalDate.of(2026, 4, 2), "110", "80")));
         when(snapshotRepo.findByPortfolioIdOrderBySnapshotDateAsc(p2.getId()))
-                .thenReturn(List.of(
-                        snap(p2.getId(), LocalDate.of(2026, 4, 1), "50", "40"),
-                        snap(p2.getId(), LocalDate.of(2026, 4, 3), "70", "45")));
+                .thenReturn(
+                        List.of(
+                                snap(p2.getId(), LocalDate.of(2026, 4, 1), "50", "40"),
+                                snap(p2.getId(), LocalDate.of(2026, 4, 3), "70", "45")));
         when(eventRepo.findByUserIdOrderByEventDateDesc(userId)).thenReturn(List.of());
 
         NetWorthTimelineResponse res = service.timeline(userId);
@@ -94,15 +102,18 @@ class NetWorthServiceTest {
     @Test
     void timelineHandlesNullValueAndCostFields() {
         Portfolio p = portfolio("A");
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of(p));
-        when(snapshotRepo.findByPortfolioIdOrderBySnapshotDateAsc(p.getId())).thenReturn(List.of(
-                PortfolioSnapshot.builder()
-                        .id(UUID.randomUUID()).portfolioId(p.getId())
-                        .snapshotDate(LocalDate.of(2026, 4, 1))
-                        .totalValueTry(null)
-                        .totalCostTry(null)
-                        .build()
-        ));
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of(p));
+        when(snapshotRepo.findByPortfolioIdOrderBySnapshotDateAsc(p.getId()))
+                .thenReturn(
+                        List.of(
+                                PortfolioSnapshot.builder()
+                                        .id(UUID.randomUUID())
+                                        .portfolioId(p.getId())
+                                        .snapshotDate(LocalDate.of(2026, 4, 1))
+                                        .totalValueTry(null)
+                                        .totalCostTry(null)
+                                        .build()));
         when(eventRepo.findByUserIdOrderByEventDateDesc(userId)).thenReturn(List.of());
 
         NetWorthTimelineResponse res = service.timeline(userId);
@@ -114,14 +125,17 @@ class NetWorthServiceTest {
 
     @Test
     void timelineIncludesEvents() {
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
-        NetWorthEvent ev = NetWorthEvent.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .eventDate(LocalDate.of(2026, 4, 10))
-                .eventType(EventType.MILESTONE)
-                .label("1M")
-                .impactTry(BigDecimal.ZERO)
-                .build();
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
+        NetWorthEvent ev =
+                NetWorthEvent.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .eventDate(LocalDate.of(2026, 4, 10))
+                        .eventType(EventType.MILESTONE)
+                        .label("1M")
+                        .impactTry(BigDecimal.ZERO)
+                        .build();
         when(eventRepo.findByUserIdOrderByEventDateDesc(userId)).thenReturn(List.of(ev));
 
         NetWorthTimelineResponse res = service.timeline(userId);
@@ -132,13 +146,15 @@ class NetWorthServiceTest {
 
     @Test
     void listEventsReturnsMappedRows() {
-        NetWorthEvent ev = NetWorthEvent.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .eventDate(LocalDate.of(2026, 4, 1))
-                .eventType(EventType.PURCHASE)
-                .label("Car")
-                .impactTry(new BigDecimal("-500000"))
-                .build();
+        NetWorthEvent ev =
+                NetWorthEvent.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .eventDate(LocalDate.of(2026, 4, 1))
+                        .eventType(EventType.PURCHASE)
+                        .label("Car")
+                        .impactTry(new BigDecimal("-500000"))
+                        .build();
         when(eventRepo.findByUserIdOrderByEventDateDesc(userId)).thenReturn(List.of(ev));
 
         List<NetWorthEventResponse> res = service.listEvents(userId);
@@ -150,14 +166,23 @@ class NetWorthServiceTest {
 
     @Test
     void createPersistsAndParsesEventType() {
-        when(eventRepo.save(any(NetWorthEvent.class))).thenAnswer(inv -> {
-            NetWorthEvent e = inv.getArgument(0);
-            e.setId(UUID.randomUUID());
-            return e;
-        });
+        when(eventRepo.save(any(NetWorthEvent.class)))
+                .thenAnswer(
+                        inv -> {
+                            NetWorthEvent e = inv.getArgument(0);
+                            e.setId(UUID.randomUUID());
+                            return e;
+                        });
 
-        NetWorthEventResponse res = service.create(userId, new UpsertEventRequest(
-                LocalDate.of(2026, 4, 1), "income", "Bonus", "annual", new BigDecimal("25000")));
+        NetWorthEventResponse res =
+                service.create(
+                        userId,
+                        new UpsertEventRequest(
+                                LocalDate.of(2026, 4, 1),
+                                "income",
+                                "Bonus",
+                                "annual",
+                                new BigDecimal("25000")));
 
         ArgumentCaptor<NetWorthEvent> captor = ArgumentCaptor.forClass(NetWorthEvent.class);
         verify(eventRepo).save(captor.capture());
@@ -172,8 +197,9 @@ class NetWorthServiceTest {
     void createFallsBackToNoteForUnknownEventType() {
         when(eventRepo.save(any(NetWorthEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.create(userId, new UpsertEventRequest(
-                LocalDate.of(2026, 4, 1), "not-a-type", "x", null, null));
+        service.create(
+                userId,
+                new UpsertEventRequest(LocalDate.of(2026, 4, 1), "not-a-type", "x", null, null));
 
         ArgumentCaptor<NetWorthEvent> captor = ArgumentCaptor.forClass(NetWorthEvent.class);
         verify(eventRepo).save(captor.capture());
@@ -185,23 +211,40 @@ class NetWorthServiceTest {
         UUID id = UUID.randomUUID();
         when(eventRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(userId, id, new UpsertEventRequest(
-                LocalDate.now(), "NOTE", "x", null, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        userId,
+                                        id,
+                                        new UpsertEventRequest(
+                                                LocalDate.now(), "NOTE", "x", null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void updateMutatesAllFields() {
-        NetWorthEvent existing = NetWorthEvent.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .eventDate(LocalDate.of(2026, 1, 1))
-                .eventType(EventType.NOTE)
-                .label("Old").note("old")
-                .impactTry(BigDecimal.ZERO).build();
-        when(eventRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        NetWorthEvent existing =
+                NetWorthEvent.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .eventDate(LocalDate.of(2026, 1, 1))
+                        .eventType(EventType.NOTE)
+                        .label("Old")
+                        .note("old")
+                        .impactTry(BigDecimal.ZERO)
+                        .build();
+        when(eventRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
-        service.update(userId, existing.getId(), new UpsertEventRequest(
-                LocalDate.of(2026, 4, 1), "MILESTONE", "New", "new note", new BigDecimal("123")));
+        service.update(
+                userId,
+                existing.getId(),
+                new UpsertEventRequest(
+                        LocalDate.of(2026, 4, 1),
+                        "MILESTONE",
+                        "New",
+                        "new note",
+                        new BigDecimal("123")));
 
         assertThat(existing.getEventDate()).isEqualTo(LocalDate.of(2026, 4, 1));
         assertThat(existing.getEventType()).isEqualTo(EventType.MILESTONE);
@@ -222,10 +265,15 @@ class NetWorthServiceTest {
 
     @Test
     void deleteRemovesWhenOwned() {
-        NetWorthEvent ev = NetWorthEvent.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .eventDate(LocalDate.now()).eventType(EventType.NOTE)
-                .label("x").impactTry(BigDecimal.ZERO).build();
+        NetWorthEvent ev =
+                NetWorthEvent.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .eventDate(LocalDate.now())
+                        .eventType(EventType.NOTE)
+                        .label("x")
+                        .impactTry(BigDecimal.ZERO)
+                        .build();
         when(eventRepo.findByIdAndUserId(ev.getId(), userId)).thenReturn(Optional.of(ev));
 
         service.delete(userId, ev.getId());

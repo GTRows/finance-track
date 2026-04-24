@@ -1,23 +1,22 @@
 package com.fintrack.push;
 
 import jakarta.annotation.PostConstruct;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.math.BigInteger;
 import java.security.*;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.*;
 import java.util.Base64;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
- * Loads or generates the VAPID P-256 keypair used to sign push requests.
- * Keys are exchanged with the frontend and push providers in URL-safe base64
- * (no padding) per RFC 8291. A missing config value is not an error — the
- * manager generates a new pair and logs it so the operator can persist it.
+ * Loads or generates the VAPID P-256 keypair used to sign push requests. Keys are exchanged with
+ * the frontend and push providers in URL-safe base64 (no padding) per RFC 8291. A missing config
+ * value is not an error — the manager generates a new pair and logs it so the operator can persist
+ * it.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,20 +30,21 @@ public class VapidKeyManager {
 
     private KeyPair keyPair;
 
-    @Getter
-    private String publicKeyB64Url;
+    @Getter private String publicKeyB64Url;
 
-    @Getter
-    private String privateKeyB64Url;
+    @Getter private String privateKeyB64Url;
 
     @PostConstruct
     void init() {
         try {
-            if (props.vapidPublicKey() == null || props.vapidPublicKey().isBlank()
-                    || props.vapidPrivateKey() == null || props.vapidPrivateKey().isBlank()) {
+            if (props.vapidPublicKey() == null
+                    || props.vapidPublicKey().isBlank()
+                    || props.vapidPrivateKey() == null
+                    || props.vapidPrivateKey().isBlank()) {
                 generate();
-                log.warn("No VAPID keys configured; generated new pair. Persist these in .env to keep "
-                        + "existing subscriptions valid across restarts:");
+                log.warn(
+                        "No VAPID keys configured; generated new pair. Persist these in .env to"
+                                + " keep existing subscriptions valid across restarts:");
                 log.warn("  PUSH_VAPID_PUBLIC_KEY={}", publicKeyB64Url);
                 log.warn("  PUSH_VAPID_PRIVATE_KEY={}", privateKeyB64Url);
             } else {
@@ -73,7 +73,8 @@ public class VapidKeyManager {
         byte[] priv = Base64.getUrlDecoder().decode(stripPadding(privateB64));
 
         if (pub.length != 65 || pub[0] != 0x04) {
-            throw new IllegalArgumentException("VAPID public key must be 65-byte uncompressed point");
+            throw new IllegalArgumentException(
+                    "VAPID public key must be 65-byte uncompressed point");
         }
         if (priv.length != 32) {
             throw new IllegalArgumentException("VAPID private key must be 32 bytes");
@@ -86,12 +87,12 @@ public class VapidKeyManager {
 
         BigInteger x = new BigInteger(1, slice(pub, 1, 33));
         BigInteger y = new BigInteger(1, slice(pub, 33, 65));
-        ECPublicKey publicKey = (ECPublicKey) kf.generatePublic(
-                new ECPublicKeySpec(new ECPoint(x, y), ecSpec));
+        ECPublicKey publicKey =
+                (ECPublicKey) kf.generatePublic(new ECPublicKeySpec(new ECPoint(x, y), ecSpec));
 
         BigInteger s = new BigInteger(1, priv);
-        ECPrivateKey privateKey = (ECPrivateKey) kf.generatePrivate(
-                new ECPrivateKeySpec(s, ecSpec));
+        ECPrivateKey privateKey =
+                (ECPrivateKey) kf.generatePrivate(new ECPrivateKeySpec(s, ecSpec));
 
         keyPair = new KeyPair(publicKey, privateKey);
         publicKeyB64Url = encodePublicKey(publicKey);

@@ -26,21 +26,20 @@ import com.fintrack.tag.TagRepository;
 import com.fintrack.tag.TransactionTagRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Exports all user-scoped data as a JSON payload and restores it on upload.
- * Restore wipes the caller's existing data and replaces it with the payload
- * contents; UUIDs are preserved so intra-backup references stay intact.
+ * Exports all user-scoped data as a JSON payload and restores it on upload. Restore wipes the
+ * caller's existing data and replaces it with the payload contents; UUIDs are preserved so
+ * intra-backup references stay intact.
  */
 @Service
 @RequiredArgsConstructor
@@ -72,13 +71,13 @@ public class BackupService {
     private final DebtPaymentRepository debtPaymentRepo;
     private final NetWorthEventRepository netWorthRepo;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @PersistenceContext private EntityManager entityManager;
 
     @Transactional(readOnly = true)
     public BackupPayload export(UUID userId) {
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepo.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserSettings settings = settingsRepo.findById(userId).orElse(null);
 
@@ -102,9 +101,10 @@ public class BackupService {
 
         List<BudgetTransaction> transactions = txnRepo.findByUserIdOrderByTxnDateAsc(userId);
         List<UUID> txnIds = transactions.stream().map(BudgetTransaction::getId).toList();
-        List<TransactionTag> transactionTags = txnIds.isEmpty()
-                ? Collections.emptyList()
-                : txnTagRepo.findByTransactionIds(txnIds);
+        List<TransactionTag> transactionTags =
+                txnIds.isEmpty()
+                        ? Collections.emptyList()
+                        : txnTagRepo.findByTransactionIds(txnIds);
 
         List<RecurringTemplate> recurring = recurringRepo.findByUserIdOrderByCreatedAtAsc(userId);
         List<TransactionCategoryRule> categoryRules =
@@ -120,7 +120,8 @@ public class BackupService {
         List<SavingsGoal> goals = goalRepo.findByUserIdOrderByCreatedAtAsc(userId);
         List<SavingsGoalContribution> contributions = new ArrayList<>();
         for (SavingsGoal goal : goals) {
-            contributions.addAll(contributionRepo.findByGoalIdOrderByContributionDateDesc(goal.getId()));
+            contributions.addAll(
+                    contributionRepo.findByGoalIdOrderByContributionDateDesc(goal.getId()));
         }
 
         List<Debt> debts = debtRepo.findByUserIdOrderByCreatedAtAsc(userId);
@@ -131,23 +132,41 @@ public class BackupService {
 
         List<NetWorthEvent> netWorthEvents = netWorthRepo.findByUserIdOrderByEventDateDesc(userId);
 
-        BackupPayload.BackupMeta meta = new BackupPayload.BackupMeta(
-                CURRENT_VERSION, Instant.now(), user.getEmail());
+        BackupPayload.BackupMeta meta =
+                new BackupPayload.BackupMeta(CURRENT_VERSION, Instant.now(), user.getEmail());
 
-        log.info("Backup exported: userId={} transactions={} portfolios={} bills={} goals={} debts={}",
-                userId, transactions.size(), portfolios.size(), bills.size(), goals.size(), debts.size());
+        log.info(
+                "Backup exported: userId={} transactions={} portfolios={} bills={} goals={}"
+                        + " debts={}",
+                userId,
+                transactions.size(),
+                portfolios.size(),
+                bills.size(),
+                goals.size(),
+                debts.size());
 
         return new BackupPayload(
                 meta,
                 settings,
-                portfolios, holdings, invTxns, snapshots, allocations,
-                incomeCats, expenseCats,
+                portfolios,
+                holdings,
+                invTxns,
+                snapshots,
+                allocations,
+                incomeCats,
+                expenseCats,
                 tags,
-                transactions, transactionTags,
-                recurring, categoryRules, budgetRules,
-                bills, billPayments,
-                goals, contributions,
-                debts, debtPayments,
+                transactions,
+                transactionTags,
+                recurring,
+                categoryRules,
+                budgetRules,
+                bills,
+                billPayments,
+                goals,
+                contributions,
+                debts,
+                debtPayments,
                 netWorthEvents);
     }
 
@@ -202,7 +221,8 @@ public class BackupService {
         log.info("Backup restored: userId={}", userId);
     }
 
-    private <T> void persistAll(List<T> items, UUID userId, java.util.function.BiConsumer<T, UUID> ownerSetter) {
+    private <T> void persistAll(
+            List<T> items, UUID userId, java.util.function.BiConsumer<T, UUID> ownerSetter) {
         if (items == null) return;
         for (T item : items) {
             if (ownerSetter != null && userId != null) {
@@ -213,23 +233,31 @@ public class BackupService {
     }
 
     /**
-     * Deletes every user-scoped row in FK-safe order. Uses JPQL bulk deletes so
-     * we never pull large result sets into memory during restore.
+     * Deletes every user-scoped row in FK-safe order. Uses JPQL bulk deletes so we never pull large
+     * result sets into memory during restore.
      */
     private void wipe(UUID userId) {
-        exec("DELETE FROM TransactionTag tt WHERE tt.transactionId IN " +
-                "(SELECT t.id FROM BudgetTransaction t WHERE t.userId = :u)", userId);
+        exec(
+                "DELETE FROM TransactionTag tt WHERE tt.transactionId IN "
+                        + "(SELECT t.id FROM BudgetTransaction t WHERE t.userId = :u)",
+                userId);
 
-        exec("DELETE FROM BillPayment bp WHERE bp.billId IN " +
-                "(SELECT b.id FROM Bill b WHERE b.userId = :u)", userId);
+        exec(
+                "DELETE FROM BillPayment bp WHERE bp.billId IN "
+                        + "(SELECT b.id FROM Bill b WHERE b.userId = :u)",
+                userId);
         exec("DELETE FROM Bill b WHERE b.userId = :u", userId);
 
-        exec("DELETE FROM SavingsGoalContribution c WHERE c.goalId IN " +
-                "(SELECT g.id FROM SavingsGoal g WHERE g.userId = :u)", userId);
+        exec(
+                "DELETE FROM SavingsGoalContribution c WHERE c.goalId IN "
+                        + "(SELECT g.id FROM SavingsGoal g WHERE g.userId = :u)",
+                userId);
         exec("DELETE FROM SavingsGoal g WHERE g.userId = :u", userId);
 
-        exec("DELETE FROM DebtPayment dp WHERE dp.debtId IN " +
-                "(SELECT d.id FROM Debt d WHERE d.userId = :u)", userId);
+        exec(
+                "DELETE FROM DebtPayment dp WHERE dp.debtId IN "
+                        + "(SELECT d.id FROM Debt d WHERE d.userId = :u)",
+                userId);
         exec("DELETE FROM Debt d WHERE d.userId = :u", userId);
 
         exec("DELETE FROM NetWorthEvent e WHERE e.userId = :u", userId);
@@ -244,14 +272,22 @@ public class BackupService {
         exec("DELETE FROM ExpenseCategory c WHERE c.userId = :u", userId);
         exec("DELETE FROM IncomeCategory c WHERE c.userId = :u", userId);
 
-        exec("DELETE FROM PortfolioAllocationTarget a WHERE a.portfolioId IN " +
-                "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)", userId);
-        exec("DELETE FROM PortfolioSnapshot s WHERE s.portfolioId IN " +
-                "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)", userId);
-        exec("DELETE FROM InvestmentTransaction it WHERE it.portfolioId IN " +
-                "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)", userId);
-        exec("DELETE FROM PortfolioHolding h WHERE h.portfolioId IN " +
-                "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)", userId);
+        exec(
+                "DELETE FROM PortfolioAllocationTarget a WHERE a.portfolioId IN "
+                        + "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)",
+                userId);
+        exec(
+                "DELETE FROM PortfolioSnapshot s WHERE s.portfolioId IN "
+                        + "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)",
+                userId);
+        exec(
+                "DELETE FROM InvestmentTransaction it WHERE it.portfolioId IN "
+                        + "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)",
+                userId);
+        exec(
+                "DELETE FROM PortfolioHolding h WHERE h.portfolioId IN "
+                        + "(SELECT p.id FROM Portfolio p WHERE p.userId = :u)",
+                userId);
         exec("DELETE FROM Portfolio p WHERE p.userId = :u", userId);
 
         entityManager.flush();

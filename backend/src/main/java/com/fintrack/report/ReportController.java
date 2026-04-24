@@ -1,6 +1,8 @@
 package com.fintrack.report;
 
 import com.fintrack.auth.FinTrackUserDetails;
+import java.time.LocalDate;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -8,9 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/reports")
@@ -21,11 +20,12 @@ public class ReportController {
 
     @GetMapping("/portfolio/{id}")
     public ResponseEntity<byte[]> portfolioReport(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         byte[] pdf = reportService.generatePortfolioPdf(user.getId(), id);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=portfolio-report.pdf")
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=portfolio-report.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }
@@ -37,7 +37,9 @@ public class ReportController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         byte[] csv = reportService.generateBudgetCsv(user.getId(), from, to);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=budget-transactions.csv")
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=budget-transactions.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csv);
     }
@@ -49,9 +51,12 @@ public class ReportController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         byte[] xlsx = reportService.generateBudgetXlsx(user.getId(), from, to);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=budget-transactions.xlsx")
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=budget-transactions.xlsx")
+                .contentType(
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(xlsx);
     }
 }

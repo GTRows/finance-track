@@ -5,18 +5,15 @@ import com.fintrack.portfolio.dto.CreatePortfolioRequest;
 import com.fintrack.portfolio.dto.PortfolioResponse;
 import com.fintrack.portfolio.dto.UpdatePortfolioRequest;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
-
-/**
- * REST endpoints for managing user portfolios.
- */
+/** REST endpoints for managing user portfolios. */
 @RestController
 @RequestMapping("/api/v1/portfolios")
 @RequiredArgsConstructor
@@ -26,15 +23,15 @@ public class PortfolioController {
 
     /** Lists all portfolios owned by the authenticated user. */
     @GetMapping
-    public ResponseEntity<List<PortfolioResponse>> list(@AuthenticationPrincipal FinTrackUserDetails user) {
+    public ResponseEntity<List<PortfolioResponse>> list(
+            @AuthenticationPrincipal FinTrackUserDetails user) {
         return ResponseEntity.ok(portfolioService.listForUser(user.getId()));
     }
 
     /** Returns a single portfolio by id. */
     @GetMapping("/{id}")
     public ResponseEntity<PortfolioResponse> get(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         return ResponseEntity.ok(portfolioService.getForUser(user.getId(), id));
     }
 
@@ -59,8 +56,7 @@ public class PortfolioController {
     /** Soft-deletes a portfolio. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         portfolioService.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }

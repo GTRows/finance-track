@@ -1,7 +1,6 @@
 package com.fintrack.networth.dto;
 
 import com.fintrack.common.entity.NetWorthEvent;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -12,8 +11,7 @@ public record NetWorthEventResponse(
         String eventType,
         String label,
         String note,
-        BigDecimal impactTry
-) {
+        BigDecimal impactTry) {
     public static NetWorthEventResponse from(NetWorthEvent e) {
         return new NetWorthEventResponse(
                 e.getId(),
@@ -21,7 +19,6 @@ public record NetWorthEventResponse(
                 e.getEventType().name(),
                 e.getLabel(),
                 e.getNote(),
-                e.getImpactTry()
-        );
+                e.getImpactTry());
     }
 }

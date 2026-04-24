@@ -1,16 +1,13 @@
 package com.fintrack.portfolio;
 
 import com.fintrack.common.entity.Portfolio;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-/**
- * JPA repository for {@link Portfolio} entities.
- */
+/** JPA repository for {@link Portfolio} entities. */
 @Repository
 public interface PortfolioRepository extends JpaRepository<Portfolio, UUID> {
 

@@ -19,7 +19,6 @@ public record FireResponse(
         LocalDate projectedFiDate,
         Integer samplesUsed,
         boolean sufficientData,
-        List<TrajectoryPoint> trajectory
-) {
+        List<TrajectoryPoint> trajectory) {
     public record TrajectoryPoint(int year, LocalDate date, BigDecimal netWorth) {}
 }

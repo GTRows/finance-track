@@ -1,15 +1,12 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.Instant;
-import java.util.UUID;
-
-/**
- * In-app notification emitted when a price alert triggers.
- */
+/** In-app notification emitted when a price alert triggers. */
 @Entity
 @Table(name = "alert_notifications")
 @Getter
@@ -51,6 +48,7 @@ public class AlertNotification {
     private Instant createdAt;
 
     public enum SourceType {
-        PRICE_ALERT, BUDGET_RULE
+        PRICE_ALERT,
+        BUDGET_RULE
     }
 }

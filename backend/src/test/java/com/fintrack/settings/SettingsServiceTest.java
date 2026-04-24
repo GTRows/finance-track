@@ -1,24 +1,23 @@
 package com.fintrack.settings;
 
-import com.fintrack.common.entity.UserSettings;
-import com.fintrack.common.exception.ResourceNotFoundException;
-import com.fintrack.settings.dto.SettingsResponse;
-import com.fintrack.settings.dto.UpdateSettingsRequest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.common.entity.UserSettings;
+import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.settings.dto.SettingsResponse;
+import com.fintrack.settings.dto.UpdateSettingsRequest;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SettingsServiceTest {
@@ -44,8 +43,7 @@ class SettingsServiceTest {
     void getThrowsWhenSettingsMissing() {
         when(repository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.get(userId))
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.get(userId)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -65,8 +63,10 @@ class SettingsServiceTest {
     void updateThrowsWhenSettingsMissing() {
         when(repository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(userId,
-                new UpdateSettingsRequest("USD", null, null, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        userId, new UpdateSettingsRequest("USD", null, null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(repository, never()).save(any());
     }
@@ -91,8 +91,9 @@ class SettingsServiceTest {
         when(repository.findById(userId)).thenReturn(Optional.of(existing));
         when(repository.save(existing)).thenReturn(existing);
 
-        SettingsResponse res = service.update(userId,
-                new UpdateSettingsRequest("EUR", "en", "system", "Europe/Berlin"));
+        SettingsResponse res =
+                service.update(
+                        userId, new UpdateSettingsRequest("EUR", "en", "system", "Europe/Berlin"));
 
         assertThat(existing.getCurrency()).isEqualTo("EUR");
         assertThat(existing.getLanguage()).isEqualTo("en");

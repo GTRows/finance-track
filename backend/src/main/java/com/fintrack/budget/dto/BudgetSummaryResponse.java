@@ -11,8 +11,7 @@ public record BudgetSummaryResponse(
         BigDecimal net,
         BigDecimal savingsRate,
         List<CategoryAmount> incomeByCategory,
-        List<CategoryAmount> expenseByCategory
-) {
+        List<CategoryAmount> expenseByCategory) {
 
     public record CategoryAmount(
             UUID categoryId,
@@ -22,7 +21,5 @@ public record BudgetSummaryResponse(
             BigDecimal percent,
             BigDecimal baseBudget,
             BigDecimal rolloverAmount,
-            BigDecimal effectiveBudget
-    ) {
-    }
+            BigDecimal effectiveBudget) {}
 }

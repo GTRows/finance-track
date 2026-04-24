@@ -1,26 +1,25 @@
 package com.fintrack.auth;
 
-import com.fintrack.common.entity.RefreshToken;
-import com.fintrack.common.exception.BusinessRuleException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.common.entity.RefreshToken;
+import com.fintrack.common.exception.BusinessRuleException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenServiceTest {
@@ -69,9 +68,13 @@ class RefreshTokenServiceTest {
 
     @Test
     void validateReturnsEntityWhenPresentAndNotExpired() {
-        RefreshToken entity = RefreshToken.builder()
-                .id(UUID.randomUUID()).userId(userId).token("t")
-                .expiresAt(Instant.now().plusSeconds(60)).build();
+        RefreshToken entity =
+                RefreshToken.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .build();
         when(refreshTokenRepository.findByToken("t")).thenReturn(Optional.of(entity));
 
         assertThat(service.validate("t")).isSameAs(entity);
@@ -88,9 +91,13 @@ class RefreshTokenServiceTest {
 
     @Test
     void validateThrowsWhenExpired() {
-        RefreshToken entity = RefreshToken.builder()
-                .id(UUID.randomUUID()).userId(userId).token("t")
-                .expiresAt(Instant.now().minus(1, ChronoUnit.HOURS)).build();
+        RefreshToken entity =
+                RefreshToken.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .token("t")
+                        .expiresAt(Instant.now().minus(1, ChronoUnit.HOURS))
+                        .build();
         when(refreshTokenRepository.findByToken("t")).thenReturn(Optional.of(entity));
 
         assertThatThrownBy(() -> service.validate("t"))
@@ -100,10 +107,15 @@ class RefreshTokenServiceTest {
 
     @Test
     void rotateDeletesOldAndCreatesNewCarryingMetadata() {
-        RefreshToken old = RefreshToken.builder()
-                .id(UUID.randomUUID()).userId(userId).token("old")
-                .userAgent("ua").ipAddress("ip")
-                .expiresAt(Instant.now().plusSeconds(60)).build();
+        RefreshToken old =
+                RefreshToken.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .token("old")
+                        .userAgent("ua")
+                        .ipAddress("ip")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .build();
         when(refreshTokenRepository.findByToken("old")).thenReturn(Optional.of(old));
         when(jwtUtil.generateRefreshToken(userId.toString())).thenReturn("new-token");
         when(jwtUtil.getRefreshExpiryMs()).thenReturn(1_000L);
@@ -120,10 +132,15 @@ class RefreshTokenServiceTest {
 
     @Test
     void rotatePrefersNewlyProvidedMetadataOverStoredValues() {
-        RefreshToken old = RefreshToken.builder()
-                .id(UUID.randomUUID()).userId(userId).token("old")
-                .userAgent("old-ua").ipAddress("old-ip")
-                .expiresAt(Instant.now().plusSeconds(60)).build();
+        RefreshToken old =
+                RefreshToken.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .token("old")
+                        .userAgent("old-ua")
+                        .ipAddress("old-ip")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .build();
         when(refreshTokenRepository.findByToken("old")).thenReturn(Optional.of(old));
         when(jwtUtil.generateRefreshToken(userId.toString())).thenReturn("new-token");
         when(jwtUtil.getRefreshExpiryMs()).thenReturn(1_000L);
@@ -149,9 +166,13 @@ class RefreshTokenServiceTest {
     @Test
     void revokeSessionDeletesWhenOwned() {
         UUID sessionId = UUID.randomUUID();
-        RefreshToken rt = RefreshToken.builder()
-                .id(sessionId).userId(userId).token("t")
-                .expiresAt(Instant.now().plusSeconds(10)).build();
+        RefreshToken rt =
+                RefreshToken.builder()
+                        .id(sessionId)
+                        .userId(userId)
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(10))
+                        .build();
         when(refreshTokenRepository.findByIdAndUserId(sessionId, userId))
                 .thenReturn(Optional.of(rt));
 
@@ -161,7 +182,8 @@ class RefreshTokenServiceTest {
 
     @Test
     void listActiveDelegatesToRepoWithCurrentInstant() {
-        when(refreshTokenRepository.findByUserIdAndExpiresAtAfterOrderByLastUsedAtDesc(any(), any()))
+        when(refreshTokenRepository.findByUserIdAndExpiresAtAfterOrderByLastUsedAtDesc(
+                        any(), any()))
                 .thenReturn(List.of());
 
         assertThat(service.listActive(userId)).isEmpty();
@@ -184,9 +206,13 @@ class RefreshTokenServiceTest {
 
     @Test
     void peekUserIdReturnsUserIdWhenTokenPresent() {
-        RefreshToken rt = RefreshToken.builder()
-                .id(UUID.randomUUID()).userId(userId).token("x")
-                .expiresAt(Instant.now().plusSeconds(60)).build();
+        RefreshToken rt =
+                RefreshToken.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .token("x")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .build();
         when(refreshTokenRepository.findByToken("x")).thenReturn(Optional.of(rt));
 
         assertThat(service.peekUserId("x")).contains(userId);

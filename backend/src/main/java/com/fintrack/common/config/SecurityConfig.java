@@ -3,9 +3,11 @@ package com.fintrack.common.config;
 import com.fintrack.auth.AutheliaForwardAuthFilter;
 import com.fintrack.auth.FinTrackUserDetailsService;
 import com.fintrack.auth.JwtAuthFilter;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -13,7 +15,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,11 +27,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
-
-/**
- * Spring Security configuration. Stateless JWT-based authentication.
- */
+/** Spring Security configuration. Stateless JWT-based authentication. */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -42,27 +39,27 @@ public class SecurityConfig {
     private final FinTrackUserDetailsService userDetailsService;
 
     private static final String[] PUBLIC_PATHS = {
-            "/api/v1/auth/register",
-            "/api/v1/auth/login",
-            "/api/v1/auth/refresh",
-            "/api/v1/auth/2fa/verify",
-            "/api/v1/auth/email-verify/confirm",
-            "/api/v1/auth/password-reset/request",
-            "/api/v1/auth/password-reset/confirm",
-            "/api/v1/health",
-            "/api/v1/health/**",
-            "/api/actuator/health",
-            "/api/actuator/prometheus",
-            "/ws/**",
-            "/v3/api-docs",
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/swagger-ui/**"
+        "/api/v1/auth/register",
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh",
+        "/api/v1/auth/2fa/verify",
+        "/api/v1/auth/email-verify/confirm",
+        "/api/v1/auth/password-reset/request",
+        "/api/v1/auth/password-reset/confirm",
+        "/api/v1/health",
+        "/api/v1/health/**",
+        "/api/actuator/health",
+        "/api/actuator/prometheus",
+        "/ws/**",
+        "/v3/api-docs",
+        "/v3/api-docs/**",
+        "/swagger-ui.html",
+        "/swagger-ui/**"
     };
 
     /**
-     * CSP for the API. The frontend ships as a separate origin, so this only
-     * needs to cover Swagger UI when served directly from the backend.
+     * CSP for the API. The frontend ships as a separate origin, so this only needs to cover Swagger
+     * UI when served directly from the backend.
      */
     private static final String CONTENT_SECURITY_POLICY =
             "default-src 'self'; "
@@ -81,26 +78,40 @@ public class SecurityConfig {
     /** Configures the security filter chain with JWT authentication. */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
+        return http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny())
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY))
-                        .referrerPolicy(ref -> ref.policy(
-                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .includeSubDomains(true)
-                                .maxAgeInSeconds(63072000))
-                        .permissionsPolicy(pp -> pp.policy(PERMISSIONS_POLICY)))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_PATHS).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(
+                        headers ->
+                                headers.frameOptions(frame -> frame.deny())
+                                        .contentSecurityPolicy(
+                                                csp ->
+                                                        csp.policyDirectives(
+                                                                CONTENT_SECURITY_POLICY))
+                                        .referrerPolicy(
+                                                ref ->
+                                                        ref.policy(
+                                                                ReferrerPolicyHeaderWriter
+                                                                        .ReferrerPolicy
+                                                                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                                        .httpStrictTransportSecurity(
+                                                hsts ->
+                                                        hsts.includeSubDomains(true)
+                                                                .maxAgeInSeconds(63072000))
+                                        .permissionsPolicy(pp -> pp.policy(PERMISSIONS_POLICY)))
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.requestMatchers(PUBLIC_PATHS)
+                                        .permitAll()
+                                        .requestMatchers("/api/v1/admin/**")
+                                        .hasRole("ADMIN")
+                                        .anyRequest()
+                                        .authenticated())
+                .exceptionHandling(
+                        ex ->
+                                ex.authenticationEntryPoint(
+                                        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(autheliaForwardAuthFilter, JwtAuthFilter.class)
@@ -133,7 +144,8 @@ public class SecurityConfig {
 
     /** Authentication manager bean for programmatic authentication in AuthService. */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+            throws Exception {
         return config.getAuthenticationManager();
     }
 

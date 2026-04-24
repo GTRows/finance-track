@@ -1,5 +1,11 @@
 package com.fintrack.price;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Asset.AssetType;
@@ -10,25 +16,18 @@ import com.fintrack.price.client.PreciousMetalsClient;
 import com.fintrack.price.client.TefasClient;
 import com.fintrack.price.client.YahooFinanceClient;
 import com.fintrack.price.client.YahooFinanceClient.Quote;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PriceSyncServiceTest {
@@ -45,9 +44,13 @@ class PriceSyncServiceTest {
 
     private Asset asset(AssetType type, String symbol, Map<String, Object> metadata) {
         return Asset.builder()
-                .id(UUID.randomUUID()).symbol(symbol).name(symbol)
-                .assetType(type).currency("TRY")
-                .metadata(metadata).build();
+                .id(UUID.randomUUID())
+                .symbol(symbol)
+                .name(symbol)
+                .assetType(type)
+                .currency("TRY")
+                .metadata(metadata)
+                .build();
     }
 
     private Map<String, Object> meta(String... kv) {
@@ -71,8 +74,12 @@ class PriceSyncServiceTest {
         Asset btc = asset(AssetType.CRYPTO, "BTC", meta("coingeckoId", "bitcoin"));
         when(assetRepository.findByAssetTypeOrderBySymbolAsc(AssetType.CRYPTO))
                 .thenReturn(List.of(btc));
-        when(coinGeckoClient.fetchPrices(any())).thenReturn(Map.of(
-                "bitcoin", new CoinGeckoClient.PricePair(new BigDecimal("3000000"), new BigDecimal("95000"))));
+        when(coinGeckoClient.fetchPrices(any()))
+                .thenReturn(
+                        Map.of(
+                                "bitcoin",
+                                new CoinGeckoClient.PricePair(
+                                        new BigDecimal("3000000"), new BigDecimal("95000"))));
 
         int count = service.refreshCrypto();
 
@@ -88,7 +95,8 @@ class PriceSyncServiceTest {
         Asset usd = asset(AssetType.CURRENCY, "USD", meta("exchangeCode", "USD"));
         when(assetRepository.findByAssetTypeOrderBySymbolAsc(AssetType.CURRENCY))
                 .thenReturn(List.of(usd));
-        when(exchangeRateClient.fetchTryRates(any())).thenReturn(Map.of("USD", new BigDecimal("34.5")));
+        when(exchangeRateClient.fetchTryRates(any()))
+                .thenReturn(Map.of("USD", new BigDecimal("34.5")));
 
         int count = service.refreshCurrencies();
 
@@ -125,8 +133,8 @@ class PriceSyncServiceTest {
 
     @Test
     void refreshMetalsHandlesGramUnitConversion() {
-        Asset goldGram = asset(AssetType.GOLD, "XAU-g",
-                meta("metalsSymbol", "XAU", "metalsUnit", "gram"));
+        Asset goldGram =
+                asset(AssetType.GOLD, "XAU-g", meta("metalsSymbol", "XAU", "metalsUnit", "gram"));
         when(assetRepository.findByAssetTypeOrderBySymbolAsc(AssetType.GOLD))
                 .thenReturn(List.of(goldGram));
         when(preciousMetalsClient.fetchUsdPerOunce(any()))
@@ -137,8 +145,10 @@ class PriceSyncServiceTest {
         service.refreshMetals();
 
         // 2000 USD/oz / 31.1034768 g/oz * 30 TRY/USD ~ 1929.09 TRY per gram
-        assertThat(goldGram.getPrice()).isCloseTo(new BigDecimal("1929.09"),
-                org.assertj.core.api.Assertions.within(new BigDecimal("0.5")));
+        assertThat(goldGram.getPrice())
+                .isCloseTo(
+                        new BigDecimal("1929.09"),
+                        org.assertj.core.api.Assertions.within(new BigDecimal("0.5")));
     }
 
     @Test
@@ -161,8 +171,8 @@ class PriceSyncServiceTest {
         Asset thy = asset(AssetType.STOCK, "THYAO", meta("yahooSymbol", "THYAO.IS"));
         when(assetRepository.findByAssetTypeOrderBySymbolAsc(AssetType.STOCK))
                 .thenReturn(List.of(thy));
-        when(yahooFinanceClient.fetchQuotes(any())).thenReturn(Map.of(
-                "THYAO.IS", new Quote(new BigDecimal("300.5"), "TRY")));
+        when(yahooFinanceClient.fetchQuotes(any()))
+                .thenReturn(Map.of("THYAO.IS", new Quote(new BigDecimal("300.5"), "TRY")));
 
         int count = service.refreshStocks();
 
@@ -176,8 +186,8 @@ class PriceSyncServiceTest {
         Asset spy = asset(AssetType.STOCK, "SPY", meta("yahooSymbol", "SPY"));
         when(assetRepository.findByAssetTypeOrderBySymbolAsc(AssetType.STOCK))
                 .thenReturn(List.of(spy));
-        when(yahooFinanceClient.fetchQuotes(any())).thenReturn(Map.of(
-                "SPY", new Quote(new BigDecimal("500"), "USD")));
+        when(yahooFinanceClient.fetchQuotes(any()))
+                .thenReturn(Map.of("SPY", new Quote(new BigDecimal("500"), "USD")));
         when(exchangeRateClient.fetchTryRates(any()))
                 .thenReturn(Map.of("USD", new BigDecimal("30")));
 
@@ -192,8 +202,8 @@ class PriceSyncServiceTest {
         Asset spy = asset(AssetType.STOCK, "SPY", meta("yahooSymbol", "SPY"));
         when(assetRepository.findByAssetTypeOrderBySymbolAsc(AssetType.STOCK))
                 .thenReturn(List.of(spy));
-        when(yahooFinanceClient.fetchQuotes(any())).thenReturn(Map.of(
-                "SPY", new Quote(new BigDecimal("500"), "USD")));
+        when(yahooFinanceClient.fetchQuotes(any()))
+                .thenReturn(Map.of("SPY", new Quote(new BigDecimal("500"), "USD")));
         when(exchangeRateClient.fetchTryRates(any())).thenReturn(Map.of());
 
         int count = service.refreshStocks();
@@ -214,8 +224,12 @@ class PriceSyncServiceTest {
     void refreshAssetCryptoPathUpdatesPrice() {
         Asset btc = asset(AssetType.CRYPTO, "BTC", meta("coingeckoId", "bitcoin"));
         when(assetRepository.findById(btc.getId())).thenReturn(Optional.of(btc));
-        when(coinGeckoClient.fetchPrices(any())).thenReturn(Map.of(
-                "bitcoin", new CoinGeckoClient.PricePair(new BigDecimal("3000000"), new BigDecimal("95000"))));
+        when(coinGeckoClient.fetchPrices(any()))
+                .thenReturn(
+                        Map.of(
+                                "bitcoin",
+                                new CoinGeckoClient.PricePair(
+                                        new BigDecimal("3000000"), new BigDecimal("95000"))));
 
         assertThat(service.refreshAsset(btc.getId())).isTrue();
         assertThat(btc.getPrice()).isEqualByComparingTo("3000000");
@@ -231,10 +245,10 @@ class PriceSyncServiceTest {
 
     @Test
     void refreshAssetFundPathPicksEmkTypeWhenMetadataSaysEmk() {
-        Asset fund = asset(AssetType.FUND, "BES1",
-                meta("tefasCode", "BES1", "tefasType", "EMK"));
+        Asset fund = asset(AssetType.FUND, "BES1", meta("tefasCode", "BES1", "tefasType", "EMK"));
         when(assetRepository.findById(fund.getId())).thenReturn(Optional.of(fund));
-        when(tefasClient.fetchPrice("BES1", TefasClient.FundType.EMK)).thenReturn(new BigDecimal("2.50"));
+        when(tefasClient.fetchPrice("BES1", TefasClient.FundType.EMK))
+                .thenReturn(new BigDecimal("2.50"));
 
         assertThat(service.refreshAsset(fund.getId())).isTrue();
         assertThat(fund.getPrice()).isEqualByComparingTo("2.50");
@@ -288,7 +302,8 @@ class PriceSyncServiceTest {
     void refreshCurrencyPathWritesHistory() {
         Asset usd = asset(AssetType.CURRENCY, "USD", meta("exchangeCode", "USD"));
         when(assetRepository.findById(usd.getId())).thenReturn(Optional.of(usd));
-        when(exchangeRateClient.fetchTryRates(any())).thenReturn(Map.of("USD", new BigDecimal("34.5")));
+        when(exchangeRateClient.fetchTryRates(any()))
+                .thenReturn(Map.of("USD", new BigDecimal("34.5")));
 
         assertThat(service.refreshAsset(usd.getId())).isTrue();
         ArgumentCaptor<PriceHistory> captor = ArgumentCaptor.forClass(PriceHistory.class);

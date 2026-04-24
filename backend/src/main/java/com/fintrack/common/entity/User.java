@@ -1,16 +1,13 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
-import java.util.UUID;
-
-/**
- * Primary user identity entity. Single user for now, multi-user ready.
- */
+/** Primary user identity entity. Single user for now, multi-user ready. */
 @Entity
 @Table(name = "users")
 @Getter
@@ -65,6 +62,7 @@ public class User {
     private Instant updatedAt;
 
     public enum Role {
-        USER, ADMIN
+        USER,
+        ADMIN
     }
 }

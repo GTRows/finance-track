@@ -1,27 +1,26 @@
 package com.fintrack.portfolio.risk;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.entity.PortfolioSnapshot;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.risk.dto.RiskMetricsResponse;
 import com.fintrack.portfolio.snapshot.SnapshotRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class RiskServiceTest {
@@ -35,14 +34,16 @@ class RiskServiceTest {
     private final UUID portfolioId = UUID.randomUUID();
 
     private void stubOwnership() {
-        Portfolio p = Portfolio.builder().id(portfolioId).userId(userId).name("P").active(true).build();
+        Portfolio p =
+                Portfolio.builder().id(portfolioId).userId(userId).name("P").active(true).build();
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(p));
     }
 
     private PortfolioSnapshot snap(LocalDate date, String value) {
         return PortfolioSnapshot.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId)
+                .id(UUID.randomUUID())
+                .portfolioId(portfolioId)
                 .snapshotDate(date)
                 .totalValueTry(new BigDecimal(value))
                 .totalCostTry(BigDecimal.ZERO)
@@ -124,7 +125,8 @@ class RiskServiceTest {
         snaps.add(snap(day, "1000"));
         for (int i = 1; i < 24; i++) snaps.add(snap(day.plusDays(i), "1100"));
         snaps.add(snap(day.plusDays(24), "1200"));
-        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId)).thenReturn(snaps);
+        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId))
+                .thenReturn(snaps);
 
         RiskMetricsResponse res = service.compute(userId, portfolioId, null);
 
@@ -145,7 +147,8 @@ class RiskServiceTest {
         values[15] = "1050";
         values[16] = "800";
         for (int i = 0; i < values.length; i++) snaps.add(snap(d.plusDays(i), values[i]));
-        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId)).thenReturn(snaps);
+        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId))
+                .thenReturn(snaps);
 
         RiskMetricsResponse res = service.compute(userId, portfolioId, null);
 
@@ -162,10 +165,13 @@ class RiskServiceTest {
         BigDecimal[] values = new BigDecimal[40];
         for (int i = 0; i < 20; i++) values[i] = BigDecimal.valueOf(1000 + i * 10);
         BigDecimal peakVal = values[19];
-        for (int i = 20; i < 40; i++) values[i] = peakVal.subtract(BigDecimal.valueOf((i - 19) * 20));
-        for (int i = 0; i < values.length; i++) snaps.add(snap(d.plusDays(i), values[i].toPlainString()));
+        for (int i = 20; i < 40; i++)
+            values[i] = peakVal.subtract(BigDecimal.valueOf((i - 19) * 20));
+        for (int i = 0; i < values.length; i++)
+            snaps.add(snap(d.plusDays(i), values[i].toPlainString()));
 
-        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId)).thenReturn(snaps);
+        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId))
+                .thenReturn(snaps);
 
         RiskMetricsResponse res = service.compute(userId, portfolioId, null);
 
@@ -178,12 +184,17 @@ class RiskServiceTest {
         List<PortfolioSnapshot> snaps = new ArrayList<>();
         LocalDate d = LocalDate.of(2026, 1, 1);
         for (int i = 0; i < 22; i++) snaps.add(snap(d.plusDays(i), "1000"));
-        snaps.set(3, PortfolioSnapshot.builder()
-                .id(UUID.randomUUID()).portfolioId(portfolioId)
-                .snapshotDate(d.plusDays(3))
-                .totalValueTry(BigDecimal.ZERO)
-                .totalCostTry(BigDecimal.ZERO).build());
-        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId)).thenReturn(snaps);
+        snaps.set(
+                3,
+                PortfolioSnapshot.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .snapshotDate(d.plusDays(3))
+                        .totalValueTry(BigDecimal.ZERO)
+                        .totalCostTry(BigDecimal.ZERO)
+                        .build());
+        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId))
+                .thenReturn(snaps);
 
         RiskMetricsResponse res = service.compute(userId, portfolioId, null);
 
@@ -210,7 +221,8 @@ class RiskServiceTest {
             int v = i % 2 == 0 ? 1000 : 1050;
             snaps.add(snap(d.plusDays(i), Integer.toString(v)));
         }
-        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId)).thenReturn(snaps);
+        when(snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId))
+                .thenReturn(snaps);
 
         RiskMetricsResponse res = service.compute(userId, portfolioId, new BigDecimal("0.00"));
 

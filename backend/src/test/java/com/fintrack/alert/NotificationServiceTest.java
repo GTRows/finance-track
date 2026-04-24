@@ -1,23 +1,22 @@
 package com.fintrack.alert;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.alert.dto.NotificationResponse;
 import com.fintrack.common.entity.AlertNotification;
 import com.fintrack.common.entity.AlertNotification.SourceType;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
@@ -30,9 +29,11 @@ class NotificationServiceTest {
 
     private AlertNotification notification(String message, Instant readAt) {
         return AlertNotification.builder()
-                .id(UUID.randomUUID()).userId(userId)
+                .id(UUID.randomUUID())
+                .userId(userId)
                 .sourceType(SourceType.PRICE_ALERT)
-                .message(message).readAt(readAt)
+                .message(message)
+                .readAt(readAt)
                 .build();
     }
 
@@ -114,8 +115,7 @@ class NotificationServiceTest {
     void markAllAsReadIsNoOpWhenNoUnread() {
         Instant existing = Instant.parse("2026-01-01T00:00:00Z");
         AlertNotification read = notification("read", existing);
-        when(notificationRepo.findByUserIdOrderByCreatedAtDesc(userId))
-                .thenReturn(List.of(read));
+        when(notificationRepo.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(read));
 
         service.markAllAsRead(userId);
 

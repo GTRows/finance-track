@@ -1,18 +1,16 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
-/**
- * Payment record for each bill per month.
- */
+/** Payment record for each bill per month. */
 @Entity
-@Table(name = "bill_payments",
+@Table(
+        name = "bill_payments",
         uniqueConstraints = @UniqueConstraint(columnNames = {"bill_id", "period"}))
 @Getter
 @Setter
@@ -50,6 +48,8 @@ public class BillPayment {
     private Instant createdAt;
 
     public enum PaymentStatus {
-        PENDING, PAID, SKIPPED
+        PENDING,
+        PAID,
+        SKIPPED
     }
 }

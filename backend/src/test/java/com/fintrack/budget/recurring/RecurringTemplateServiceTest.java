@@ -1,5 +1,12 @@
 package com.fintrack.budget.recurring;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.budget.ExpenseCategoryRepository;
 import com.fintrack.budget.IncomeCategoryRepository;
 import com.fintrack.budget.TransactionRepository;
@@ -11,26 +18,18 @@ import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
 import com.fintrack.common.entity.RecurringTemplate;
 import com.fintrack.common.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class RecurringTemplateServiceTest {
@@ -44,12 +43,18 @@ class RecurringTemplateServiceTest {
 
     private final UUID userId = UUID.randomUUID();
 
-    private RecurringTemplate template(TxnType type, String amount, int dom, boolean active, UUID categoryId) {
+    private RecurringTemplate template(
+            TxnType type, String amount, int dom, boolean active, UUID categoryId) {
         return RecurringTemplate.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .txnType(type).amount(new BigDecimal(amount))
-                .categoryId(categoryId).description("x")
-                .dayOfMonth(dom).active(active).build();
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .txnType(type)
+                .amount(new BigDecimal(amount))
+                .categoryId(categoryId)
+                .description("x")
+                .dayOfMonth(dom)
+                .active(active)
+                .build();
     }
 
     @Test
@@ -65,35 +70,53 @@ class RecurringTemplateServiceTest {
     @Test
     void nextDueOnReturnsThisMonthWhenDayIsTodayAndNotYetMaterialized() {
         LocalDate today = LocalDate.of(2026, 4, 15);
-        RecurringTemplate t = RecurringTemplate.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .txnType(TxnType.INCOME).amount(BigDecimal.ONE)
-                .dayOfMonth(15).active(true).build();
+        RecurringTemplate t =
+                RecurringTemplate.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .txnType(TxnType.INCOME)
+                        .amount(BigDecimal.ONE)
+                        .dayOfMonth(15)
+                        .active(true)
+                        .build();
 
-        assertThat(RecurringTemplateService.nextDueOn(t, today)).isEqualTo(LocalDate.of(2026, 4, 15));
+        assertThat(RecurringTemplateService.nextDueOn(t, today))
+                .isEqualTo(LocalDate.of(2026, 4, 15));
     }
 
     @Test
     void nextDueOnRollsToNextMonthWhenDayInPast() {
         LocalDate today = LocalDate.of(2026, 4, 20);
-        RecurringTemplate t = RecurringTemplate.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .txnType(TxnType.INCOME).amount(BigDecimal.ONE)
-                .dayOfMonth(10).active(true).build();
+        RecurringTemplate t =
+                RecurringTemplate.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .txnType(TxnType.INCOME)
+                        .amount(BigDecimal.ONE)
+                        .dayOfMonth(10)
+                        .active(true)
+                        .build();
 
-        assertThat(RecurringTemplateService.nextDueOn(t, today)).isEqualTo(LocalDate.of(2026, 5, 10));
+        assertThat(RecurringTemplateService.nextDueOn(t, today))
+                .isEqualTo(LocalDate.of(2026, 5, 10));
     }
 
     @Test
     void nextDueOnRollsToNextMonthWhenAlreadyMaterializedThisMonth() {
         LocalDate today = LocalDate.of(2026, 4, 10);
-        RecurringTemplate t = RecurringTemplate.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .txnType(TxnType.INCOME).amount(BigDecimal.ONE)
-                .dayOfMonth(15).active(true)
-                .lastMaterializedOn(LocalDate.of(2026, 4, 15)).build();
+        RecurringTemplate t =
+                RecurringTemplate.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .txnType(TxnType.INCOME)
+                        .amount(BigDecimal.ONE)
+                        .dayOfMonth(15)
+                        .active(true)
+                        .lastMaterializedOn(LocalDate.of(2026, 4, 15))
+                        .build();
 
-        assertThat(RecurringTemplateService.nextDueOn(t, today)).isEqualTo(LocalDate.of(2026, 5, 15));
+        assertThat(RecurringTemplateService.nextDueOn(t, today))
+                .isEqualTo(LocalDate.of(2026, 5, 15));
     }
 
     @Test
@@ -106,8 +129,12 @@ class RecurringTemplateServiceTest {
 
     @Test
     void listAttachesCategoryNameAndNextDueOn() {
-        IncomeCategory salary = IncomeCategory.builder()
-                .id(UUID.randomUUID()).userId(userId).name("Salary").build();
+        IncomeCategory salary =
+                IncomeCategory.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .name("Salary")
+                        .build();
         RecurringTemplate t = template(TxnType.INCOME, "50000", 1, true, salary.getId());
         when(templateRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of(t));
         when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(salary));
@@ -134,14 +161,18 @@ class RecurringTemplateServiceTest {
 
     @Test
     void createPersistsWithDefaultActiveTrueWhenNull() {
-        when(templateRepo.save(any(RecurringTemplate.class))).thenAnswer(inv -> {
-            RecurringTemplate t = inv.getArgument(0);
-            t.setId(UUID.randomUUID());
-            return t;
-        });
+        when(templateRepo.save(any(RecurringTemplate.class)))
+                .thenAnswer(
+                        inv -> {
+                            RecurringTemplate t = inv.getArgument(0);
+                            t.setId(UUID.randomUUID());
+                            return t;
+                        });
 
-        service.create(userId, new UpsertRecurringRequest(
-                TxnType.INCOME, new BigDecimal("1000"), null, "Salary", 1, null));
+        service.create(
+                userId,
+                new UpsertRecurringRequest(
+                        TxnType.INCOME, new BigDecimal("1000"), null, "Salary", 1, null));
 
         ArgumentCaptor<RecurringTemplate> captor = ArgumentCaptor.forClass(RecurringTemplate.class);
         verify(templateRepo).save(captor.capture());
@@ -153,8 +184,10 @@ class RecurringTemplateServiceTest {
     void createRespectsActiveFlagWhenProvided() {
         when(templateRepo.save(any(RecurringTemplate.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.create(userId, new UpsertRecurringRequest(
-                TxnType.EXPENSE, new BigDecimal("200"), null, "Rent", 5, Boolean.FALSE));
+        service.create(
+                userId,
+                new UpsertRecurringRequest(
+                        TxnType.EXPENSE, new BigDecimal("200"), null, "Rent", 5, Boolean.FALSE));
 
         ArgumentCaptor<RecurringTemplate> captor = ArgumentCaptor.forClass(RecurringTemplate.class);
         verify(templateRepo).save(captor.capture());
@@ -166,18 +199,32 @@ class RecurringTemplateServiceTest {
         UUID id = UUID.randomUUID();
         when(templateRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(userId, id, new UpsertRecurringRequest(
-                TxnType.INCOME, BigDecimal.ONE, null, "x", 1, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        userId,
+                                        id,
+                                        new UpsertRecurringRequest(
+                                                TxnType.INCOME,
+                                                BigDecimal.ONE,
+                                                null,
+                                                "x",
+                                                1,
+                                                null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void updateMutatesAllFieldsButKeepsActiveWhenRequestActiveNull() {
         RecurringTemplate existing = template(TxnType.INCOME, "100", 1, true, null);
-        when(templateRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(templateRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
-        service.update(userId, existing.getId(), new UpsertRecurringRequest(
-                TxnType.EXPENSE, new BigDecimal("250"), null, "new", 10, null));
+        service.update(
+                userId,
+                existing.getId(),
+                new UpsertRecurringRequest(
+                        TxnType.EXPENSE, new BigDecimal("250"), null, "new", 10, null));
 
         assertThat(existing.getTxnType()).isEqualTo(TxnType.EXPENSE);
         assertThat(existing.getAmount()).isEqualByComparingTo("250");
@@ -189,10 +236,14 @@ class RecurringTemplateServiceTest {
     @Test
     void updateAppliesActiveWhenRequestActiveProvided() {
         RecurringTemplate existing = template(TxnType.INCOME, "100", 1, true, null);
-        when(templateRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(templateRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
 
-        service.update(userId, existing.getId(), new UpsertRecurringRequest(
-                TxnType.INCOME, BigDecimal.TEN, null, null, 1, Boolean.FALSE));
+        service.update(
+                userId,
+                existing.getId(),
+                new UpsertRecurringRequest(
+                        TxnType.INCOME, BigDecimal.TEN, null, null, 1, Boolean.FALSE));
 
         assertThat(existing.isActive()).isFalse();
     }
@@ -246,8 +297,8 @@ class RecurringTemplateServiceTest {
 
     @Test
     void runNowMaterializesTodayAndReturnsResponse() {
-        ExpenseCategory cat = ExpenseCategory.builder()
-                .id(UUID.randomUUID()).userId(userId).name("Rent").build();
+        ExpenseCategory cat =
+                ExpenseCategory.builder().id(UUID.randomUUID()).userId(userId).name("Rent").build();
         RecurringTemplate t = template(TxnType.EXPENSE, "1000", 5, true, cat.getId());
         when(templateRepo.findByIdAndUserId(t.getId(), userId)).thenReturn(Optional.of(t));
         when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of());

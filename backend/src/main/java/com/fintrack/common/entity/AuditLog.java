@@ -1,11 +1,10 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "audit_log")
@@ -16,7 +15,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AuditLog {
 
-    public enum Status { SUCCESS, FAILURE }
+    public enum Status {
+        SUCCESS,
+        FAILURE
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

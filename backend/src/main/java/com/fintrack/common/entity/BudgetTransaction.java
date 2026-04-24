@@ -1,18 +1,15 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * Every income or expense entry recorded by the user.
- */
+/** Every income or expense entry recorded by the user. */
 @Entity
 @Table(name = "transactions")
 @Getter
@@ -77,6 +74,7 @@ public class BudgetTransaction {
     private Instant updatedAt;
 
     public enum TxnType {
-        INCOME, EXPENSE
+        INCOME,
+        EXPENSE
     }
 }

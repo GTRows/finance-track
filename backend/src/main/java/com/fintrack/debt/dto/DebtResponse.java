@@ -24,13 +24,11 @@ public record DebtResponse(
         BigDecimal progressRatio,
         Integer monthsAhead,
         String status,
-        List<AmortizationRow> nextPayments
-) {
+        List<AmortizationRow> nextPayments) {
     public record AmortizationRow(
             LocalDate dueDate,
             BigDecimal payment,
             BigDecimal principal,
             BigDecimal interest,
-            BigDecimal remainingBalance
-    ) {}
+            BigDecimal remainingBalance) {}
 }

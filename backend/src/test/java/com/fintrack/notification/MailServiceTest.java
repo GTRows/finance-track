@@ -1,7 +1,15 @@
 package com.fintrack.notification;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
+import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,15 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
-
-import java.util.Properties;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MailServiceTest {
@@ -91,8 +90,13 @@ class MailServiceTest {
 
     @Test
     void sendHtmlWithAttachmentSkipsSendWhenDisabled() {
-        service.sendHtmlWithAttachment("user@example.com", "Subj", "<p>x</p>",
-                "report.pdf", new byte[]{1, 2, 3}, "application/pdf");
+        service.sendHtmlWithAttachment(
+                "user@example.com",
+                "Subj",
+                "<p>x</p>",
+                "report.pdf",
+                new byte[] {1, 2, 3},
+                "application/pdf");
 
         verify(mailSender, never()).send(any(MimeMessage.class));
     }
@@ -103,8 +107,13 @@ class MailServiceTest {
         MimeMessage msg = realMessage();
         when(mailSender.createMimeMessage()).thenReturn(msg);
 
-        service.sendHtmlWithAttachment("user@example.com", "Report", "<p>body</p>",
-                "report.pdf", new byte[]{1, 2, 3}, "application/pdf");
+        service.sendHtmlWithAttachment(
+                "user@example.com",
+                "Report",
+                "<p>body</p>",
+                "report.pdf",
+                new byte[] {1, 2, 3},
+                "application/pdf");
 
         verify(mailSender).send(msg);
     }
@@ -115,8 +124,13 @@ class MailServiceTest {
         when(mailSender.createMimeMessage()).thenReturn(realMessage());
         doThrow(new MailSendException("smtp down")).when(mailSender).send(any(MimeMessage.class));
 
-        service.sendHtmlWithAttachment("user@example.com", "Report", "<p>body</p>",
-                "report.pdf", new byte[]{1, 2, 3}, "application/pdf");
+        service.sendHtmlWithAttachment(
+                "user@example.com",
+                "Report",
+                "<p>body</p>",
+                "report.pdf",
+                new byte[] {1, 2, 3},
+                "application/pdf");
 
         verify(mailSender).send(any(MimeMessage.class));
     }

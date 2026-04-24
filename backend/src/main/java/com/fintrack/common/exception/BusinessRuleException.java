@@ -1,8 +1,6 @@
 package com.fintrack.common.exception;
 
-/**
- * Thrown when a business rule is violated (e.g., duplicate username). Maps to HTTP 400.
- */
+/** Thrown when a business rule is violated (e.g., duplicate username). Maps to HTTP 400. */
 public class BusinessRuleException extends RuntimeException {
 
     private final String code;

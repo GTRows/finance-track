@@ -1,18 +1,16 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(
         name = "portfolio_allocation_targets",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"portfolio_id", "asset_type"})
-)
+        uniqueConstraints = @UniqueConstraint(columnNames = {"portfolio_id", "asset_type"}))
 @Getter
 @Setter
 @Builder

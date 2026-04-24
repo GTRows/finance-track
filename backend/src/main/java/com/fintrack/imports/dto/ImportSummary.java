@@ -7,6 +7,4 @@ public record ImportSummary(
         int importedRows,
         int skippedRows,
         int warningRows,
-        List<ImportPreviewRow> rows
-) {
-}
+        List<ImportPreviewRow> rows) {}

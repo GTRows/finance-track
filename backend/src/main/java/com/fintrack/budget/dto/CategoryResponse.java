@@ -2,7 +2,6 @@ package com.fintrack.budget.dto;
 
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -12,8 +11,7 @@ public record CategoryResponse(
         String icon,
         String color,
         BigDecimal budgetAmount,
-        boolean rolloverEnabled
-) {
+        boolean rolloverEnabled) {
 
     public static CategoryResponse from(IncomeCategory c) {
         return new CategoryResponse(c.getId(), c.getName(), c.getIcon(), c.getColor(), null, false);
@@ -26,7 +24,6 @@ public record CategoryResponse(
                 c.getIcon(),
                 c.getColor(),
                 c.getBudgetAmount(),
-                c.isRolloverEnabled()
-        );
+                c.isRolloverEnabled());
     }
 }

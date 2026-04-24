@@ -10,8 +10,7 @@ public record CashFlowProjectionResponse(
         int sampleMonths,
         boolean sufficient,
         BigDecimal startingBalance,
-        List<MonthPoint> months
-) {
+        List<MonthPoint> months) {
 
     public record MonthPoint(
             String period,
@@ -21,13 +20,7 @@ public record CashFlowProjectionResponse(
             BigDecimal endingBalance,
             BigDecimal scheduledIncome,
             BigDecimal scheduledExpense,
-            List<ScheduledItem> scheduled
-    ) {}
+            List<ScheduledItem> scheduled) {}
 
-    public record ScheduledItem(
-            String source,
-            String label,
-            String kind,
-            BigDecimal amount
-    ) {}
+    public record ScheduledItem(String source, String label, String kind, BigDecimal amount) {}
 }

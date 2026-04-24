@@ -1,5 +1,13 @@
 package com.fintrack.imports;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Asset.AssetType;
@@ -10,6 +18,14 @@ import com.fintrack.imports.dto.ImportPreviewRow;
 import com.fintrack.imports.dto.ImportSummary;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.transaction.InvestmentTransactionRepository;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -20,23 +36,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ExcelImportServiceTest {
@@ -96,19 +95,31 @@ class ExcelImportServiceTest {
     }
 
     private MockMultipartFile file(byte[] bytes) {
-        return new MockMultipartFile("file", "book.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", bytes);
+        return new MockMultipartFile(
+                "file",
+                "book.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                bytes);
     }
 
     private Asset asset(String symbol) {
         return Asset.builder()
-                .id(UUID.randomUUID()).symbol(symbol).name(symbol)
-                .assetType(AssetType.FUND).currency("TRY").build();
+                .id(UUID.randomUUID())
+                .symbol(symbol)
+                .name(symbol)
+                .assetType(AssetType.FUND)
+                .currency("TRY")
+                .build();
     }
 
     private Portfolio portfolio(String name, PortfolioType type) {
-        return Portfolio.builder().id(UUID.randomUUID()).userId(userId)
-                .name(name).portfolioType(type).active(true).build();
+        return Portfolio.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .portfolioType(type)
+                .active(true)
+                .build();
     }
 
     @Test
@@ -128,11 +139,12 @@ class ExcelImportServiceTest {
     void previewMapsSupportedTypesAndFlagsUnknown() throws IOException {
         Asset tta = asset("TTA");
         when(assetRepo.findAll()).thenReturn(List.of(tta));
-        byte[] bytes = new Builder()
-                .row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", "apr")
-                .row(LocalDate.of(2026, 4, 2), "Kar Alma", "TTA", "500", null)
-                .row(LocalDate.of(2026, 4, 3), "Bilinmeyen", "TTA", "100", null)
-                .bytes();
+        byte[] bytes =
+                new Builder()
+                        .row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", "apr")
+                        .row(LocalDate.of(2026, 4, 2), "Kar Alma", "TTA", "500", null)
+                        .row(LocalDate.of(2026, 4, 3), "Bilinmeyen", "TTA", "100", null)
+                        .bytes();
 
         ImportSummary res = service.preview(file(bytes));
 
@@ -149,12 +161,13 @@ class ExcelImportServiceTest {
     void previewFlagsMissingFields() throws IOException {
         Asset tta = asset("TTA");
         when(assetRepo.findAll()).thenReturn(List.of(tta));
-        byte[] bytes = new Builder()
-                .row(null, "Yatirim", "TTA", "100", null)
-                .row(LocalDate.of(2026, 4, 2), "Yatirim", null, "100", null)
-                .row(LocalDate.of(2026, 4, 3), "Yatirim", "TTA", "0", null)
-                .row(LocalDate.of(2026, 4, 4), "Yatirim", "UNKNOWN", "100", null)
-                .bytes();
+        byte[] bytes =
+                new Builder()
+                        .row(null, "Yatirim", "TTA", "100", null)
+                        .row(LocalDate.of(2026, 4, 2), "Yatirim", null, "100", null)
+                        .row(LocalDate.of(2026, 4, 3), "Yatirim", "TTA", "0", null)
+                        .row(LocalDate.of(2026, 4, 4), "Yatirim", "UNKNOWN", "100", null)
+                        .bytes();
 
         ImportSummary res = service.preview(file(bytes));
 
@@ -169,10 +182,7 @@ class ExcelImportServiceTest {
     @Test
     void previewSkipsFullyBlankRows() throws IOException {
         when(assetRepo.findAll()).thenReturn(List.of());
-        byte[] bytes = new Builder()
-                .emptyRow()
-                .emptyRow()
-                .bytes();
+        byte[] bytes = new Builder().emptyRow().emptyRow().bytes();
 
         ImportSummary res = service.preview(file(bytes));
 
@@ -184,35 +194,43 @@ class ExcelImportServiceTest {
     void previewNormalizesTurkishCharactersInType() throws IOException {
         Asset tta = asset("TTA");
         when(assetRepo.findAll()).thenReturn(List.of(tta));
-        byte[] bytes = new Builder()
-                .row(LocalDate.of(2026, 4, 1), "BES KATKI", "TTA", "500", null)
-                .row(LocalDate.of(2026, 4, 2), "Para Çekme", "TTA", "200", null)
-                .row(LocalDate.of(2026, 4, 3), "Fon Değişikliği", "TTA", "100", null)
-                .bytes();
+        byte[] bytes =
+                new Builder()
+                        .row(LocalDate.of(2026, 4, 1), "BES KATKI", "TTA", "500", null)
+                        .row(LocalDate.of(2026, 4, 2), "Para Çekme", "TTA", "200", null)
+                        .row(LocalDate.of(2026, 4, 3), "Fon Değişikliği", "TTA", "100", null)
+                        .bytes();
 
         ImportSummary res = service.preview(file(bytes));
 
-        assertThat(res.rows().get(0).mappedType()).isEqualTo(InvestmentTransaction.TxnType.BES_CONTRIBUTION);
-        assertThat(res.rows().get(1).mappedType()).isEqualTo(InvestmentTransaction.TxnType.WITHDRAW);
-        assertThat(res.rows().get(2).mappedType()).isEqualTo(InvestmentTransaction.TxnType.REBALANCE);
+        assertThat(res.rows().get(0).mappedType())
+                .isEqualTo(InvestmentTransaction.TxnType.BES_CONTRIBUTION);
+        assertThat(res.rows().get(1).mappedType())
+                .isEqualTo(InvestmentTransaction.TxnType.WITHDRAW);
+        assertThat(res.rows().get(2).mappedType())
+                .isEqualTo(InvestmentTransaction.TxnType.REBALANCE);
     }
 
     @Test
     void commitCreatesMissingPortfoliosAndPersistsTransactions() throws IOException {
         Asset tta = asset("TTA");
         when(assetRepo.findAll()).thenReturn(List.of(tta));
-        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId)).thenReturn(List.of());
-        when(portfolioRepo.save(any(Portfolio.class))).thenAnswer(inv -> {
-            Portfolio p = inv.getArgument(0);
-            p.setId(UUID.randomUUID());
-            return p;
-        });
+        when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of());
+        when(portfolioRepo.save(any(Portfolio.class)))
+                .thenAnswer(
+                        inv -> {
+                            Portfolio p = inv.getArgument(0);
+                            p.setId(UUID.randomUUID());
+                            return p;
+                        });
         when(txnRepo.findByPortfolioIdInAndNotesStartingWith(any(), any())).thenReturn(List.of());
 
-        byte[] bytes = new Builder()
-                .row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", "apr")
-                .row(LocalDate.of(2026, 4, 2), "BES KATKI", "TTA", "500", null)
-                .bytes();
+        byte[] bytes =
+                new Builder()
+                        .row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", "apr")
+                        .row(LocalDate.of(2026, 4, 2), "BES KATKI", "TTA", "500", null)
+                        .bytes();
 
         ImportSummary res = service.commit(userId, file(bytes));
 
@@ -231,9 +249,8 @@ class ExcelImportServiceTest {
                 .thenReturn(List.of(bireysel, bes));
         when(txnRepo.findByPortfolioIdInAndNotesStartingWith(any(), any())).thenReturn(List.of());
 
-        byte[] bytes = new Builder()
-                .row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", null)
-                .bytes();
+        byte[] bytes =
+                new Builder().row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", null).bytes();
 
         service.commit(userId, file(bytes));
 
@@ -248,17 +265,23 @@ class ExcelImportServiceTest {
         when(assetRepo.findAll()).thenReturn(List.of(tta));
         when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(bireysel, bes));
-        InvestmentTransaction existing = InvestmentTransaction.builder()
-                .id(UUID.randomUUID()).portfolioId(bireysel.getId()).assetId(tta.getId())
-                .txnType(InvestmentTransaction.TxnType.BUY)
-                .amountTry(new BigDecimal("1000"))
-                .txnDate(LocalDate.of(2026, 4, 1))
-                .notes("[xlsx-import] apr").build();
-        when(txnRepo.findByPortfolioIdInAndNotesStartingWith(any(), any())).thenReturn(List.of(existing));
+        InvestmentTransaction existing =
+                InvestmentTransaction.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(bireysel.getId())
+                        .assetId(tta.getId())
+                        .txnType(InvestmentTransaction.TxnType.BUY)
+                        .amountTry(new BigDecimal("1000"))
+                        .txnDate(LocalDate.of(2026, 4, 1))
+                        .notes("[xlsx-import] apr")
+                        .build();
+        when(txnRepo.findByPortfolioIdInAndNotesStartingWith(any(), any()))
+                .thenReturn(List.of(existing));
 
-        byte[] bytes = new Builder()
-                .row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", "apr")
-                .bytes();
+        byte[] bytes =
+                new Builder()
+                        .row(LocalDate.of(2026, 4, 1), "Yatirim", "TTA", "1000", "apr")
+                        .bytes();
 
         ImportSummary res = service.commit(userId, file(bytes));
 
@@ -277,9 +300,10 @@ class ExcelImportServiceTest {
                 .thenReturn(List.of(bireysel, bes));
         when(txnRepo.findByPortfolioIdInAndNotesStartingWith(any(), any())).thenReturn(List.of());
 
-        byte[] bytes = new Builder()
-                .row(LocalDate.of(2026, 4, 1), "Bilinmeyen", "TTA", "1000", null)
-                .bytes();
+        byte[] bytes =
+                new Builder()
+                        .row(LocalDate.of(2026, 4, 1), "Bilinmeyen", "TTA", "1000", null)
+                        .bytes();
 
         ImportSummary res = service.commit(userId, file(bytes));
 
@@ -290,9 +314,12 @@ class ExcelImportServiceTest {
 
     @Test
     void previewWrapsCorruptFileInIllegalArgument() {
-        MockMultipartFile file = new MockMultipartFile("file", "garbage.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                new byte[]{1, 2, 3, 4});
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "file",
+                        "garbage.xlsx",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        new byte[] {1, 2, 3, 4});
 
         assertThatThrownBy(() -> service.preview(file))
                 .isInstanceOf(IllegalArgumentException.class);

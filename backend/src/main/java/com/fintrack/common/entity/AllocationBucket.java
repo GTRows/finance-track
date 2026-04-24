@@ -1,18 +1,17 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
-
 /**
- * A named cash-flow bucket (e.g. "Savings", "Investments") owned by a user.
- * Percentages are applied against discretionary income — the leftover after
- * obligatory outflows. Multiple buckets per user, ordered by {@code ordinal}.
+ * A named cash-flow bucket (e.g. "Savings", "Investments") owned by a user. Percentages are applied
+ * against discretionary income — the leftover after obligatory outflows. Multiple buckets per user,
+ * ordered by {@code ordinal}.
  */
 @Entity
 @Table(name = "allocation_buckets")

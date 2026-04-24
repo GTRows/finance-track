@@ -1,15 +1,6 @@
 package com.fintrack.price.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -19,15 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Public TEFAS price client. TEFAS exposes a per-fund history endpoint at
- * {@code /api/DB/BindHistoryInfo} that accepts form-urlencoded bodies and
- * returns a paginated list of daily prices. We request a 7 day window and take
- * the most recent non-null {@code FIYAT} as the current unit price.
+ * Public TEFAS price client. TEFAS exposes a per-fund history endpoint at {@code
+ * /api/DB/BindHistoryInfo} that accepts form-urlencoded bodies and returns a paginated list of
+ * daily prices. We request a 7 day window and take the most recent non-null {@code FIYAT} as the
+ * current unit price.
  *
- * <p>There is no batch endpoint, so the caller must invoke {@link #fetchPrice}
- * once per fund code. The scheduler spaces these out itself.
+ * <p>There is no batch endpoint, so the caller must invoke {@link #fetchPrice} once per fund code.
+ * The scheduler spaces these out itself.
  */
 @Component
 @Slf4j
@@ -51,21 +50,22 @@ public class TefasClient {
     }
 
     /** Lightweight fund descriptor from the TEFAS comparison list. */
-    public record FundSummary(String code, String name, FundType type) {
-    }
+    public record FundSummary(String code, String name, FundType type) {}
 
     private static final Duration LIST_CACHE_TTL = Duration.ofHours(6);
     private final ConcurrentMap<FundType, List<FundSummary>> listCache = new ConcurrentHashMap<>();
     private final ConcurrentMap<FundType, Instant> listCacheAt = new ConcurrentHashMap<>();
 
     /**
-     * Returns the full list of TEFAS funds of the given type. Cached for 6 hours
-     * since this catalog changes slowly. Returns an empty list on any failure.
+     * Returns the full list of TEFAS funds of the given type. Cached for 6 hours since this catalog
+     * changes slowly. Returns an empty list on any failure.
      */
     public List<FundSummary> listAll(FundType type) {
         Instant cachedAt = listCacheAt.get(type);
         List<FundSummary> cached = listCache.get(type);
-        if (cached != null && cachedAt != null && Duration.between(cachedAt, Instant.now()).compareTo(LIST_CACHE_TTL) < 0) {
+        if (cached != null
+                && cachedAt != null
+                && Duration.between(cachedAt, Instant.now()).compareTo(LIST_CACHE_TTL) < 0) {
             return cached;
         }
 
@@ -85,14 +85,16 @@ public class TefasClient {
         form.add("strperiod", "1,1,1,1,1,1,1");
 
         try {
-            JsonNode response = webClient.post()
-                    .uri("/api/DB/BindComparisonFundReturns")
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .body(BodyInserters.fromFormData(form))
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .timeout(Duration.ofSeconds(15))
-                    .block();
+            JsonNode response =
+                    webClient
+                            .post()
+                            .uri("/api/DB/BindComparisonFundReturns")
+                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                            .body(BodyInserters.fromFormData(form))
+                            .retrieve()
+                            .bodyToMono(JsonNode.class)
+                            .timeout(Duration.ofSeconds(15))
+                            .block();
 
             if (response == null || !response.has("data") || !response.get("data").isArray()) {
                 log.warn("TEFAS comparison list returned no data for type={}", type);
@@ -118,12 +120,11 @@ public class TefasClient {
     }
 
     /** Single unit-price point in a historical series. */
-    public record PricePoint(Instant at, BigDecimal price) {
-    }
+    public record PricePoint(Instant at, BigDecimal price) {}
 
     /**
-     * Fetches daily unit price history for a TEFAS fund over the last {@code days}.
-     * Returns an empty list on any failure.
+     * Fetches daily unit price history for a TEFAS fund over the last {@code days}. Returns an
+     * empty list on any failure.
      */
     public List<PricePoint> fetchHistory(String fundCode, FundType type, int days) {
         if (fundCode == null || fundCode.isBlank()) return List.of();
@@ -143,14 +144,16 @@ public class TefasClient {
         form.add("fonunvantip", "");
 
         try {
-            JsonNode response = webClient.post()
-                    .uri("/api/DB/BindHistoryInfo")
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .body(BodyInserters.fromFormData(form))
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .timeout(Duration.ofSeconds(15))
-                    .block();
+            JsonNode response =
+                    webClient
+                            .post()
+                            .uri("/api/DB/BindHistoryInfo")
+                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                            .body(BodyInserters.fromFormData(form))
+                            .retrieve()
+                            .bodyToMono(JsonNode.class)
+                            .timeout(Duration.ofSeconds(15))
+                            .block();
 
             if (response == null || !response.has("data") || !response.get("data").isArray()) {
                 return List.of();
@@ -173,8 +176,8 @@ public class TefasClient {
     }
 
     /**
-     * Fetches the most recent unit price for a TEFAS fund. Returns null on any
-     * failure — the scheduler should keep going regardless.
+     * Fetches the most recent unit price for a TEFAS fund. Returns null on any failure — the
+     * scheduler should keep going regardless.
      */
     public BigDecimal fetchPrice(String fundCode, FundType type) {
         if (fundCode == null || fundCode.isBlank()) {
@@ -195,14 +198,16 @@ public class TefasClient {
         form.add("fonunvantip", "");
 
         try {
-            JsonNode response = webClient.post()
-                    .uri("/api/DB/BindHistoryInfo")
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .body(BodyInserters.fromFormData(form))
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .block();
+            JsonNode response =
+                    webClient
+                            .post()
+                            .uri("/api/DB/BindHistoryInfo")
+                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                            .body(BodyInserters.fromFormData(form))
+                            .retrieve()
+                            .bodyToMono(JsonNode.class)
+                            .timeout(Duration.ofSeconds(10))
+                            .block();
 
             if (response == null || !response.has("data") || !response.get("data").isArray()) {
                 log.debug("TEFAS empty response for fund={}", fundCode);
@@ -218,9 +223,10 @@ public class TefasClient {
                     continue;
                 }
                 BigDecimal price = row.get("FIYAT").decimalValue();
-                long ts = row.has("TARIH") && row.get("TARIH").isNumber()
-                        ? row.get("TARIH").longValue()
-                        : 0L;
+                long ts =
+                        row.has("TARIH") && row.get("TARIH").isNumber()
+                                ? row.get("TARIH").longValue()
+                                : 0L;
                 if (ts >= latestTs) {
                     latestTs = ts;
                     latestPrice = price;

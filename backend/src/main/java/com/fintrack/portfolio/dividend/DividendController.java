@@ -4,13 +4,12 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.portfolio.dividend.dto.DividendResponse;
 import com.fintrack.portfolio.dividend.dto.RecordDividendRequest;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -21,8 +20,7 @@ public class DividendController {
 
     @GetMapping("/portfolios/{portfolioId}/dividends")
     public ResponseEntity<List<DividendResponse>> listForPortfolio(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID portfolioId) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID portfolioId) {
         return ResponseEntity.ok(service.listForPortfolio(user.getId(), portfolioId));
     }
 
@@ -45,8 +43,7 @@ public class DividendController {
 
     @GetMapping("/assets/{assetId}/dividends")
     public ResponseEntity<List<DividendResponse>> listForAsset(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID assetId) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID assetId) {
         return ResponseEntity.ok(service.listForAsset(user.getId(), assetId));
     }
 }

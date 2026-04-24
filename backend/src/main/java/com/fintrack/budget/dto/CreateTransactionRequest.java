@@ -3,7 +3,6 @@ package com.fintrack.budget.dto;
 import com.fintrack.common.entity.BudgetTransaction;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +16,4 @@ public record CreateTransactionRequest(
         String description,
         @NotNull LocalDate txnDate,
         boolean isRecurring,
-        List<UUID> tagIds
-) {
-}
+        List<UUID> tagIds) {}

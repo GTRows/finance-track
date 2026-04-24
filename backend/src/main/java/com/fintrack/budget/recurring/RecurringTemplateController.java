@@ -4,13 +4,12 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.budget.recurring.dto.RecurringTemplateResponse;
 import com.fintrack.budget.recurring.dto.UpsertRecurringRequest;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/budget/recurring")
@@ -20,7 +19,8 @@ public class RecurringTemplateController {
     private final RecurringTemplateService service;
 
     @GetMapping
-    public ResponseEntity<List<RecurringTemplateResponse>> list(@AuthenticationPrincipal FinTrackUserDetails user) {
+    public ResponseEntity<List<RecurringTemplateResponse>> list(
+            @AuthenticationPrincipal FinTrackUserDetails user) {
         return ResponseEntity.ok(service.listForUser(user.getId()));
     }
 
@@ -41,16 +41,14 @@ public class RecurringTemplateController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         service.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/run-now")
     public ResponseEntity<RecurringTemplateResponse> runNow(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         return ResponseEntity.ok(service.runNow(user.getId(), id));
     }
 }

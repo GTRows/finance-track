@@ -1,6 +1,3 @@
 package com.fintrack.auth.dto;
 
-public record TotpStatusResponse(
-        boolean enabled
-) {
-}
+public record TotpStatusResponse(boolean enabled) {}

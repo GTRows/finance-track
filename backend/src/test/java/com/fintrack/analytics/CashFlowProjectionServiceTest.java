@@ -1,5 +1,10 @@
 package com.fintrack.analytics;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.analytics.dto.CashFlowProjectionResponse;
 import com.fintrack.bills.BillRepository;
 import com.fintrack.budget.MonthlySummaryRepository;
@@ -9,21 +14,15 @@ import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BudgetTransaction.TxnType;
 import com.fintrack.common.entity.MonthlySummary;
 import com.fintrack.common.entity.RecurringTemplate;
+import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.YearMonth;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CashFlowProjectionServiceTest {
@@ -39,25 +38,36 @@ class CashFlowProjectionServiceTest {
 
     private MonthlySummary summary(String period, String income, String expense) {
         return MonthlySummary.builder()
-                .id(UUID.randomUUID()).userId(userId).period(period)
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .period(period)
                 .totalIncome(new BigDecimal(income))
                 .totalExpense(new BigDecimal(expense))
                 .build();
     }
 
-    private RecurringTemplate recurring(TxnType type, String amount, String description, boolean active) {
+    private RecurringTemplate recurring(
+            TxnType type, String amount, String description, boolean active) {
         return RecurringTemplate.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .txnType(type).amount(new BigDecimal(amount))
-                .description(description).dayOfMonth(1).active(active)
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .txnType(type)
+                .amount(new BigDecimal(amount))
+                .description(description)
+                .dayOfMonth(1)
+                .active(active)
                 .build();
     }
 
     private Bill bill(String name, String amount, int dueDay) {
         return Bill.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .name(name).amount(new BigDecimal(amount))
-                .dueDay(dueDay).active(true).build();
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .amount(new BigDecimal(amount))
+                .dueDay(dueDay)
+                .active(true)
+                .build();
     }
 
     @Test
@@ -98,16 +108,20 @@ class CashFlowProjectionServiceTest {
 
         CashFlowProjectionResponse res = service.project(userId, 3, null);
 
-        assertThat(res.months().get(0).period()).isEqualTo(YearMonth.now().plusMonths(1).toString());
-        assertThat(res.months().get(2).period()).isEqualTo(YearMonth.now().plusMonths(3).toString());
+        assertThat(res.months().get(0).period())
+                .isEqualTo(YearMonth.now().plusMonths(1).toString());
+        assertThat(res.months().get(2).period())
+                .isEqualTo(YearMonth.now().plusMonths(3).toString());
     }
 
     @Test
     void usesSummaryAveragesAboveMinSamples() {
-        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of(
-                summary("2026-03", "10000", "6000"),
-                summary("2026-02", "10000", "6000"),
-                summary("2026-01", "10000", "6000")));
+        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId))
+                .thenReturn(
+                        List.of(
+                                summary("2026-03", "10000", "6000"),
+                                summary("2026-02", "10000", "6000"),
+                                summary("2026-01", "10000", "6000")));
         when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of());
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
@@ -122,8 +136,8 @@ class CashFlowProjectionServiceTest {
 
     @Test
     void fallsBackToTransactionsWhenSummariesBelowMinSamples() {
-        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of(
-                summary("2026-03", "10000", "6000")));
+        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId))
+                .thenReturn(List.of(summary("2026-03", "10000", "6000")));
         when(txnRepo.sumByUserIdAndTypeAndDateRange(eq(userId), eq(TxnType.INCOME), any(), any()))
                 .thenReturn(new BigDecimal("8000"));
         when(txnRepo.sumByUserIdAndTypeAndDateRange(eq(userId), eq(TxnType.EXPENSE), any(), any()))
@@ -140,16 +154,19 @@ class CashFlowProjectionServiceTest {
 
     @Test
     void recurringAndBillsAppearAsScheduledItems() {
-        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of(
-                summary("2026-03", "0", "0"),
-                summary("2026-02", "0", "0"),
-                summary("2026-01", "0", "0")));
-        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of(
-                recurring(TxnType.INCOME, "5000", "Salary", true),
-                recurring(TxnType.EXPENSE, "1500", "Rent", true)));
-        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of(
-                bill("Internet", "200", 5),
-                bill("Electric", "500", 12)));
+        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId))
+                .thenReturn(
+                        List.of(
+                                summary("2026-03", "0", "0"),
+                                summary("2026-02", "0", "0"),
+                                summary("2026-01", "0", "0")));
+        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId))
+                .thenReturn(
+                        List.of(
+                                recurring(TxnType.INCOME, "5000", "Salary", true),
+                                recurring(TxnType.EXPENSE, "1500", "Rent", true)));
+        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId))
+                .thenReturn(List.of(bill("Internet", "200", 5), bill("Electric", "500", 12)));
 
         CashFlowProjectionResponse res = service.project(userId, 1, null);
 
@@ -163,8 +180,8 @@ class CashFlowProjectionServiceTest {
     void inactiveRecurringTemplatesAreSkipped() {
         when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of());
         when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(null);
-        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of(
-                recurring(TxnType.INCOME, "1000", "inactive", false)));
+        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of(recurring(TxnType.INCOME, "1000", "inactive", false)));
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
         CashFlowProjectionResponse res = service.project(userId, 1, null);
@@ -175,12 +192,14 @@ class CashFlowProjectionServiceTest {
 
     @Test
     void projectedIncomeIsMaxOfAverageAndScheduled() {
-        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of(
-                summary("2026-03", "1000", "0"),
-                summary("2026-02", "1000", "0"),
-                summary("2026-01", "1000", "0")));
-        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of(
-                recurring(TxnType.INCOME, "7000", "Bonus", true)));
+        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId))
+                .thenReturn(
+                        List.of(
+                                summary("2026-03", "1000", "0"),
+                                summary("2026-02", "1000", "0"),
+                                summary("2026-01", "1000", "0")));
+        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of(recurring(TxnType.INCOME, "7000", "Bonus", true)));
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
         CashFlowProjectionResponse res = service.project(userId, 1, null);
@@ -190,14 +209,16 @@ class CashFlowProjectionServiceTest {
 
     @Test
     void projectedExpenseIsMaxOfAverageAndScheduled() {
-        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of(
-                summary("2026-03", "0", "8000"),
-                summary("2026-02", "0", "8000"),
-                summary("2026-01", "0", "8000")));
-        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of(
-                recurring(TxnType.EXPENSE, "3000", "Subscription", true)));
-        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of(
-                bill("Electric", "500", 1)));
+        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId))
+                .thenReturn(
+                        List.of(
+                                summary("2026-03", "0", "8000"),
+                                summary("2026-02", "0", "8000"),
+                                summary("2026-01", "0", "8000")));
+        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId))
+                .thenReturn(List.of(recurring(TxnType.EXPENSE, "3000", "Subscription", true)));
+        when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId))
+                .thenReturn(List.of(bill("Electric", "500", 1)));
 
         CashFlowProjectionResponse res = service.project(userId, 1, null);
 
@@ -206,10 +227,12 @@ class CashFlowProjectionServiceTest {
 
     @Test
     void balanceAccumulatesAcrossMonths() {
-        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of(
-                summary("2026-03", "5000", "3000"),
-                summary("2026-02", "5000", "3000"),
-                summary("2026-01", "5000", "3000")));
+        when(summaryRepo.findByUserIdOrderByPeriodDesc(userId))
+                .thenReturn(
+                        List.of(
+                                summary("2026-03", "5000", "3000"),
+                                summary("2026-02", "5000", "3000"),
+                                summary("2026-01", "5000", "3000")));
         when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of());
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
@@ -224,11 +247,18 @@ class CashFlowProjectionServiceTest {
     void scheduledItemLabelFallsBackWhenDescriptionBlank() {
         when(summaryRepo.findByUserIdOrderByPeriodDesc(userId)).thenReturn(List.of());
         when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(null);
-        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId)).thenReturn(List.of(
-                RecurringTemplate.builder()
-                        .id(UUID.randomUUID()).userId(userId)
-                        .txnType(TxnType.INCOME).amount(new BigDecimal("100"))
-                        .description("   ").dayOfMonth(1).active(true).build()));
+        when(recurringRepo.findByUserIdOrderByCreatedAtAsc(userId))
+                .thenReturn(
+                        List.of(
+                                RecurringTemplate.builder()
+                                        .id(UUID.randomUUID())
+                                        .userId(userId)
+                                        .txnType(TxnType.INCOME)
+                                        .amount(new BigDecimal("100"))
+                                        .description("   ")
+                                        .dayOfMonth(1)
+                                        .active(true)
+                                        .build()));
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of());
 
         CashFlowProjectionResponse res = service.project(userId, 1, null);

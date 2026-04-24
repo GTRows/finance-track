@@ -1,6 +1,9 @@
 package com.fintrack.common.exception;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.fintrack.auth.LoginRateLimitException;
+import java.util.Objects;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,10 +16,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-
-import java.util.Objects;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GlobalExceptionHandlerTest {
 
@@ -42,8 +41,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void notFoundMapsTo404WithMessage() {
-        ResponseEntity<ErrorResponse> res = handler.handleNotFound(
-                new ResourceNotFoundException("Portfolio missing"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleNotFound(new ResourceNotFoundException("Portfolio missing"), request);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(body(res).error()).isEqualTo("Portfolio missing");
@@ -55,8 +54,9 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void businessRuleUsesCodeFromException() {
-        ResponseEntity<ErrorResponse> res = handler.handleBusinessRule(
-                new BusinessRuleException("Cannot proceed", "ALLOCATION_SUM"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleBusinessRule(
+                        new BusinessRuleException("Cannot proceed", "ALLOCATION_SUM"), request);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(body(res).code()).isEqualTo("ALLOCATION_SUM");
@@ -74,14 +74,16 @@ class GlobalExceptionHandlerTest {
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(body(res).code()).isEqualTo("VALIDATION_ERROR");
-        assertThat(body(res).error()).contains("amount: must be positive")
+        assertThat(body(res).error())
+                .contains("amount: must be positive")
                 .contains("name: must not be blank");
     }
 
     @Test
     void badCredentialsMapsTo401WithFixedMessage() {
-        ResponseEntity<ErrorResponse> res = handler.handleBadCredentials(
-                new BadCredentialsException("internal: wrong pw"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleBadCredentials(
+                        new BadCredentialsException("internal: wrong pw"), request);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(body(res).error()).isEqualTo("Invalid credentials");
@@ -90,8 +92,9 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void loginRateLimitMapsTo429() {
-        ResponseEntity<ErrorResponse> res = handler.handleLoginRateLimit(
-                new LoginRateLimitException("Too many attempts"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleLoginRateLimit(
+                        new LoginRateLimitException("Too many attempts"), request);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
         assertThat(body(res).code()).isEqualTo("LOGIN_RATE_LIMITED");
@@ -100,8 +103,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void accessDeniedMapsTo403WithFixedMessage() {
-        ResponseEntity<ErrorResponse> res = handler.handleAccessDenied(
-                new AccessDeniedException("internal detail"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleAccessDenied(new AccessDeniedException("internal detail"), request);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(body(res).error()).isEqualTo("Access denied");
@@ -110,8 +113,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void illegalArgumentMapsTo400WithMessage() {
-        ResponseEntity<ErrorResponse> res = handler.handleIllegalArgument(
-                new IllegalArgumentException("bad input"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleIllegalArgument(new IllegalArgumentException("bad input"), request);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(body(res).error()).isEqualTo("bad input");
@@ -120,8 +123,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void unhandledExceptionMapsTo500WithGenericMessage() {
-        ResponseEntity<ErrorResponse> res = handler.handleGeneral(
-                new RuntimeException("internal detail"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleGeneral(new RuntimeException("internal detail"), request);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(body(res).error()).isEqualTo("Internal server error");
@@ -132,8 +135,8 @@ class GlobalExceptionHandlerTest {
     void missingMdcRequestIdProducesNullRequestId() {
         MDC.clear();
 
-        ResponseEntity<ErrorResponse> res = handler.handleNotFound(
-                new ResourceNotFoundException("x"), request);
+        ResponseEntity<ErrorResponse> res =
+                handler.handleNotFound(new ResourceNotFoundException("x"), request);
 
         assertThat(body(res).requestId()).isNull();
     }

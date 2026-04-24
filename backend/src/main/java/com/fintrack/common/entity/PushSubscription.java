@@ -1,18 +1,16 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
-import java.util.UUID;
-
 /**
- * One browser/device grant of push permission. Keyed by endpoint URL, which
- * the user's push provider (FCM, Mozilla autopush, etc.) issues per
- * subscription. The p256dh and auth keys are required if/when we start
- * sending encrypted payloads; the current implementation only sends
+ * One browser/device grant of push permission. Keyed by endpoint URL, which the user's push
+ * provider (FCM, Mozilla autopush, etc.) issues per subscription. The p256dh and auth keys are
+ * required if/when we start sending encrypted payloads; the current implementation only sends
  * empty-body wake-ups.
  */
 @Entity

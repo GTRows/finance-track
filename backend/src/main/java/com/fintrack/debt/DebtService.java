@@ -4,11 +4,6 @@ import com.fintrack.common.entity.Debt;
 import com.fintrack.common.entity.DebtPayment;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.debt.dto.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -17,6 +12,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,16 +37,17 @@ public class DebtService {
 
     @Transactional
     public DebtResponse create(UUID userId, UpsertDebtRequest req) {
-        Debt debt = Debt.builder()
-                .userId(userId)
-                .name(req.name())
-                .debtType(req.debtType())
-                .principal(req.principal())
-                .annualRate(req.annualRate())
-                .termMonths(req.termMonths())
-                .startDate(req.startDate())
-                .notes(req.notes())
-                .build();
+        Debt debt =
+                Debt.builder()
+                        .userId(userId)
+                        .name(req.name())
+                        .debtType(req.debtType())
+                        .principal(req.principal())
+                        .annualRate(req.annualRate())
+                        .termMonths(req.termMonths())
+                        .startDate(req.startDate())
+                        .notes(req.notes())
+                        .build();
         debt = debtRepo.save(debt);
         log.info("Debt created: id={} name={}", debt.getId(), debt.getName());
         return toResponse(debt, BigDecimal.ZERO);
@@ -84,12 +84,13 @@ public class DebtService {
     @Transactional
     public DebtPaymentResponse addPayment(UUID userId, UUID debtId, DebtPaymentRequest req) {
         requireOwned(userId, debtId);
-        DebtPayment payment = DebtPayment.builder()
-                .debtId(debtId)
-                .paymentDate(req.paymentDate())
-                .amount(req.amount())
-                .note(req.note())
-                .build();
+        DebtPayment payment =
+                DebtPayment.builder()
+                        .debtId(debtId)
+                        .paymentDate(req.paymentDate())
+                        .amount(req.amount())
+                        .note(req.note())
+                        .build();
         payment = paymentRepo.save(payment);
         return DebtPaymentResponse.from(payment);
     }
@@ -97,8 +98,10 @@ public class DebtService {
     @Transactional
     public void deletePayment(UUID userId, UUID debtId, UUID paymentId) {
         requireOwned(userId, debtId);
-        DebtPayment payment = paymentRepo.findById(paymentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+        DebtPayment payment =
+                paymentRepo
+                        .findById(paymentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
         if (!payment.getDebtId().equals(debtId)) {
             throw new ResourceNotFoundException("Payment not found");
         }
@@ -112,23 +115,29 @@ public class DebtService {
 
     private DebtResponse toResponse(Debt debt, BigDecimal actuallyPaid) {
         BigDecimal monthly = scheduledMonthlyPayment(debt);
-        BigDecimal totalScheduled = monthly.multiply(BigDecimal.valueOf(debt.getTermMonths()))
-                .setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalInterest = totalScheduled.subtract(debt.getPrincipal()).max(BigDecimal.ZERO);
+        BigDecimal totalScheduled =
+                monthly.multiply(BigDecimal.valueOf(debt.getTermMonths()))
+                        .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalInterest =
+                totalScheduled.subtract(debt.getPrincipal()).max(BigDecimal.ZERO);
 
         BigDecimal remaining = simulateRemaining(debt, actuallyPaid);
-        BigDecimal progress = totalScheduled.signum() > 0
-                ? actuallyPaid.divide(totalScheduled, 4, RoundingMode.HALF_UP).min(BigDecimal.ONE)
-                : BigDecimal.ZERO;
+        BigDecimal progress =
+                totalScheduled.signum() > 0
+                        ? actuallyPaid
+                                .divide(totalScheduled, 4, RoundingMode.HALF_UP)
+                                .min(BigDecimal.ONE)
+                        : BigDecimal.ZERO;
 
         LocalDate scheduledPayoff = debt.getStartDate().plusMonths(debt.getTermMonths());
 
         ProjectedPayoff projection = projectPayoff(debt, monthly, remaining);
-        long monthsAhead = projection.payoff != null
-                ? java.time.temporal.ChronoUnit.MONTHS.between(
-                        projection.payoff.withDayOfMonth(1),
-                        scheduledPayoff.withDayOfMonth(1))
-                : 0;
+        long monthsAhead =
+                projection.payoff != null
+                        ? java.time.temporal.ChronoUnit.MONTHS.between(
+                                projection.payoff.withDayOfMonth(1),
+                                scheduledPayoff.withDayOfMonth(1))
+                        : 0;
 
         String status = remaining.signum() <= 0 ? "PAID_OFF" : "ACTIVE";
 
@@ -153,8 +162,7 @@ public class DebtService {
                 progress,
                 (int) (-monthsAhead),
                 status,
-                preview
-        );
+                preview);
     }
 
     private BigDecimal scheduledMonthlyPayment(Debt debt) {
@@ -179,9 +187,10 @@ public class DebtService {
     private BigDecimal simulateRemaining(Debt debt, BigDecimal totalPaid) {
         if (totalPaid.signum() <= 0) return debt.getPrincipal();
         BigDecimal balance = debt.getPrincipal();
-        BigDecimal r = debt.getAnnualRate().signum() == 0
-                ? BigDecimal.ZERO
-                : debt.getAnnualRate().divide(BigDecimal.valueOf(12), MC);
+        BigDecimal r =
+                debt.getAnnualRate().signum() == 0
+                        ? BigDecimal.ZERO
+                        : debt.getAnnualRate().divide(BigDecimal.valueOf(12), MC);
         BigDecimal monthly = scheduledMonthlyPayment(debt);
 
         BigDecimal pool = totalPaid;
@@ -205,9 +214,10 @@ public class DebtService {
 
     private ProjectedPayoff projectPayoff(Debt debt, BigDecimal monthly, BigDecimal remaining) {
         if (remaining.signum() <= 0) return new ProjectedPayoff(null);
-        BigDecimal r = debt.getAnnualRate().signum() == 0
-                ? BigDecimal.ZERO
-                : debt.getAnnualRate().divide(BigDecimal.valueOf(12), MC);
+        BigDecimal r =
+                debt.getAnnualRate().signum() == 0
+                        ? BigDecimal.ZERO
+                        : debt.getAnnualRate().divide(BigDecimal.valueOf(12), MC);
 
         BigDecimal balance = remaining;
         int months = 0;
@@ -222,11 +232,13 @@ public class DebtService {
         return new ProjectedPayoff(LocalDate.now().plusMonths(months));
     }
 
-    private List<DebtResponse.AmortizationRow> buildPreview(Debt debt, BigDecimal monthly, BigDecimal remaining) {
+    private List<DebtResponse.AmortizationRow> buildPreview(
+            Debt debt, BigDecimal monthly, BigDecimal remaining) {
         if (remaining.signum() <= 0) return List.of();
-        BigDecimal r = debt.getAnnualRate().signum() == 0
-                ? BigDecimal.ZERO
-                : debt.getAnnualRate().divide(BigDecimal.valueOf(12), MC);
+        BigDecimal r =
+                debt.getAnnualRate().signum() == 0
+                        ? BigDecimal.ZERO
+                        : debt.getAnnualRate().divide(BigDecimal.valueOf(12), MC);
 
         List<DebtResponse.AmortizationRow> rows = new ArrayList<>();
         BigDecimal balance = remaining;
@@ -236,13 +248,13 @@ public class DebtService {
             BigDecimal payment = balance.add(interest).min(monthly);
             BigDecimal principalPart = payment.subtract(interest);
             balance = balance.subtract(principalPart).max(BigDecimal.ZERO);
-            rows.add(new DebtResponse.AmortizationRow(
-                    due,
-                    payment.setScale(2, RoundingMode.HALF_UP),
-                    principalPart.setScale(2, RoundingMode.HALF_UP),
-                    interest,
-                    balance.setScale(2, RoundingMode.HALF_UP)
-            ));
+            rows.add(
+                    new DebtResponse.AmortizationRow(
+                            due,
+                            payment.setScale(2, RoundingMode.HALF_UP),
+                            principalPart.setScale(2, RoundingMode.HALF_UP),
+                            interest,
+                            balance.setScale(2, RoundingMode.HALF_UP)));
             due = due.plusMonths(1);
         }
         return rows;

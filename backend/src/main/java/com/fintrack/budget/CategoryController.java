@@ -5,13 +5,12 @@ import com.fintrack.budget.dto.CategoriesResponse;
 import com.fintrack.budget.dto.CategoryResponse;
 import com.fintrack.budget.dto.CreateCategoryRequest;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/budget/categories")
@@ -60,16 +59,14 @@ public class CategoryController {
 
     @DeleteMapping("/income/{id}")
     public ResponseEntity<Void> deleteIncome(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         categoryService.deleteIncome(user.getId(), id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/expense/{id}")
     public ResponseEntity<Void> deleteExpense(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         categoryService.deleteExpense(user.getId(), id);
         return ResponseEntity.noContent().build();
     }

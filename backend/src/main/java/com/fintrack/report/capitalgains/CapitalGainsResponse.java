@@ -13,8 +13,7 @@ public record CapitalGainsResponse(
         BigDecimal realizedGain,
         BigDecimal dividendsNetTry,
         List<YearSummary> byYear,
-        List<Event> events
-) {
+        List<Event> events) {
 
     public record YearSummary(
             int year,
@@ -23,8 +22,7 @@ public record CapitalGainsResponse(
             BigDecimal fees,
             BigDecimal realizedGain,
             BigDecimal dividendsNetTry,
-            int eventCount
-    ) {}
+            int eventCount) {}
 
     public record Event(
             UUID transactionId,
@@ -39,6 +37,5 @@ public record CapitalGainsResponse(
             BigDecimal proceeds,
             BigDecimal costBasis,
             BigDecimal fee,
-            BigDecimal realizedGain
-    ) {}
+            BigDecimal realizedGain) {}
 }

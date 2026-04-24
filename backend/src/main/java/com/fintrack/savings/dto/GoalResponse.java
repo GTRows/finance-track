@@ -6,7 +6,8 @@ import java.util.UUID;
 
 /**
  * Denormalised savings goal with computed progress fields.
- * <p>All percentage-style values are decimals (0.42 = 42%).</p>
+ *
+ * <p>All percentage-style values are decimals (0.42 = 42%).
  */
 public record GoalResponse(
         UUID id,
@@ -20,6 +21,4 @@ public record GoalResponse(
         BigDecimal progressRatio,
         BigDecimal monthlyPace,
         LocalDate projectedCompletion,
-        String status
-) {
-}
+        String status) {}

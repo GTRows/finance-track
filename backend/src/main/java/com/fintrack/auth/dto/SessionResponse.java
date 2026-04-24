@@ -9,6 +9,4 @@ public record SessionResponse(
         Instant createdAt,
         Instant lastUsedAt,
         Instant expiresAt,
-        boolean current
-) {
-}
+        boolean current) {}

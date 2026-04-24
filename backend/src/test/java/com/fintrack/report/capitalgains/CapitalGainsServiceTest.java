@@ -1,5 +1,12 @@
 package com.fintrack.report.capitalgains;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.InvestmentTransaction;
@@ -8,13 +15,6 @@ import com.fintrack.common.entity.Portfolio;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.dividend.DividendRepository;
 import com.fintrack.portfolio.transaction.InvestmentTransactionRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -22,13 +22,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class CapitalGainsServiceTest {
@@ -56,10 +55,12 @@ class CapitalGainsServiceTest {
         asset = Asset.builder().id(assetId).symbol("BTC").name("Bitcoin").build();
         sequence = 0L;
 
-        lenient().when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
+        lenient()
+                .when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(portfolio));
         lenient().when(assetRepo.findById(assetId)).thenReturn(Optional.of(asset));
-        lenient().when(dividendRepo.sumNetByPortfoliosAndRange(anyList(), any(), any()))
+        lenient()
+                .when(dividendRepo.sumNetByPortfoliosAndRange(anyList(), any(), any()))
                 .thenReturn(BigDecimal.ZERO);
     }
 
@@ -70,8 +71,7 @@ class CapitalGainsServiceTest {
         // Gain = 1493 - 1005 = 488
         txnRepoReturns(
                 buy(LocalDate.of(2026, 1, 1), "10", "100", "5"),
-                sell(LocalDate.of(2026, 6, 1), "10", "150", "7")
-        );
+                sell(LocalDate.of(2026, 6, 1), "10", "150", "7"));
 
         CapitalGainsResponse report = service.compute(userId, null);
 
@@ -91,8 +91,7 @@ class CapitalGainsServiceTest {
         txnRepoReturns(
                 buy(LocalDate.of(2026, 1, 1), "10", "100", "0"),
                 buy(LocalDate.of(2026, 2, 1), "10", "200", "0"),
-                sell(LocalDate.of(2026, 3, 1), "10", "250", "0")
-        );
+                sell(LocalDate.of(2026, 3, 1), "10", "250", "0"));
 
         CapitalGainsResponse report = service.compute(userId, null);
 
@@ -108,8 +107,7 @@ class CapitalGainsServiceTest {
         // Remaining lot: qty 6, cost 600
         txnRepoReturns(
                 buy(LocalDate.of(2026, 1, 1), "10", "100", "0"),
-                sell(LocalDate.of(2026, 2, 1), "4", "150", "0")
-        );
+                sell(LocalDate.of(2026, 2, 1), "4", "150", "0"));
 
         CapitalGainsResponse report = service.compute(userId, null);
 
@@ -124,8 +122,7 @@ class CapitalGainsServiceTest {
         txnRepoReturns(
                 buy(LocalDate.of(2024, 1, 1), "10", "100", "0"),
                 sell(LocalDate.of(2025, 3, 1), "4", "150", "0"),
-                sell(LocalDate.of(2026, 4, 1), "6", "200", "0")
-        );
+                sell(LocalDate.of(2026, 4, 1), "6", "200", "0"));
 
         CapitalGainsResponse report = service.compute(userId, null);
 
@@ -141,8 +138,7 @@ class CapitalGainsServiceTest {
         txnRepoReturns(
                 buy(LocalDate.of(2024, 1, 1), "10", "100", "0"),
                 sell(LocalDate.of(2025, 3, 1), "4", "150", "0"),
-                sell(LocalDate.of(2026, 4, 1), "6", "200", "0")
-        );
+                sell(LocalDate.of(2026, 4, 1), "6", "200", "0"));
 
         CapitalGainsResponse report = service.compute(userId, 2026);
 
@@ -153,9 +149,7 @@ class CapitalGainsServiceTest {
 
     @Test
     void sellWithoutPriorBuyIsIgnored() {
-        txnRepoReturns(
-                sell(LocalDate.of(2026, 1, 1), "5", "100", "0")
-        );
+        txnRepoReturns(sell(LocalDate.of(2026, 1, 1), "5", "100", "0"));
 
         CapitalGainsResponse report = service.compute(userId, null);
 
@@ -166,14 +160,14 @@ class CapitalGainsServiceTest {
     @Test
     void oversellCapsAtAvailableQuantity() {
         // Buy 10 @ 100, then attempt to sell 20 @ 150
-        // Only 10 are available; cost basis 1000, proceeds 1500 (on 10 sold qty pricing is from txn),
+        // Only 10 are available; cost basis 1000, proceeds 1500 (on 10 sold qty pricing is from
+        // txn),
         // Actually proceeds scales to what was sold: qty=20 in txn but we cap at 10.
         // Txn amountTry = 20*150 = 3000 (net of fee). We cap qty at 10 but use full amountTry.
         // This is a safety path; the business rule prevents it in practice via applyToHolding.
         txnRepoReturns(
                 buy(LocalDate.of(2026, 1, 1), "10", "100", "0"),
-                sell(LocalDate.of(2026, 2, 1), "20", "150", "0")
-        );
+                sell(LocalDate.of(2026, 2, 1), "20", "150", "0"));
 
         CapitalGainsResponse report = service.compute(userId, null);
 
@@ -186,13 +180,12 @@ class CapitalGainsServiceTest {
     void includesDividendNetInYearSummary() {
         txnRepoReturns(
                 buy(LocalDate.of(2026, 1, 1), "10", "100", "0"),
-                sell(LocalDate.of(2026, 6, 1), "10", "150", "0")
-        );
+                sell(LocalDate.of(2026, 6, 1), "10", "150", "0"));
         when(dividendRepo.sumNetByPortfoliosAndRange(
-                eq(List.of(portfolioId)),
-                eq(LocalDate.of(2026, 1, 1)),
-                eq(LocalDate.of(2026, 12, 31))
-        )).thenReturn(new BigDecimal("125"));
+                        eq(List.of(portfolioId)),
+                        eq(LocalDate.of(2026, 1, 1)),
+                        eq(LocalDate.of(2026, 12, 31))))
+                .thenReturn(new BigDecimal("125"));
 
         CapitalGainsResponse report = service.compute(userId, 2026);
 
@@ -219,8 +212,7 @@ class CapitalGainsServiceTest {
         // Cost basis 500, proceeds 1000, gain 500
         txnRepoReturns(
                 bes(LocalDate.of(2026, 1, 1), "5", "100"),
-                sell(LocalDate.of(2026, 6, 1), "5", "200", "0")
-        );
+                sell(LocalDate.of(2026, 6, 1), "5", "200", "0"));
 
         CapitalGainsResponse report = service.compute(userId, null);
 

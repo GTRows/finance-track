@@ -1,17 +1,14 @@
 package com.fintrack.auth;
 
 import com.fintrack.common.entity.User;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
-/**
- * Loads user details for Spring Security authentication.
- */
+/** Loads user details for Spring Security authentication. */
 @Service
 @RequiredArgsConstructor
 public class FinTrackUserDetailsService implements UserDetailsService {
@@ -20,8 +17,11 @@ public class FinTrackUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        User user =
+                userRepository
+                        .findByUsername(username)
+                        .orElseThrow(
+                                () -> new UsernameNotFoundException("User not found: " + username));
         return new FinTrackUserDetails(user);
     }
 
@@ -33,8 +33,13 @@ public class FinTrackUserDetailsService implements UserDetailsService {
      * @throws UsernameNotFoundException if the user does not exist
      */
     public UserDetails loadUserByUserId(String userId) throws UsernameNotFoundException {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found by id: " + userId));
+        User user =
+                userRepository
+                        .findById(UUID.fromString(userId))
+                        .orElseThrow(
+                                () ->
+                                        new UsernameNotFoundException(
+                                                "User not found by id: " + userId));
         return new FinTrackUserDetails(user);
     }
 }

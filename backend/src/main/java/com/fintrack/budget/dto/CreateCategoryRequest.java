@@ -1,7 +1,6 @@
 package com.fintrack.budget.dto;
 
 import jakarta.validation.constraints.NotBlank;
-
 import java.math.BigDecimal;
 
 public record CreateCategoryRequest(
@@ -9,6 +8,4 @@ public record CreateCategoryRequest(
         String icon,
         String color,
         BigDecimal budgetAmount,
-        Boolean rolloverEnabled
-) {
-}
+        Boolean rolloverEnabled) {}

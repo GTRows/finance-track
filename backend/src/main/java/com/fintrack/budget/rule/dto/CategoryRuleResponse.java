@@ -2,7 +2,6 @@ package com.fintrack.budget.rule.dto;
 
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.TransactionCategoryRule;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -15,9 +14,9 @@ public record CategoryRuleResponse(
         BudgetTransaction.TxnType txnType,
         int priority,
         int matchCount,
-        Instant createdAt
-) {
-    public static CategoryRuleResponse from(TransactionCategoryRule r, String categoryName, String categoryColor) {
+        Instant createdAt) {
+    public static CategoryRuleResponse from(
+            TransactionCategoryRule r, String categoryName, String categoryColor) {
         return new CategoryRuleResponse(
                 r.getId(),
                 r.getPattern(),
@@ -27,7 +26,6 @@ public record CategoryRuleResponse(
                 r.getTxnType(),
                 r.getPriority(),
                 r.getMatchCount(),
-                r.getCreatedAt()
-        );
+                r.getCreatedAt());
     }
 }

@@ -3,8 +3,8 @@ package com.fintrack.bills.dto;
 import java.math.BigDecimal;
 
 /**
- * Month-over-month change between the two most recent PAID periods for a bill.
- * {@code delta} is positive when the current period was more expensive.
+ * Month-over-month change between the two most recent PAID periods for a bill. {@code delta} is
+ * positive when the current period was more expensive.
  */
 public record BillVarianceDto(
         String currentPeriod,
@@ -13,6 +13,4 @@ public record BillVarianceDto(
         BigDecimal previousAmount,
         BigDecimal delta,
         BigDecimal deltaPercent,
-        boolean flagged
-) {
-}
+        boolean flagged) {}

@@ -1,14 +1,15 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.Instant;
-import java.util.UUID;
-
 @Entity
-@Table(name = "watchlist_entries", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "asset_id"}))
+@Table(
+        name = "watchlist_entries",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "asset_id"}))
 @Getter
 @Setter
 @Builder

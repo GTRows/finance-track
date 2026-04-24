@@ -1,9 +1,23 @@
 package com.fintrack.budget.receipt;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.budget.TransactionRepository;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.BudgetTransaction.TxnType;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,21 +27,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ReceiptStorageServiceTest {
@@ -49,7 +48,8 @@ class ReceiptStorageServiceTest {
 
     private BudgetTransaction txn(String receiptPath) {
         return BudgetTransaction.builder()
-                .id(txnId).userId(userId)
+                .id(txnId)
+                .userId(userId)
                 .txnType(TxnType.EXPENSE)
                 .amount(new BigDecimal("10"))
                 .txnDate(LocalDate.now())
@@ -60,7 +60,8 @@ class ReceiptStorageServiceTest {
     @Test
     void storeRejectsMissingTransaction() {
         when(txnRepo.findByIdAndUserId(txnId, userId)).thenReturn(Optional.empty());
-        MockMultipartFile file = new MockMultipartFile("f", "r.jpg", "image/jpeg", new byte[]{1, 2, 3});
+        MockMultipartFile file =
+                new MockMultipartFile("f", "r.jpg", "image/jpeg", new byte[] {1, 2, 3});
 
         assertThatThrownBy(() -> service.store(userId, txnId, file))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -90,7 +91,7 @@ class ReceiptStorageServiceTest {
     @Test
     void storeRejectsUnsupportedMimeType() {
         when(txnRepo.findByIdAndUserId(txnId, userId)).thenReturn(Optional.of(txn(null)));
-        MockMultipartFile file = new MockMultipartFile("f", "r.txt", "text/plain", new byte[]{1});
+        MockMultipartFile file = new MockMultipartFile("f", "r.txt", "text/plain", new byte[] {1});
 
         assertThatThrownBy(() -> service.store(userId, txnId, file))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -120,8 +121,9 @@ class ReceiptStorageServiceTest {
     void storeAcceptsMimeTypeWithCharsetParameter() throws IOException {
         BudgetTransaction existing = txn(null);
         when(txnRepo.findByIdAndUserId(txnId, userId)).thenReturn(Optional.of(existing));
-        MockMultipartFile file = new MockMultipartFile(
-                "f", "r.pdf", "application/pdf; charset=utf-8", new byte[]{1, 2});
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "f", "r.pdf", "application/pdf; charset=utf-8", new byte[] {1, 2});
 
         ReceiptStorageService.StoredReceipt res = service.store(userId, txnId, file);
 
@@ -138,7 +140,8 @@ class ReceiptStorageServiceTest {
 
         BudgetTransaction existing = txn(oldRelative);
         when(txnRepo.findByIdAndUserId(txnId, userId)).thenReturn(Optional.of(existing));
-        MockMultipartFile newFile = new MockMultipartFile("f", "r.png", "image/png", "new".getBytes());
+        MockMultipartFile newFile =
+                new MockMultipartFile("f", "r.png", "image/png", "new".getBytes());
 
         ReceiptStorageService.StoredReceipt res = service.store(userId, txnId, newFile);
 

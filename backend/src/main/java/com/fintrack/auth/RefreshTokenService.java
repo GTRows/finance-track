@@ -2,19 +2,16 @@ package com.fintrack.auth;
 
 import com.fintrack.common.entity.RefreshToken;
 import com.fintrack.common.exception.BusinessRuleException;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-/**
- * Manages refresh token lifecycle: creation, validation, rotation, and revocation.
- */
+/** Manages refresh token lifecycle: creation, validation, rotation, and revocation. */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -39,14 +36,15 @@ public class RefreshTokenService {
     public String createRefreshToken(UUID userId, String userAgent, String ipAddress) {
         String tokenValue = jwtUtil.generateRefreshToken(userId.toString());
         Instant now = Instant.now();
-        RefreshToken entity = RefreshToken.builder()
-                .userId(userId)
-                .token(tokenValue)
-                .userAgent(truncate(userAgent, 512))
-                .ipAddress(truncate(ipAddress, 45))
-                .lastUsedAt(now)
-                .expiresAt(now.plusMillis(jwtUtil.getRefreshExpiryMs()))
-                .build();
+        RefreshToken entity =
+                RefreshToken.builder()
+                        .userId(userId)
+                        .token(tokenValue)
+                        .userAgent(truncate(userAgent, 512))
+                        .ipAddress(truncate(ipAddress, 45))
+                        .lastUsedAt(now)
+                        .expiresAt(now.plusMillis(jwtUtil.getRefreshExpiryMs()))
+                        .build();
         refreshTokenRepository.save(entity);
         log.debug("Created refresh token for user {}", userId);
         return tokenValue;
@@ -66,8 +64,13 @@ public class RefreshTokenService {
      */
     @Transactional(readOnly = true)
     public RefreshToken validate(String token) {
-        RefreshToken entity = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new BusinessRuleException("Invalid refresh token", "INVALID_REFRESH_TOKEN"));
+        RefreshToken entity =
+                refreshTokenRepository
+                        .findByToken(token)
+                        .orElseThrow(
+                                () ->
+                                        new BusinessRuleException(
+                                                "Invalid refresh token", "INVALID_REFRESH_TOKEN"));
         if (entity.getExpiresAt().isBefore(Instant.now())) {
             throw new BusinessRuleException("Refresh token expired", "REFRESH_TOKEN_EXPIRED");
         }
@@ -78,7 +81,7 @@ public class RefreshTokenService {
      * Rotates a refresh token: deletes the old one and creates a new one.
      *
      * @param oldToken the current refresh token string
-     * @param userId   the user's UUID
+     * @param userId the user's UUID
      * @return the new refresh token string
      */
     @Transactional
@@ -90,8 +93,10 @@ public class RefreshTokenService {
     @Transactional
     public String rotate(String oldToken, UUID userId, String userAgent, String ipAddress) {
         RefreshToken existing = refreshTokenRepository.findByToken(oldToken).orElse(null);
-        String ua = userAgent != null ? userAgent : existing != null ? existing.getUserAgent() : null;
-        String ip = ipAddress != null ? ipAddress : existing != null ? existing.getIpAddress() : null;
+        String ua =
+                userAgent != null ? userAgent : existing != null ? existing.getUserAgent() : null;
+        String ip =
+                ipAddress != null ? ipAddress : existing != null ? existing.getIpAddress() : null;
         refreshTokenRepository.deleteByToken(oldToken);
         return createRefreshToken(userId, ua, ip);
     }
@@ -99,21 +104,27 @@ public class RefreshTokenService {
     /** Lists active (non-expired) refresh tokens for a user. */
     @Transactional(readOnly = true)
     public List<RefreshToken> listActive(UUID userId) {
-        return refreshTokenRepository.findByUserIdAndExpiresAtAfterOrderByLastUsedAtDesc(userId, Instant.now());
+        return refreshTokenRepository.findByUserIdAndExpiresAtAfterOrderByLastUsedAtDesc(
+                userId, Instant.now());
     }
 
     /** Revokes one session owned by the user. Returns true if it existed. */
     @Transactional
     public boolean revokeSession(UUID userId, UUID sessionId) {
-        return refreshTokenRepository.findByIdAndUserId(sessionId, userId)
-                .map(rt -> {
-                    refreshTokenRepository.delete(rt);
-                    return true;
-                })
+        return refreshTokenRepository
+                .findByIdAndUserId(sessionId, userId)
+                .map(
+                        rt -> {
+                            refreshTokenRepository.delete(rt);
+                            return true;
+                        })
                 .orElse(false);
     }
 
-    /** Revokes every other session for the user, keeping the supplied one. Returns the count removed. */
+    /**
+     * Revokes every other session for the user, keeping the supplied one. Returns the count
+     * removed.
+     */
     @Transactional
     public int revokeOthers(UUID userId, UUID keepSessionId) {
         return refreshTokenRepository.deleteByUserIdExcept(userId, keepSessionId);

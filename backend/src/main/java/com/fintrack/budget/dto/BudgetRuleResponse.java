@@ -1,7 +1,6 @@
 package com.fintrack.budget.dto;
 
 import com.fintrack.common.entity.BudgetRule;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -16,11 +15,14 @@ public record BudgetRuleResponse(
         BigDecimal usagePct,
         boolean active,
         String lastAlertedPeriod,
-        Instant createdAt
-) {
+        Instant createdAt) {
 
-    public static BudgetRuleResponse from(BudgetRule rule, String categoryName, String categoryColor,
-                                          BigDecimal currentSpendTry, BigDecimal usagePct) {
+    public static BudgetRuleResponse from(
+            BudgetRule rule,
+            String categoryName,
+            String categoryColor,
+            BigDecimal currentSpendTry,
+            BigDecimal usagePct) {
         return new BudgetRuleResponse(
                 rule.getId(),
                 rule.getCategoryId(),
@@ -31,7 +33,6 @@ public record BudgetRuleResponse(
                 usagePct,
                 rule.isActive(),
                 rule.getLastAlertedPeriod(),
-                rule.getCreatedAt()
-        );
+                rule.getCreatedAt());
     }
 }

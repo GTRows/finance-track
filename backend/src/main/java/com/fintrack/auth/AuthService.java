@@ -6,10 +6,11 @@ import com.fintrack.auth.dto.*;
 import com.fintrack.common.entity.RefreshToken;
 import com.fintrack.common.entity.User;
 import com.fintrack.common.entity.UserSettings;
-import com.fintrack.common.web.RequestContext;
-import com.fintrack.settings.UserSettingsRepository;
 import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.common.web.RequestContext;
+import com.fintrack.settings.UserSettingsRepository;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,11 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
-/**
- * Handles user registration, login, token refresh, and profile retrieval.
- */
+/** Handles user registration, login, token refresh, and profile retrieval. */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -49,17 +46,16 @@ public class AuthService {
             throw new BusinessRuleException("Email already registered", "EMAIL_TAKEN");
         }
 
-        User user = User.builder()
-                .username(request.username())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .role(User.Role.USER)
-                .build();
+        User user =
+                User.builder()
+                        .username(request.username())
+                        .email(request.email())
+                        .password(passwordEncoder.encode(request.password()))
+                        .role(User.Role.USER)
+                        .build();
         user = userRepository.save(user);
 
-        UserSettings settings = UserSettings.builder()
-                .userId(user.getId())
-                .build();
+        UserSettings settings = UserSettings.builder().userId(user.getId()).build();
         userSettingsRepository.save(settings);
 
         log.info("User registered: {}", user.getUsername());
@@ -67,7 +63,10 @@ public class AuthService {
         try {
             emailVerificationService.sendVerification(user.getId());
         } catch (Exception e) {
-            log.warn("Failed to queue verification email for {}: {}", user.getUsername(), e.getMessage());
+            log.warn(
+                    "Failed to queue verification email for {}: {}",
+                    user.getUsername(),
+                    e.getMessage());
         }
         return buildAuthResponse(user);
     }
@@ -77,22 +76,26 @@ public class AuthService {
         loginRateLimiter.enforce(request.username());
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+                    new UsernamePasswordAuthenticationToken(
+                            request.username(), request.password()));
         } catch (AuthenticationException ex) {
             loginRateLimiter.recordFailure(request.username());
             auditService.failure(AuditAction.LOGIN, request.username(), "invalid credentials");
             throw ex;
         }
 
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findByUsername(request.username())
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         loginRateLimiter.recordSuccess(request.username());
 
         if (user.isTotpEnabled()) {
             String challenge = jwtUtil.generateTotpChallengeToken(user.getId().toString());
             log.info("TOTP challenge issued for user: {}", user.getUsername());
-            auditService.success(AuditAction.TOTP_CHALLENGE_ISSUED, user.getId(), user.getUsername());
+            auditService.success(
+                    AuditAction.TOTP_CHALLENGE_ISSUED, user.getId(), user.getUsername());
             return AuthResponse.challenge(challenge);
         }
 
@@ -106,18 +109,23 @@ public class AuthService {
         String userId = jwtUtil.validateTotpChallenge(request.challengeToken());
         if (userId == null) {
             auditService.failure(AuditAction.TOTP_VERIFY, null, "invalid challenge token");
-            throw new BusinessRuleException("Invalid or expired challenge", "TOTP_CHALLENGE_INVALID");
+            throw new BusinessRuleException(
+                    "Invalid or expired challenge", "TOTP_CHALLENGE_INVALID");
         }
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(UUID.fromString(userId))
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!user.isTotpEnabled() || user.getTotpSecret() == null) {
-            auditService.failure(AuditAction.TOTP_VERIFY, user.getId(), user.getUsername(), "TOTP not enabled");
+            auditService.failure(
+                    AuditAction.TOTP_VERIFY, user.getId(), user.getUsername(), "TOTP not enabled");
             throw new BusinessRuleException("TOTP not enabled for this user", "TOTP_NOT_ENABLED");
         }
 
         if (!totpService.verify(user.getTotpSecret(), request.code())) {
-            auditService.failure(AuditAction.TOTP_VERIFY, user.getId(), user.getUsername(), "invalid code");
+            auditService.failure(
+                    AuditAction.TOTP_VERIFY, user.getId(), user.getUsername(), "invalid code");
             throw new BusinessRuleException("Invalid verification code", "TOTP_INVALID");
         }
 
@@ -129,15 +137,19 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public TotpStatusResponse totpStatus(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return new TotpStatusResponse(user.isTotpEnabled());
     }
 
     @Transactional
     public TotpSetupResponse totpSetup(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (user.isTotpEnabled()) {
             throw new BusinessRuleException("TOTP already enabled", "TOTP_ALREADY_ENABLED");
         }
@@ -151,13 +163,16 @@ public class AuthService {
 
     @Transactional
     public void totpEnable(UUID userId, TotpEnableRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (user.getTotpSecret() == null) {
             throw new BusinessRuleException("TOTP setup not initiated", "TOTP_NOT_STARTED");
         }
         if (!totpService.verify(user.getTotpSecret(), request.code())) {
-            auditService.failure(AuditAction.TOTP_ENABLE, user.getId(), user.getUsername(), "invalid code");
+            auditService.failure(
+                    AuditAction.TOTP_ENABLE, user.getId(), user.getUsername(), "invalid code");
             throw new BusinessRuleException("Invalid verification code", "TOTP_INVALID");
         }
         user.setTotpEnabled(true);
@@ -168,10 +183,13 @@ public class AuthService {
 
     @Transactional
     public void totpDisable(UUID userId, TotpDisableRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            auditService.failure(AuditAction.TOTP_DISABLE, user.getId(), user.getUsername(), "wrong password");
+            auditService.failure(
+                    AuditAction.TOTP_DISABLE, user.getId(), user.getUsername(), "wrong password");
             throw new BusinessRuleException("Incorrect password", "PASSWORD_INVALID");
         }
         user.setTotpEnabled(false);
@@ -183,14 +201,21 @@ public class AuthService {
 
     @Transactional
     public void changePassword(UUID userId, PasswordChangeRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            auditService.failure(AuditAction.PASSWORD_CHANGE, user.getId(), user.getUsername(), "wrong current password");
+            auditService.failure(
+                    AuditAction.PASSWORD_CHANGE,
+                    user.getId(),
+                    user.getUsername(),
+                    "wrong current password");
             throw new BusinessRuleException("Incorrect password", "PASSWORD_INVALID");
         }
         if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
-            throw new BusinessRuleException("New password must differ from the current one", "PASSWORD_UNCHANGED");
+            throw new BusinessRuleException(
+                    "New password must differ from the current one", "PASSWORD_UNCHANGED");
         }
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
@@ -202,25 +227,34 @@ public class AuthService {
     @Transactional
     public AuthResponse refresh(RefreshRequest request) {
         RefreshToken existing = refreshTokenService.validate(request.refreshToken());
-        User user = userRepository.findById(existing.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(existing.getUserId())
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        String newRefreshToken = refreshTokenService.rotate(
-                request.refreshToken(), user.getId(), RequestContext.userAgent(), RequestContext.clientIp());
-        String accessToken = jwtUtil.generateAccessToken(
-                user.getId().toString(), user.getUsername(), user.getRole().name());
+        String newRefreshToken =
+                refreshTokenService.rotate(
+                        request.refreshToken(),
+                        user.getId(),
+                        RequestContext.userAgent(),
+                        RequestContext.clientIp());
+        String accessToken =
+                jwtUtil.generateAccessToken(
+                        user.getId().toString(), user.getUsername(), user.getRole().name());
 
         log.debug("Token refreshed for user: {}", user.getUsername());
         auditService.success(AuditAction.TOKEN_REFRESH, user.getId(), user.getUsername());
-        return AuthResponse.of(accessToken, newRefreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
+        return AuthResponse.of(
+                accessToken, newRefreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
     }
 
     @Transactional
     public void logout(String refreshToken) {
         UUID userId = refreshTokenService.peekUserId(refreshToken).orElse(null);
-        String username = userId == null
-                ? null
-                : userRepository.findById(userId).map(User::getUsername).orElse(null);
+        String username =
+                userId == null
+                        ? null
+                        : userRepository.findById(userId).map(User::getUsername).orElse(null);
         refreshTokenService.revoke(refreshToken);
         log.debug("User logged out");
         auditService.success(AuditAction.LOGOUT, userId, username);
@@ -228,17 +262,22 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public UserProfileResponse getProfile(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return toProfile(user);
     }
 
     private AuthResponse buildAuthResponse(User user) {
-        String accessToken = jwtUtil.generateAccessToken(
-                user.getId().toString(), user.getUsername(), user.getRole().name());
-        String refreshToken = refreshTokenService.createRefreshToken(
-                user.getId(), RequestContext.userAgent(), RequestContext.clientIp());
-        return AuthResponse.of(accessToken, refreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
+        String accessToken =
+                jwtUtil.generateAccessToken(
+                        user.getId().toString(), user.getUsername(), user.getRole().name());
+        String refreshToken =
+                refreshTokenService.createRefreshToken(
+                        user.getId(), RequestContext.userAgent(), RequestContext.clientIp());
+        return AuthResponse.of(
+                accessToken, refreshToken, jwtUtil.getAccessExpirySeconds(), toProfile(user));
     }
 
     private UserProfileResponse toProfile(User user) {
@@ -248,7 +287,6 @@ public class AuthService {
                 user.getEmail(),
                 user.getRole().name(),
                 user.isEmailVerified(),
-                user.getCreatedAt() != null ? user.getCreatedAt().toString() : null
-        );
+                user.getCreatedAt() != null ? user.getCreatedAt().toString() : null);
     }
 }

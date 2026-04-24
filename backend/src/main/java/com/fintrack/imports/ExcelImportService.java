@@ -8,18 +8,6 @@ import com.fintrack.imports.dto.ImportPreviewRow;
 import com.fintrack.imports.dto.ImportSummary;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.transaction.InvestmentTransactionRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -33,6 +21,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -63,7 +62,8 @@ public class ExcelImportService {
     }
 
     private ImportSummary parse(MultipartFile file, boolean commit, UUID userId) {
-        try (InputStream is = file.getInputStream(); Workbook wb = new XSSFWorkbook(is)) {
+        try (InputStream is = file.getInputStream();
+                Workbook wb = new XSSFWorkbook(is)) {
             Sheet sheet = wb.getSheet(LOG_SHEET);
             if (sheet == null) {
                 throw new IllegalArgumentException("Sheet not found: " + LOG_SHEET);
@@ -75,7 +75,8 @@ public class ExcelImportService {
             Set<String> existingFingerprints = new HashSet<>();
 
             if (commit) {
-                individual = ensurePortfolio(userId, "Bireysel", Portfolio.PortfolioType.INDIVIDUAL);
+                individual =
+                        ensurePortfolio(userId, "Bireysel", Portfolio.PortfolioType.INDIVIDUAL);
                 bes = ensurePortfolio(userId, "BES", Portfolio.PortfolioType.BES);
                 existingFingerprints = loadExistingFingerprints(individual.getId(), bes.getId());
             }
@@ -109,48 +110,64 @@ public class ExcelImportService {
                     warning = "Missing or non-positive amount";
                 }
 
-                Asset assetEntity = asset != null ? assetIndex.get(asset.toUpperCase(Locale.ROOT)) : null;
+                Asset assetEntity =
+                        asset != null ? assetIndex.get(asset.toUpperCase(Locale.ROOT)) : null;
                 if (warning == null && assetEntity == null) {
                     warning = "Asset not in catalog: " + asset;
                 }
 
                 if (warning != null) warnings++;
 
-                ImportPreviewRow previewRow = new ImportPreviewRow(
-                        r + 1, date, type, mapped, asset, amount, note, warning
-                );
+                ImportPreviewRow previewRow =
+                        new ImportPreviewRow(
+                                r + 1, date, type, mapped, asset, amount, note, warning);
                 rows.add(previewRow);
 
-                if (!commit || warning != null || mapped == null || assetEntity == null
-                        || date == null || amount == null) {
+                if (!commit
+                        || warning != null
+                        || mapped == null
+                        || assetEntity == null
+                        || date == null
+                        || amount == null) {
                     if (commit && warning != null) skipped++;
                     continue;
                 }
 
-                Portfolio target = mapped == InvestmentTransaction.TxnType.BES_CONTRIBUTION ? bes : individual;
-                String fingerprint = fingerprint(target.getId(), assetEntity.getId(), mapped, date, amount);
+                Portfolio target =
+                        mapped == InvestmentTransaction.TxnType.BES_CONTRIBUTION ? bes : individual;
+                String fingerprint =
+                        fingerprint(target.getId(), assetEntity.getId(), mapped, date, amount);
                 if (existingFingerprints.contains(fingerprint)) {
                     skipped++;
                     continue;
                 }
 
-                InvestmentTransaction txn = InvestmentTransaction.builder()
-                        .portfolioId(target.getId())
-                        .assetId(assetEntity.getId())
-                        .txnType(mapped)
-                        .amountTry(amount)
-                        .feeTry(BigDecimal.ZERO)
-                        .txnDate(date)
-                        .notes(NOTE_PREFIX + (note != null && !note.isBlank() ? " " + note : ""))
-                        .build();
+                InvestmentTransaction txn =
+                        InvestmentTransaction.builder()
+                                .portfolioId(target.getId())
+                                .assetId(assetEntity.getId())
+                                .txnType(mapped)
+                                .amountTry(amount)
+                                .feeTry(BigDecimal.ZERO)
+                                .txnDate(date)
+                                .notes(
+                                        NOTE_PREFIX
+                                                + (note != null && !note.isBlank()
+                                                        ? " " + note
+                                                        : ""))
+                                .build();
                 txnRepo.save(txn);
                 existingFingerprints.add(fingerprint);
                 imported++;
             }
 
             if (commit) {
-                log.info("Excel import committed for user {}: imported={} skipped={} warnings={}",
-                        userId, imported, skipped, warnings);
+                log.info(
+                        "Excel import committed for user {}: imported={} skipped={} warnings={}",
+                        userId,
+                        imported,
+                        skipped,
+                        warnings);
             }
 
             return new ImportSummary(rows.size(), imported, skipped, warnings, rows);
@@ -171,28 +188,49 @@ public class ExcelImportService {
         return portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId).stream()
                 .filter(p -> p.getName().equalsIgnoreCase(name))
                 .findFirst()
-                .orElseGet(() -> portfolioRepo.save(Portfolio.builder()
-                        .userId(userId)
-                        .name(name)
-                        .portfolioType(type)
-                        .description("Imported from Yatirim_Takip_v2.xlsx")
-                        .active(true)
-                        .build()));
+                .orElseGet(
+                        () ->
+                                portfolioRepo.save(
+                                        Portfolio.builder()
+                                                .userId(userId)
+                                                .name(name)
+                                                .portfolioType(type)
+                                                .description("Imported from Yatirim_Takip_v2.xlsx")
+                                                .active(true)
+                                                .build()));
     }
 
     private Set<String> loadExistingFingerprints(UUID... portfolioIds) {
         Set<String> set = new HashSet<>();
-        List<InvestmentTransaction> existing = txnRepo
-                .findByPortfolioIdInAndNotesStartingWith(List.of(portfolioIds), NOTE_PREFIX);
+        List<InvestmentTransaction> existing =
+                txnRepo.findByPortfolioIdInAndNotesStartingWith(List.of(portfolioIds), NOTE_PREFIX);
         for (InvestmentTransaction t : existing) {
-            set.add(fingerprint(t.getPortfolioId(), t.getAssetId(), t.getTxnType(), t.getTxnDate(), t.getAmountTry()));
+            set.add(
+                    fingerprint(
+                            t.getPortfolioId(),
+                            t.getAssetId(),
+                            t.getTxnType(),
+                            t.getTxnDate(),
+                            t.getAmountTry()));
         }
         return set;
     }
 
-    private String fingerprint(UUID portfolioId, UUID assetId, InvestmentTransaction.TxnType type,
-                               LocalDate date, BigDecimal amount) {
-        return portfolioId + "|" + assetId + "|" + type + "|" + date + "|" + amount.stripTrailingZeros().toPlainString();
+    private String fingerprint(
+            UUID portfolioId,
+            UUID assetId,
+            InvestmentTransaction.TxnType type,
+            LocalDate date,
+            BigDecimal amount) {
+        return portfolioId
+                + "|"
+                + assetId
+                + "|"
+                + type
+                + "|"
+                + date
+                + "|"
+                + amount.stripTrailingZeros().toPlainString();
     }
 
     private InvestmentTransaction.TxnType mapType(String raw) {
@@ -230,7 +268,10 @@ public class ExcelImportService {
         try {
             if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
                 if (DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    return cell.getDateCellValue()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
                 }
             }
             String text = readString(cell);

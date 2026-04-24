@@ -9,11 +9,6 @@ import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.holding.HoldingRepository;
 import com.fintrack.portfolio.snapshot.dto.SnapshotResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -24,10 +19,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Captures and reads daily portfolio snapshots. Snapshots power the historical
- * value chart and future analytics such as XIRR / drawdown.
+ * Captures and reads daily portfolio snapshots. Snapshots power the historical value chart and
+ * future analytics such as XIRR / drawdown.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,8 +41,8 @@ public class SnapshotService {
     private final AssetRepository assetRepository;
 
     /**
-     * Captures one snapshot per active portfolio for today (Europe/Istanbul).
-     * Safe to run multiple times per day -- existing rows are updated in place.
+     * Captures one snapshot per active portfolio for today (Europe/Istanbul). Safe to run multiple
+     * times per day -- existing rows are updated in place.
      */
     @Transactional
     public CaptureResult captureDaily() {
@@ -59,18 +58,20 @@ public class SnapshotService {
         for (Portfolio portfolio : portfolios) {
             ValuedPortfolio valued = valuate(portfolio.getId());
 
-            PortfolioSnapshot snapshot = snapshotRepository
-                    .findByPortfolioIdAndSnapshotDate(portfolio.getId(), today)
-                    .orElse(null);
+            PortfolioSnapshot snapshot =
+                    snapshotRepository
+                            .findByPortfolioIdAndSnapshotDate(portfolio.getId(), today)
+                            .orElse(null);
 
             if (snapshot == null) {
-                snapshot = PortfolioSnapshot.builder()
-                        .portfolioId(portfolio.getId())
-                        .snapshotDate(today)
-                        .totalValueTry(valued.totalValue())
-                        .totalCostTry(valued.totalCost())
-                        .holdingsJson(valued.holdingsJson())
-                        .build();
+                snapshot =
+                        PortfolioSnapshot.builder()
+                                .portfolioId(portfolio.getId())
+                                .snapshotDate(today)
+                                .totalValueTry(valued.totalValue())
+                                .totalCostTry(valued.totalCost())
+                                .holdingsJson(valued.holdingsJson())
+                                .build();
                 snapshotRepository.save(snapshot);
                 created++;
             } else {
@@ -81,14 +82,16 @@ public class SnapshotService {
             }
         }
 
-        log.info("Daily snapshots captured: date={} created={} updated={}", today, created, updated);
+        log.info(
+                "Daily snapshots captured: date={} created={} updated={}", today, created, updated);
         return new CaptureResult(today, created, updated);
     }
 
     /** Returns the full chronological history for a portfolio owned by the user. */
     @Transactional(readOnly = true)
     public List<SnapshotResponse> listForPortfolio(UUID userId, UUID portfolioId) {
-        portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId)
+        portfolioRepository
+                .findByIdAndUserIdAndActiveTrue(portfolioId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found"));
 
         return snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId).stream()
@@ -103,9 +106,8 @@ public class SnapshotService {
             return new ValuedPortfolio(BigDecimal.ZERO, BigDecimal.ZERO, new LinkedHashMap<>());
         }
 
-        Set<UUID> assetIds = holdings.stream()
-                .map(PortfolioHolding::getAssetId)
-                .collect(Collectors.toSet());
+        Set<UUID> assetIds =
+                holdings.stream().map(PortfolioHolding::getAssetId).collect(Collectors.toSet());
         Map<UUID, Asset> assetsById = new HashMap<>();
         assetRepository.findAllById(assetIds).forEach(a -> assetsById.put(a.getId(), a));
 
@@ -118,7 +120,8 @@ public class SnapshotService {
             if (asset == null) {
                 continue;
             }
-            BigDecimal quantity = holding.getQuantity() != null ? holding.getQuantity() : BigDecimal.ZERO;
+            BigDecimal quantity =
+                    holding.getQuantity() != null ? holding.getQuantity() : BigDecimal.ZERO;
             BigDecimal price = asset.getPrice();
             BigDecimal avgCost = holding.getAvgCostTry();
 
@@ -141,13 +144,8 @@ public class SnapshotService {
     }
 
     /** Result summary for a daily capture run. */
-    public record CaptureResult(LocalDate date, int created, int updated) {
-    }
+    public record CaptureResult(LocalDate date, int created, int updated) {}
 
     private record ValuedPortfolio(
-            BigDecimal totalValue,
-            BigDecimal totalCost,
-            Map<String, Object> holdingsJson
-    ) {
-    }
+            BigDecimal totalValue, BigDecimal totalCost, Map<String, Object> holdingsJson) {}
 }

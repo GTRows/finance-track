@@ -1,18 +1,16 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * Current position in each asset within a portfolio. Updated on every investment transaction.
- */
+/** Current position in each asset within a portfolio. Updated on every investment transaction. */
 @Entity
-@Table(name = "portfolio_holdings",
+@Table(
+        name = "portfolio_holdings",
         uniqueConstraints = @UniqueConstraint(columnNames = {"portfolio_id", "asset_id"}))
 @Getter
 @Setter

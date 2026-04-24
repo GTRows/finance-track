@@ -1,16 +1,13 @@
 package com.fintrack.asset;
 
 import com.fintrack.common.entity.Asset;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-/**
- * JPA repository for {@link Asset} master data.
- */
+/** JPA repository for {@link Asset} master data. */
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, UUID> {
 

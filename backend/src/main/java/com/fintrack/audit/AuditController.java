@@ -2,6 +2,9 @@ package com.fintrack.audit;
 
 import com.fintrack.audit.dto.AuditLogResponse;
 import com.fintrack.common.entity.AuditLog;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,10 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/admin/audit")
@@ -32,7 +31,8 @@ public class AuditController {
             @RequestParam(required = false) UUID userId,
             @RequestParam(required = false) String action) {
 
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_SIZE));
+        Pageable pageable =
+                PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), MAX_SIZE));
         Page<AuditLog> result;
         if (userId != null) {
             result = repository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
@@ -42,16 +42,15 @@ public class AuditController {
             result = repository.findAllByOrderByCreatedAtDesc(pageable);
         }
 
-        List<AuditLogResponse> items = result.getContent().stream()
-                .map(AuditLogResponse::from)
-                .toList();
+        List<AuditLogResponse> items =
+                result.getContent().stream().map(AuditLogResponse::from).toList();
 
-        return ResponseEntity.ok(Map.of(
-                "items", items,
-                "page", result.getNumber(),
-                "size", result.getSize(),
-                "totalElements", result.getTotalElements(),
-                "totalPages", result.getTotalPages()
-        ));
+        return ResponseEntity.ok(
+                Map.of(
+                        "items", items,
+                        "page", result.getNumber(),
+                        "size", result.getSize(),
+                        "totalElements", result.getTotalElements(),
+                        "totalPages", result.getTotalPages()));
     }
 }

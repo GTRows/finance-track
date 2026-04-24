@@ -2,7 +2,6 @@ package com.fintrack.portfolio.dividend.dto;
 
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Dividend;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -22,8 +21,7 @@ public record DividendResponse(
         BigDecimal netAmountTry,
         LocalDate paymentDate,
         LocalDate exDividendDate,
-        String notes
-) {
+        String notes) {
     public static DividendResponse from(Dividend d, Asset asset) {
         return new DividendResponse(
                 d.getId(),

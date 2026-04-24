@@ -1,14 +1,13 @@
 package com.fintrack.auth;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Clock;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class TotpService {
@@ -41,11 +40,18 @@ public class TotpService {
     public String buildOtpauthUrl(String secret, String accountLabel) {
         String encodedIssuer = URLEncoder.encode(issuer, StandardCharsets.UTF_8);
         String encodedLabel = URLEncoder.encode(accountLabel, StandardCharsets.UTF_8);
-        return "otpauth://totp/" + encodedIssuer + ":" + encodedLabel
-                + "?secret=" + secret
-                + "&issuer=" + encodedIssuer
-                + "&algorithm=SHA1&digits=" + CODE_DIGITS
-                + "&period=" + TIME_STEP_SECONDS;
+        return "otpauth://totp/"
+                + encodedIssuer
+                + ":"
+                + encodedLabel
+                + "?secret="
+                + secret
+                + "&issuer="
+                + encodedIssuer
+                + "&algorithm=SHA1&digits="
+                + CODE_DIGITS
+                + "&period="
+                + TIME_STEP_SECONDS;
     }
 
     public boolean verify(String secret, String code) {
@@ -79,10 +85,11 @@ public class TotpService {
             mac.init(new SecretKeySpec(key, "HmacSHA1"));
             byte[] hash = mac.doFinal(data);
             int offset = hash[hash.length - 1] & 0xf;
-            int binary = ((hash[offset] & 0x7f) << 24)
-                    | ((hash[offset + 1] & 0xff) << 16)
-                    | ((hash[offset + 2] & 0xff) << 8)
-                    | (hash[offset + 3] & 0xff);
+            int binary =
+                    ((hash[offset] & 0x7f) << 24)
+                            | ((hash[offset + 1] & 0xff) << 16)
+                            | ((hash[offset + 2] & 0xff) << 8)
+                            | (hash[offset + 3] & 0xff);
             int modulus = 1;
             for (int i = 0; i < CODE_DIGITS; i++) modulus *= 10;
             return binary % modulus;

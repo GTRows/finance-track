@@ -4,14 +4,13 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.budget.rule.dto.CategoryRuleResponse;
 import com.fintrack.budget.rule.dto.UpsertCategoryRuleRequest;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/budget/category-rules")
@@ -44,8 +43,7 @@ public class TransactionCategoryRuleController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         ruleService.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }

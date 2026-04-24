@@ -1,7 +1,6 @@
 package com.fintrack.audit.dto;
 
 import com.fintrack.common.entity.AuditLog;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -14,8 +13,7 @@ public record AuditLogResponse(
         String ipAddress,
         String userAgent,
         String detail,
-        Instant createdAt
-) {
+        Instant createdAt) {
     public static AuditLogResponse from(AuditLog entry) {
         return new AuditLogResponse(
                 entry.getId(),

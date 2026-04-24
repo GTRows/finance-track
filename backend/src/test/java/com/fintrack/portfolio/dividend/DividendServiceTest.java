@@ -1,5 +1,13 @@
 package com.fintrack.portfolio.dividend;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Dividend;
@@ -9,6 +17,10 @@ import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.dividend.dto.DividendResponse;
 import com.fintrack.portfolio.dividend.dto.RecordDividendRequest;
 import com.fintrack.price.FxConversionService;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,19 +28,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DividendServiceTest {
@@ -50,8 +49,10 @@ class DividendServiceTest {
         portfolioId = UUID.randomUUID();
         assetId = UUID.randomUUID();
 
-        Portfolio portfolio = Portfolio.builder().id(portfolioId).userId(userId).name("Main").build();
-        lenient().when(portfolioRepo.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
+        Portfolio portfolio =
+                Portfolio.builder().id(portfolioId).userId(userId).name("Main").build();
+        lenient()
+                .when(portfolioRepo.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(portfolio));
 
         Asset asset = Asset.builder().id(assetId).symbol("KO").name("Coca-Cola").build();
@@ -62,17 +63,17 @@ class DividendServiceTest {
     void recordsTryDividendWithoutFxConversion() {
         when(dividendRepo.save(any(Dividend.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        RecordDividendRequest request = new RecordDividendRequest(
-                assetId,
-                new BigDecimal("100"),
-                new BigDecimal("15"),
-                "TRY",
-                null,
-                null,
-                LocalDate.of(2026, 4, 1),
-                null,
-                null
-        );
+        RecordDividendRequest request =
+                new RecordDividendRequest(
+                        assetId,
+                        new BigDecimal("100"),
+                        new BigDecimal("15"),
+                        "TRY",
+                        null,
+                        null,
+                        LocalDate.of(2026, 4, 1),
+                        null,
+                        null);
 
         DividendResponse response = service.record(userId, portfolioId, request);
 
@@ -92,17 +93,17 @@ class DividendServiceTest {
         when(fxConversionService.convert(new BigDecimal("85"), "USD", "TRY"))
                 .thenReturn(new BigDecimal("2805.00"));
 
-        RecordDividendRequest request = new RecordDividendRequest(
-                assetId,
-                new BigDecimal("100"),
-                new BigDecimal("15"),
-                "usd",
-                null,
-                null,
-                LocalDate.of(2026, 4, 1),
-                null,
-                null
-        );
+        RecordDividendRequest request =
+                new RecordDividendRequest(
+                        assetId,
+                        new BigDecimal("100"),
+                        new BigDecimal("15"),
+                        "usd",
+                        null,
+                        null,
+                        LocalDate.of(2026, 4, 1),
+                        null,
+                        null);
 
         service.record(userId, portfolioId, request);
 
@@ -118,17 +119,17 @@ class DividendServiceTest {
     void defaultsWithholdingTaxToZeroWhenOmitted() {
         when(dividendRepo.save(any(Dividend.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        RecordDividendRequest request = new RecordDividendRequest(
-                assetId,
-                new BigDecimal("50"),
-                null,
-                "TRY",
-                null,
-                null,
-                LocalDate.of(2026, 1, 1),
-                null,
-                null
-        );
+        RecordDividendRequest request =
+                new RecordDividendRequest(
+                        assetId,
+                        new BigDecimal("50"),
+                        null,
+                        "TRY",
+                        null,
+                        null,
+                        LocalDate.of(2026, 1, 1),
+                        null,
+                        null);
 
         service.record(userId, portfolioId, request);
 
@@ -142,17 +143,17 @@ class DividendServiceTest {
     void normalizesBlankCurrencyToTry() {
         when(dividendRepo.save(any(Dividend.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        RecordDividendRequest request = new RecordDividendRequest(
-                assetId,
-                new BigDecimal("30"),
-                BigDecimal.ZERO,
-                "  ",
-                null,
-                null,
-                LocalDate.of(2026, 1, 1),
-                null,
-                null
-        );
+        RecordDividendRequest request =
+                new RecordDividendRequest(
+                        assetId,
+                        new BigDecimal("30"),
+                        BigDecimal.ZERO,
+                        "  ",
+                        null,
+                        null,
+                        LocalDate.of(2026, 1, 1),
+                        null,
+                        null);
 
         service.record(userId, portfolioId, request);
 
@@ -167,17 +168,17 @@ class DividendServiceTest {
         when(portfolioRepo.findByIdAndUserIdAndActiveTrue(portfolioId, otherUser))
                 .thenReturn(Optional.empty());
 
-        RecordDividendRequest request = new RecordDividendRequest(
-                assetId,
-                new BigDecimal("10"),
-                BigDecimal.ZERO,
-                "TRY",
-                null,
-                null,
-                LocalDate.of(2026, 1, 1),
-                null,
-                null
-        );
+        RecordDividendRequest request =
+                new RecordDividendRequest(
+                        assetId,
+                        new BigDecimal("10"),
+                        BigDecimal.ZERO,
+                        "TRY",
+                        null,
+                        null,
+                        LocalDate.of(2026, 1, 1),
+                        null,
+                        null);
 
         assertThatThrownBy(() -> service.record(otherUser, portfolioId, request))
                 .isInstanceOf(ResourceNotFoundException.class);

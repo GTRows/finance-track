@@ -2,6 +2,7 @@ package com.fintrack.price;
 
 import com.fintrack.alert.PriceAlertService;
 import com.fintrack.websocket.PriceBroadcaster;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -9,11 +10,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.TimeUnit;
-
 /**
- * Periodically refreshes prices so the portfolio UI always has fresh data
- * without needing a manual trigger.
+ * Periodically refreshes prices so the portfolio UI always has fresh data without needing a manual
+ * trigger.
  */
 @Component
 @RequiredArgsConstructor
@@ -37,9 +36,13 @@ public class PriceScheduler {
     public void onStartup() {
         try {
             PriceSyncService.SyncResult result = priceSyncService.refreshAll();
-            log.info("Initial price sync complete: crypto={} currency={} fund={} metal={} stock={}",
-                    result.cryptoUpdated(), result.currencyUpdated(),
-                    result.fundUpdated(), result.metalUpdated(), result.stockUpdated());
+            log.info(
+                    "Initial price sync complete: crypto={} currency={} fund={} metal={} stock={}",
+                    result.cryptoUpdated(),
+                    result.currencyUpdated(),
+                    result.fundUpdated(),
+                    result.metalUpdated(),
+                    result.stockUpdated());
             priceBroadcaster.broadcastAll();
             evaluateAlertsSafely();
         } catch (Exception e) {
@@ -48,15 +51,23 @@ public class PriceScheduler {
     }
 
     /** Runs on a fixed delay defined by {@code price-api.sync-interval-seconds}. */
-    @Scheduled(fixedDelayString = "${price-api.sync-interval-seconds:30}", timeUnit = TimeUnit.SECONDS)
+    @Scheduled(
+            fixedDelayString = "${price-api.sync-interval-seconds:30}",
+            timeUnit = TimeUnit.SECONDS)
     public void scheduledRefresh() {
         try {
             PriceSyncService.SyncResult result = priceSyncService.refreshLive();
-            log.debug("Scheduled price sync: crypto={} currency={} metal={} stock={}",
-                    result.cryptoUpdated(), result.currencyUpdated(),
-                    result.metalUpdated(), result.stockUpdated());
-            if (result.cryptoUpdated() + result.currencyUpdated()
-                    + result.metalUpdated() + result.stockUpdated() > 0) {
+            log.debug(
+                    "Scheduled price sync: crypto={} currency={} metal={} stock={}",
+                    result.cryptoUpdated(),
+                    result.currencyUpdated(),
+                    result.metalUpdated(),
+                    result.stockUpdated());
+            if (result.cryptoUpdated()
+                            + result.currencyUpdated()
+                            + result.metalUpdated()
+                            + result.stockUpdated()
+                    > 0) {
                 priceBroadcaster.broadcastAll();
                 evaluateAlertsSafely();
             }
@@ -66,9 +77,8 @@ public class PriceScheduler {
     }
 
     /**
-     * TEFAS fund prices only publish once per trading day, so we only poke them
-     * every hour. A separate schedule keeps the 30-second tick free of slow
-     * sequential HTTP calls.
+     * TEFAS fund prices only publish once per trading day, so we only poke them every hour. A
+     * separate schedule keeps the 30-second tick free of slow sequential HTTP calls.
      */
     @Scheduled(fixedDelay = 1, initialDelay = 1, timeUnit = TimeUnit.HOURS)
     public void scheduledFundRefresh() {

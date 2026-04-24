@@ -4,6 +4,8 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.budget.dto.*;
 import com.fintrack.common.entity.BudgetTransaction;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,9 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/budget")
@@ -29,7 +28,8 @@ public class BudgetController {
             @RequestParam(required = false) BudgetTransaction.TxnType type,
             @RequestParam(required = false) UUID tagId,
             Pageable pageable) {
-        return ResponseEntity.ok(budgetService.listTransactions(user.getId(), month, type, tagId, pageable));
+        return ResponseEntity.ok(
+                budgetService.listTransactions(user.getId(), month, type, tagId, pageable));
     }
 
     @PostMapping("/transactions")
@@ -50,8 +50,7 @@ public class BudgetController {
 
     @DeleteMapping("/transactions/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         budgetService.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }
@@ -68,27 +67,26 @@ public class BudgetController {
     public ResponseEntity<BulkResultResponse> bulkUpdate(
             @AuthenticationPrincipal FinTrackUserDetails user,
             @Valid @RequestBody BulkUpdateRequest request) {
-        int affected = budgetService.bulkUpdate(
-                user.getId(),
-                request.ids(),
-                request.categoryId(),
-                Boolean.TRUE.equals(request.clearCategory()),
-                request.addTagIds(),
-                request.removeTagIds());
+        int affected =
+                budgetService.bulkUpdate(
+                        user.getId(),
+                        request.ids(),
+                        request.categoryId(),
+                        Boolean.TRUE.equals(request.clearCategory()),
+                        request.addTagIds(),
+                        request.removeTagIds());
         return ResponseEntity.ok(new BulkResultResponse(affected));
     }
 
     @GetMapping("/summary")
     public ResponseEntity<BudgetSummaryResponse> summary(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @RequestParam String month) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @RequestParam String month) {
         return ResponseEntity.ok(budgetService.summary(user.getId(), month));
     }
 
     @PostMapping("/summaries/{period}/snapshot")
     public ResponseEntity<MonthlySummaryResponse> snapshot(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable String period) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable String period) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(budgetService.captureSnapshot(user.getId(), period));
     }

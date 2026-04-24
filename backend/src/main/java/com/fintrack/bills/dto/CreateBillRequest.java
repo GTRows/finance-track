@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-
 import java.math.BigDecimal;
 
 public record CreateBillRequest(
@@ -14,6 +13,4 @@ public record CreateBillRequest(
         String category,
         int remindDaysBefore,
         boolean autoPay,
-        String notes
-) {
-}
+        String notes) {}

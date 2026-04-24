@@ -1,19 +1,18 @@
 package com.fintrack.price.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Spot precious-metal prices from api.gold-api.com. Keyless public endpoint
- * that returns USD per troy ounce for each symbol (XAU/XAG/XPT/XPD). Callers
- * are responsible for converting to local currency using a separate FX rate.
+ * Spot precious-metal prices from api.gold-api.com. Keyless public endpoint that returns USD per
+ * troy ounce for each symbol (XAU/XAG/XPT/XPD). Callers are responsible for converting to local
+ * currency using a separate FX rate.
  */
 @Component
 @Slf4j
@@ -42,12 +41,14 @@ public class PreciousMetalsClient {
 
     private BigDecimal fetchOne(String symbol) {
         try {
-            JsonNode response = webClient.get()
-                    .uri("/price/{symbol}", symbol)
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .block();
+            JsonNode response =
+                    webClient
+                            .get()
+                            .uri("/price/{symbol}", symbol)
+                            .retrieve()
+                            .bodyToMono(JsonNode.class)
+                            .timeout(Duration.ofSeconds(10))
+                            .block();
 
             if (response == null) return null;
             JsonNode price = response.path("price");

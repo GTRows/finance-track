@@ -1,21 +1,19 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-
-/**
- * Month-end snapshots. The "log" the user captures each month.
- */
+/** Month-end snapshots. The "log" the user captures each month. */
 @Entity
-@Table(name = "monthly_summaries",
+@Table(
+        name = "monthly_summaries",
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "period"}))
 @Getter
 @Setter

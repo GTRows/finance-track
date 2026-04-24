@@ -4,14 +4,13 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.portfolio.transaction.dto.RecordTransactionRequest;
 import com.fintrack.portfolio.transaction.dto.TransactionResponse;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/portfolios/{portfolioId}/transactions")
@@ -22,8 +21,7 @@ public class InvestmentTransactionController {
 
     @GetMapping
     public ResponseEntity<List<TransactionResponse>> list(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID portfolioId) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID portfolioId) {
         return ResponseEntity.ok(transactionService.list(user.getId(), portfolioId));
     }
 

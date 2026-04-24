@@ -4,10 +4,6 @@ import com.fintrack.analytics.benchmark.dto.BenchmarkSeries;
 import com.fintrack.analytics.benchmark.dto.BenchmarkSeriesResponse;
 import com.fintrack.price.client.YahooFinanceClient;
 import com.fintrack.price.client.YahooFinanceClient.PricePoint;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -24,11 +23,11 @@ public class BenchmarkService {
 
     private static final Duration CACHE_TTL = Duration.ofHours(1);
 
-    private static final List<BenchmarkSpec> SPECS = List.of(
-            new BenchmarkSpec("BIST100", "XU100.IS", "TRY"),
-            new BenchmarkSpec("SP500", "^GSPC", "USD"),
-            new BenchmarkSpec("GOLD", "GC=F", "USD")
-    );
+    private static final List<BenchmarkSpec> SPECS =
+            List.of(
+                    new BenchmarkSpec("BIST100", "XU100.IS", "TRY"),
+                    new BenchmarkSpec("SP500", "^GSPC", "USD"),
+                    new BenchmarkSpec("GOLD", "GC=F", "USD"));
 
     private final YahooFinanceClient yahoo;
     private final Map<String, CachedSeries> cache = new ConcurrentHashMap<>();
@@ -38,7 +37,8 @@ public class BenchmarkService {
         List<BenchmarkSeries> seriesList = new ArrayList<>();
         for (BenchmarkSpec spec : SPECS) {
             List<BenchmarkSeries.Point> points = loadSeries(spec, window);
-            seriesList.add(new BenchmarkSeries(spec.code(), spec.symbol(), spec.currency(), points));
+            seriesList.add(
+                    new BenchmarkSeries(spec.code(), spec.symbol(), spec.currency(), points));
         }
         return new BenchmarkSeriesResponse(window, seriesList);
     }

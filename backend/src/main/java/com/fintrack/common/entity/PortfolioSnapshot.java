@@ -1,22 +1,20 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-/**
- * Daily point-in-time portfolio valuation used for historical charts.
- */
+/** Daily point-in-time portfolio valuation used for historical charts. */
 @Entity
-@Table(name = "portfolio_snapshots",
+@Table(
+        name = "portfolio_snapshots",
         uniqueConstraints = @UniqueConstraint(columnNames = {"portfolio_id", "snapshot_date"}))
 @Getter
 @Setter

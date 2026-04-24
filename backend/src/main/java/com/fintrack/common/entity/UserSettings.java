@@ -1,19 +1,16 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-
-/**
- * Per-user preferences (1:1 with users table).
- */
+/** Per-user preferences (1:1 with users table). */
 @Entity
 @Table(name = "user_settings")
 @Getter

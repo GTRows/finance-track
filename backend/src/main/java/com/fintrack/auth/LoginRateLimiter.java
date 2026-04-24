@@ -1,21 +1,20 @@
 package com.fintrack.auth;
 
 import com.fintrack.common.web.RequestContext;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-
 /**
- * Fixed-window counter stored in Redis. Rejects a login attempt once either the
- * per-username or per-IP counter exceeds the configured threshold inside the window.
+ * Fixed-window counter stored in Redis. Rejects a login attempt once either the per-username or
+ * per-IP counter exceeds the configured threshold inside the window.
  *
- * <p>Keys expire automatically, so no scheduled cleanup is needed. Successful logins
- * clear the username-bound counter so the user is not punished for their own typos once
- * they get the password right.
+ * <p>Keys expire automatically, so no scheduled cleanup is needed. Successful logins clear the
+ * username-bound counter so the user is not punished for their own typos once they get the password
+ * right.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,9 +30,8 @@ public class LoginRateLimiter {
     private long windowSeconds;
 
     /**
-     * Rate limits for sensitive non-login actions (password reset, email verification,
-     * token refresh). Keyed by IP + category so a single bad actor can't burn through
-     * any one flow.
+     * Rate limits for sensitive non-login actions (password reset, email verification, token
+     * refresh). Keyed by IP + category so a single bad actor can't burn through any one flow.
      */
     @Value("${fintrack.auth.sensitive-rate-limit.max-attempts:10}")
     private int sensitiveMaxAttempts;
@@ -44,7 +42,8 @@ public class LoginRateLimiter {
     public void enforce(String username) {
         if (!isEnabled()) return;
         String ip = RequestContext.clientIp();
-        if (isBlocked("login:user:" + normalise(username)) || (ip != null && isBlocked("login:ip:" + ip))) {
+        if (isBlocked("login:user:" + normalise(username))
+                || (ip != null && isBlocked("login:ip:" + ip))) {
             log.warn("Login rate limit hit for user={} ip={}", username, ip);
             throw new LoginRateLimitException(
                     "Too many login attempts. Try again in a few minutes.");
@@ -52,9 +51,9 @@ public class LoginRateLimiter {
     }
 
     /**
-     * Enforce rate limit for sensitive flows by category (e.g. "password-reset",
-     * "email-verify", "token-refresh"). Uses a per-IP counter so legitimate users on
-     * a different network are unaffected by abuse from a single source.
+     * Enforce rate limit for sensitive flows by category (e.g. "password-reset", "email-verify",
+     * "token-refresh"). Uses a per-IP counter so legitimate users on a different network are
+     * unaffected by abuse from a single source.
      */
     public void enforceSensitive(String category) {
         if (!isSensitiveEnabled()) return;
@@ -70,8 +69,7 @@ public class LoginRateLimiter {
         }
         if (count >= sensitiveMaxAttempts) {
             log.warn("Sensitive rate limit hit for category={} ip={}", category, ip);
-            throw new LoginRateLimitException(
-                    "Too many attempts. Try again in a few minutes.");
+            throw new LoginRateLimitException("Too many attempts. Try again in a few minutes.");
         }
         Long next = redis.opsForValue().increment(key);
         if (next != null && next == 1L) {

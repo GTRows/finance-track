@@ -5,14 +5,13 @@ import com.fintrack.networth.dto.NetWorthEventResponse;
 import com.fintrack.networth.dto.NetWorthTimelineResponse;
 import com.fintrack.networth.dto.UpsertEventRequest;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/net-worth")
@@ -50,8 +49,7 @@ public class NetWorthController {
 
     @DeleteMapping("/events/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         service.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }

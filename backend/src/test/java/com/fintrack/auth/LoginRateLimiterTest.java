@@ -1,5 +1,13 @@
 package com.fintrack.auth;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,15 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.time.Duration;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LoginRateLimiterTest {
@@ -123,8 +122,8 @@ class LoginRateLimiterTest {
         when(redis.opsForValue()).thenReturn(ops);
         when(ops.get("sensitive:password-reset:ip:10.0.0.1")).thenReturn("10");
 
-        assertThrows(LoginRateLimitException.class,
-                () -> limiter.enforceSensitive("password-reset"));
+        assertThrows(
+                LoginRateLimitException.class, () -> limiter.enforceSensitive("password-reset"));
         verify(ops, org.mockito.Mockito.never()).increment(any(String.class));
     }
 }

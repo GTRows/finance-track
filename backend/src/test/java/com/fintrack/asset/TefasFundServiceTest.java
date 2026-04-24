@@ -1,5 +1,12 @@
 package com.fintrack.asset;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.asset.TefasFundService.FundSearchRow;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Asset.AssetType;
@@ -7,25 +14,17 @@ import com.fintrack.price.PriceSyncService;
 import com.fintrack.price.client.TefasClient;
 import com.fintrack.price.client.TefasClient.FundSummary;
 import com.fintrack.price.client.TefasClient.FundType;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TefasFundServiceTest {
@@ -42,9 +41,13 @@ class TefasFundServiceTest {
 
     private Asset fundAsset(String symbol, Map<String, Object> metadata) {
         return Asset.builder()
-                .id(UUID.randomUUID()).symbol(symbol).name(symbol)
-                .assetType(AssetType.FUND).currency("TRY")
-                .metadata(metadata).build();
+                .id(UUID.randomUUID())
+                .symbol(symbol)
+                .name(symbol)
+                .assetType(AssetType.FUND)
+                .currency("TRY")
+                .metadata(metadata)
+                .build();
     }
 
     @Test
@@ -56,11 +59,13 @@ class TefasFundServiceTest {
 
     @Test
     void searchMatchesCodeOrNameSubstringAcrossCatalogs() {
-        when(tefasClient.listAll(FundType.YAT)).thenReturn(List.of(
-                fund("TTA", "TEB PARA PIYASASI", FundType.YAT),
-                fund("ABC", "Some other fund", FundType.YAT)));
-        when(tefasClient.listAll(FundType.EMK)).thenReturn(List.of(
-                fund("BES1", "Is Bankasi Emeklilik", FundType.EMK)));
+        when(tefasClient.listAll(FundType.YAT))
+                .thenReturn(
+                        List.of(
+                                fund("TTA", "TEB PARA PIYASASI", FundType.YAT),
+                                fund("ABC", "Some other fund", FundType.YAT)));
+        when(tefasClient.listAll(FundType.EMK))
+                .thenReturn(List.of(fund("BES1", "Is Bankasi Emeklilik", FundType.EMK)));
         when(assetRepository.findByAssetTypeOrderBySymbolAsc(AssetType.FUND)).thenReturn(List.of());
 
         List<FundSearchRow> res = service.search("teb");
@@ -72,8 +77,8 @@ class TefasFundServiceTest {
 
     @Test
     void searchSetsImportedTrueWhenAssetAlreadyExists() {
-        when(tefasClient.listAll(FundType.YAT)).thenReturn(List.of(
-                fund("TTA", "TEB PARA PIYASASI", FundType.YAT)));
+        when(tefasClient.listAll(FundType.YAT))
+                .thenReturn(List.of(fund("TTA", "TEB PARA PIYASASI", FundType.YAT)));
         when(tefasClient.listAll(FundType.EMK)).thenReturn(List.of());
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("tefasCode", "TTA");
@@ -126,18 +131,28 @@ class TefasFundServiceTest {
     void importFundSavesNewAssetAndRefreshesPrice() {
         when(assetRepository.findBySymbolAndAssetType("TTA", AssetType.FUND))
                 .thenReturn(Optional.empty());
-        when(tefasClient.listAll(FundType.YAT)).thenReturn(List.of(
-                fund("TTA", "TEB PARA PIYASASI", FundType.YAT)));
-        when(assetRepository.save(any(Asset.class))).thenAnswer(inv -> {
-            Asset a = inv.getArgument(0);
-            a.setId(UUID.randomUUID());
-            return a;
-        });
-        when(assetRepository.findById(any(UUID.class))).thenAnswer(inv -> {
-            Asset a = Asset.builder().id(inv.getArgument(0)).symbol("TTA").name("TEB PARA PIYASASI")
-                    .assetType(AssetType.FUND).currency("TRY").build();
-            return Optional.of(a);
-        });
+        when(tefasClient.listAll(FundType.YAT))
+                .thenReturn(List.of(fund("TTA", "TEB PARA PIYASASI", FundType.YAT)));
+        when(assetRepository.save(any(Asset.class)))
+                .thenAnswer(
+                        inv -> {
+                            Asset a = inv.getArgument(0);
+                            a.setId(UUID.randomUUID());
+                            return a;
+                        });
+        when(assetRepository.findById(any(UUID.class)))
+                .thenAnswer(
+                        inv -> {
+                            Asset a =
+                                    Asset.builder()
+                                            .id(inv.getArgument(0))
+                                            .symbol("TTA")
+                                            .name("TEB PARA PIYASASI")
+                                            .assetType(AssetType.FUND)
+                                            .currency("TRY")
+                                            .build();
+                            return Optional.of(a);
+                        });
 
         Asset saved = service.importFund("  tta  ", FundType.YAT);
 
@@ -160,16 +175,26 @@ class TefasFundServiceTest {
                 .thenReturn(Optional.empty());
         when(tefasClient.listAll(FundType.YAT)).thenReturn(List.of());
         when(tefasClient.listAll(FundType.EMK)).thenReturn(List.of());
-        when(assetRepository.save(any(Asset.class))).thenAnswer(inv -> {
-            Asset a = inv.getArgument(0);
-            a.setId(UUID.randomUUID());
-            return a;
-        });
-        when(assetRepository.findById(any(UUID.class))).thenAnswer(inv -> {
-            Asset a = Asset.builder().id(inv.getArgument(0)).symbol("XYZ").name("XYZ")
-                    .assetType(AssetType.FUND).currency("TRY").build();
-            return Optional.of(a);
-        });
+        when(assetRepository.save(any(Asset.class)))
+                .thenAnswer(
+                        inv -> {
+                            Asset a = inv.getArgument(0);
+                            a.setId(UUID.randomUUID());
+                            return a;
+                        });
+        when(assetRepository.findById(any(UUID.class)))
+                .thenAnswer(
+                        inv -> {
+                            Asset a =
+                                    Asset.builder()
+                                            .id(inv.getArgument(0))
+                                            .symbol("XYZ")
+                                            .name("XYZ")
+                                            .assetType(AssetType.FUND)
+                                            .currency("TRY")
+                                            .build();
+                            return Optional.of(a);
+                        });
 
         service.importFund("xyz", FundType.YAT);
 
@@ -183,17 +208,21 @@ class TefasFundServiceTest {
         when(assetRepository.findBySymbolAndAssetType("BES1", AssetType.FUND))
                 .thenReturn(Optional.empty());
         when(tefasClient.listAll(FundType.YAT)).thenReturn(List.of());
-        when(tefasClient.listAll(FundType.EMK)).thenReturn(List.of(
-                fund("BES1", "Is Bankasi Emeklilik", FundType.EMK)));
-        when(assetRepository.save(any(Asset.class))).thenAnswer(inv -> {
-            Asset a = inv.getArgument(0);
-            a.setId(UUID.randomUUID());
-            return a;
-        });
-        when(assetRepository.findById(any(UUID.class))).thenAnswer(inv -> {
-            Asset a = Asset.builder().id(inv.getArgument(0)).build();
-            return Optional.of(a);
-        });
+        when(tefasClient.listAll(FundType.EMK))
+                .thenReturn(List.of(fund("BES1", "Is Bankasi Emeklilik", FundType.EMK)));
+        when(assetRepository.save(any(Asset.class)))
+                .thenAnswer(
+                        inv -> {
+                            Asset a = inv.getArgument(0);
+                            a.setId(UUID.randomUUID());
+                            return a;
+                        });
+        when(assetRepository.findById(any(UUID.class)))
+                .thenAnswer(
+                        inv -> {
+                            Asset a = Asset.builder().id(inv.getArgument(0)).build();
+                            return Optional.of(a);
+                        });
 
         service.importFund("bes1", FundType.YAT);
 

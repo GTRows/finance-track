@@ -1,14 +1,11 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
-
-/**
- * System-wide admin configuration stored in the database.
- */
+/** System-wide admin configuration stored in the database. */
 @Entity
 @Table(name = "admin_settings")
 @Getter

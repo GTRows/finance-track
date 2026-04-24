@@ -1,23 +1,5 @@
 package com.fintrack.auth;
 
-import com.fintrack.audit.AuditService;
-import com.fintrack.common.entity.PasswordReset;
-import com.fintrack.common.entity.User;
-import com.fintrack.common.exception.BusinessRuleException;
-import com.fintrack.notification.MailProperties;
-import com.fintrack.notification.MailService;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,6 +8,23 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.audit.AuditService;
+import com.fintrack.common.entity.PasswordReset;
+import com.fintrack.common.entity.User;
+import com.fintrack.common.exception.BusinessRuleException;
+import com.fintrack.notification.MailProperties;
+import com.fintrack.notification.MailService;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class PasswordResetServiceTest {
@@ -89,10 +88,14 @@ class PasswordResetServiceTest {
 
     @Test
     void confirmResetThrowsWhenAlreadyUsed() {
-        PasswordReset entry = PasswordReset.builder()
-                .id(UUID.randomUUID()).userId(UUID.randomUUID()).token("t")
-                .expiresAt(Instant.now().plusSeconds(60))
-                .consumedAt(Instant.now().minusSeconds(5)).build();
+        PasswordReset entry =
+                PasswordReset.builder()
+                        .id(UUID.randomUUID())
+                        .userId(UUID.randomUUID())
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .consumedAt(Instant.now().minusSeconds(5))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
 
         assertThatThrownBy(() -> service.confirmReset("t", "new-pw"))
@@ -102,9 +105,13 @@ class PasswordResetServiceTest {
 
     @Test
     void confirmResetThrowsWhenExpired() {
-        PasswordReset entry = PasswordReset.builder()
-                .id(UUID.randomUUID()).userId(UUID.randomUUID()).token("t")
-                .expiresAt(Instant.now().minusSeconds(60)).build();
+        PasswordReset entry =
+                PasswordReset.builder()
+                        .id(UUID.randomUUID())
+                        .userId(UUID.randomUUID())
+                        .token("t")
+                        .expiresAt(Instant.now().minusSeconds(60))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
 
         assertThatThrownBy(() -> service.confirmReset("t", "new-pw"))
@@ -114,9 +121,13 @@ class PasswordResetServiceTest {
 
     @Test
     void confirmResetThrowsWhenUserMissing() {
-        PasswordReset entry = PasswordReset.builder()
-                .id(UUID.randomUUID()).userId(UUID.randomUUID()).token("t")
-                .expiresAt(Instant.now().plusSeconds(60)).build();
+        PasswordReset entry =
+                PasswordReset.builder()
+                        .id(UUID.randomUUID())
+                        .userId(UUID.randomUUID())
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
         when(userRepository.findById(entry.getUserId())).thenReturn(Optional.empty());
 
@@ -127,9 +138,13 @@ class PasswordResetServiceTest {
     @Test
     void confirmResetRejectsReuseOfSamePassword() {
         User u = user();
-        PasswordReset entry = PasswordReset.builder()
-                .id(UUID.randomUUID()).userId(u.getId()).token("t")
-                .expiresAt(Instant.now().plusSeconds(60)).build();
+        PasswordReset entry =
+                PasswordReset.builder()
+                        .id(UUID.randomUUID())
+                        .userId(u.getId())
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
         when(userRepository.findById(u.getId())).thenReturn(Optional.of(u));
         when(passwordEncoder.matches("new-pw", "bcrypt-current")).thenReturn(true);
@@ -145,9 +160,13 @@ class PasswordResetServiceTest {
     @Test
     void confirmResetSetsNewPasswordAndRevokesSessions() {
         User u = user();
-        PasswordReset entry = PasswordReset.builder()
-                .id(UUID.randomUUID()).userId(u.getId()).token("t")
-                .expiresAt(Instant.now().plusSeconds(60)).build();
+        PasswordReset entry =
+                PasswordReset.builder()
+                        .id(UUID.randomUUID())
+                        .userId(u.getId())
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .build();
         when(repository.findByToken("t")).thenReturn(Optional.of(entry));
         when(userRepository.findById(u.getId())).thenReturn(Optional.of(u));
         when(passwordEncoder.matches("new-pw", "bcrypt-current")).thenReturn(false);

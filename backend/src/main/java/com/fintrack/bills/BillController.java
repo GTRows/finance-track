@@ -3,14 +3,13 @@ package com.fintrack.bills;
 import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.bills.dto.*;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/bills")
@@ -43,8 +42,7 @@ public class BillController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         billService.delete(user.getId(), id);
         return ResponseEntity.noContent().build();
     }
@@ -59,15 +57,13 @@ public class BillController {
 
     @GetMapping("/{id}/history")
     public ResponseEntity<List<PaymentHistoryResponse>> history(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         return ResponseEntity.ok(billService.history(user.getId(), id));
     }
 
     @PostMapping("/{id}/mark-used")
     public ResponseEntity<BillResponse> markUsed(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID id) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID id) {
         return ResponseEntity.ok(billService.markUsed(user.getId(), id));
     }
 

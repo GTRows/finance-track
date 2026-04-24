@@ -3,7 +3,6 @@ package com.fintrack.portfolio.transaction.dto;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.InvestmentTransaction;
 import com.fintrack.common.entity.InvestmentTransaction.TxnType;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,8 +21,7 @@ public record TransactionResponse(
         BigDecimal feeTry,
         String notes,
         LocalDate txnDate,
-        Instant createdAt
-) {
+        Instant createdAt) {
 
     public static TransactionResponse from(InvestmentTransaction t, Asset asset) {
         return new TransactionResponse(
@@ -39,7 +37,6 @@ public record TransactionResponse(
                 t.getFeeTry(),
                 t.getNotes(),
                 t.getTxnDate(),
-                t.getCreatedAt()
-        );
+                t.getCreatedAt());
     }
 }

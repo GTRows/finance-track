@@ -1,7 +1,6 @@
 package com.fintrack.alert.dto;
 
 import com.fintrack.common.entity.AlertNotification;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,8 +12,7 @@ public record NotificationResponse(
         UUID sourceId,
         String message,
         Instant readAt,
-        Instant createdAt
-) {
+        Instant createdAt) {
 
     public static NotificationResponse from(AlertNotification n) {
         return new NotificationResponse(
@@ -25,7 +23,6 @@ public record NotificationResponse(
                 n.getSourceId(),
                 n.getMessage(),
                 n.getReadAt(),
-                n.getCreatedAt()
-        );
+                n.getCreatedAt());
     }
 }

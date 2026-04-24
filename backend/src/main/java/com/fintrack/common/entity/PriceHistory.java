@@ -1,15 +1,12 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.*;
 
-/**
- * Time-series price data for charts. Kept for 90 days.
- */
+/** Time-series price data for charts. Kept for 90 days. */
 @Entity
 @Table(name = "price_history")
 @Getter

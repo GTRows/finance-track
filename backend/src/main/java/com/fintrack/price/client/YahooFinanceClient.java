@@ -1,10 +1,6 @@
 package com.fintrack.price.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -12,12 +8,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Yahoo Finance chart API client. Keyless public endpoint that exposes a
- * regular market price + currency for any ticker symbol including BIST via
- * the {@code .IS} suffix (e.g. {@code THYAO.IS}). Used for individual stock
- * coverage where TEFAS only lists fund-style instruments.
+ * Yahoo Finance chart API client. Keyless public endpoint that exposes a regular market price +
+ * currency for any ticker symbol including BIST via the {@code .IS} suffix (e.g. {@code THYAO.IS}).
+ * Used for individual stock coverage where TEFAS only lists fund-style instruments.
  */
 @Component
 @Slf4j
@@ -30,20 +28,19 @@ public class YahooFinanceClient {
     private final WebClient webClient;
 
     public YahooFinanceClient() {
-        this.webClient = WebClient.builder()
-                .baseUrl(BASE_URL)
-                .defaultHeader("User-Agent", UA)
-                .defaultHeader("Accept", "application/json")
-                .build();
+        this.webClient =
+                WebClient.builder()
+                        .baseUrl(BASE_URL)
+                        .defaultHeader("User-Agent", UA)
+                        .defaultHeader("Accept", "application/json")
+                        .build();
     }
 
     /** Current market price and its native currency for a given Yahoo symbol. */
-    public record Quote(BigDecimal price, String currency) {
-    }
+    public record Quote(BigDecimal price, String currency) {}
 
     /** Timestamped close price. */
-    public record PricePoint(Instant at, BigDecimal price) {
-    }
+    public record PricePoint(Instant at, BigDecimal price) {}
 
     /** Fetches current quotes for a batch of symbols in parallel, one request each. */
     public Map<String, Quote> fetchQuotes(Iterable<String> symbols) {
@@ -60,17 +57,24 @@ public class YahooFinanceClient {
 
     private Quote fetchOne(String symbol) {
         try {
-            JsonNode response = webClient.get()
-                    .uri(uri -> uri.path("/v8/finance/chart/{symbol}")
-                            .queryParam("interval", "1d")
-                            .queryParam("range", "1d")
-                            .build(symbol))
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .block();
+            JsonNode response =
+                    webClient
+                            .get()
+                            .uri(
+                                    uri ->
+                                            uri.path("/v8/finance/chart/{symbol}")
+                                                    .queryParam("interval", "1d")
+                                                    .queryParam("range", "1d")
+                                                    .build(symbol))
+                            .retrieve()
+                            .bodyToMono(JsonNode.class)
+                            .timeout(Duration.ofSeconds(10))
+                            .block();
 
-            JsonNode meta = response == null ? null : response.path("chart").path("result").path(0).path("meta");
+            JsonNode meta =
+                    response == null
+                            ? null
+                            : response.path("chart").path("result").path(0).path("meta");
             if (meta == null || meta.isMissingNode()) {
                 log.warn("Yahoo quote {}: missing meta in response", symbol);
                 return null;
@@ -89,31 +93,37 @@ public class YahooFinanceClient {
     }
 
     /**
-     * Fetches daily close history over the last N days. Uses 1d interval with a
-     * range derived from {@code days}. Caller receives epoch-seconds timestamps
-     * already translated to {@link Instant}.
+     * Fetches daily close history over the last N days. Uses 1d interval with a range derived from
+     * {@code days}. Caller receives epoch-seconds timestamps already translated to {@link Instant}.
      */
     public List<PricePoint> fetchHistory(String symbol, int days) {
         if (symbol == null || symbol.isBlank()) return List.of();
         int window = Math.max(1, Math.min(days, 365));
-        String range = window <= 5 ? "5d"
-                : window <= 30 ? "1mo"
-                : window <= 90 ? "3mo"
-                : window <= 180 ? "6mo"
-                : window <= 365 ? "1y"
-                : "2y";
+        String range =
+                window <= 5
+                        ? "5d"
+                        : window <= 30
+                                ? "1mo"
+                                : window <= 90
+                                        ? "3mo"
+                                        : window <= 180 ? "6mo" : window <= 365 ? "1y" : "2y";
         try {
-            JsonNode response = webClient.get()
-                    .uri(uri -> uri.path("/v8/finance/chart/{symbol}")
-                            .queryParam("interval", "1d")
-                            .queryParam("range", range)
-                            .build(symbol))
-                    .retrieve()
-                    .bodyToMono(JsonNode.class)
-                    .timeout(Duration.ofSeconds(15))
-                    .block();
+            JsonNode response =
+                    webClient
+                            .get()
+                            .uri(
+                                    uri ->
+                                            uri.path("/v8/finance/chart/{symbol}")
+                                                    .queryParam("interval", "1d")
+                                                    .queryParam("range", range)
+                                                    .build(symbol))
+                            .retrieve()
+                            .bodyToMono(JsonNode.class)
+                            .timeout(Duration.ofSeconds(15))
+                            .block();
 
-            JsonNode result = response == null ? null : response.path("chart").path("result").path(0);
+            JsonNode result =
+                    response == null ? null : response.path("chart").path("result").path(0);
             if (result == null || result.isMissingNode()) return List.of();
 
             JsonNode timestamps = result.path("timestamp");
@@ -126,7 +136,9 @@ public class YahooFinanceClient {
                 JsonNode closeNode = closes.get(i);
                 if (closeNode == null || closeNode.isNull() || !closeNode.isNumber()) continue;
                 long epochSecond = timestamps.get(i).asLong();
-                points.add(new PricePoint(Instant.ofEpochSecond(epochSecond), closeNode.decimalValue()));
+                points.add(
+                        new PricePoint(
+                                Instant.ofEpochSecond(epochSecond), closeNode.decimalValue()));
             }
             return points;
         } catch (Exception e) {

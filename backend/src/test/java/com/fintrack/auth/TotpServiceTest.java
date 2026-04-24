@@ -1,12 +1,11 @@
 package com.fintrack.auth;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class TotpServiceTest {
 
@@ -58,7 +57,8 @@ class TotpServiceTest {
         String secret = service.generateSecret();
         assertEquals(32, secret.length());
         for (char c : secret.toCharArray()) {
-            assertTrue("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".indexOf(c) >= 0,
+            assertTrue(
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".indexOf(c) >= 0,
                     "secret contains non-base32 character: " + c);
         }
     }

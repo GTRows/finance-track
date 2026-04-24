@@ -5,23 +5,22 @@ import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
 import com.fintrack.portfolio.risk.dto.RiskMetricsResponse;
 import com.fintrack.portfolio.snapshot.SnapshotRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Derives common risk/return indicators from the daily portfolio snapshots
- * captured by {@link com.fintrack.portfolio.snapshot.SnapshotScheduler}.
+ * Derives common risk/return indicators from the daily portfolio snapshots captured by {@link
+ * com.fintrack.portfolio.snapshot.SnapshotScheduler}.
  *
- * Daily returns are computed as <code>r_i = V_i/V_{i-1} - 1</code>. Values
- * are expressed as decimals so that the frontend can format them freely.
+ * <p>Daily returns are computed as <code>r_i = V_i/V_{i-1} - 1</code>. Values are expressed as
+ * decimals so that the frontend can format them freely.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,14 +38,16 @@ public class RiskService {
     private final PortfolioRepository portfolioRepository;
 
     @Transactional(readOnly = true)
-    public RiskMetricsResponse compute(UUID userId, UUID portfolioId, BigDecimal annualRiskFreeRate) {
-        portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId)
+    public RiskMetricsResponse compute(
+            UUID userId, UUID portfolioId, BigDecimal annualRiskFreeRate) {
+        portfolioRepository
+                .findByIdAndUserIdAndActiveTrue(portfolioId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found"));
 
         BigDecimal rf = annualRiskFreeRate != null ? annualRiskFreeRate : BigDecimal.ZERO;
 
-        List<PortfolioSnapshot> snapshots = snapshotRepository
-                .findByPortfolioIdOrderBySnapshotDateAsc(portfolioId);
+        List<PortfolioSnapshot> snapshots =
+                snapshotRepository.findByPortfolioIdOrderBySnapshotDateAsc(portfolioId);
 
         if (snapshots.isEmpty()) {
             return RiskMetricsResponse.insufficient(0, null, null, rf);
@@ -59,8 +60,7 @@ public class RiskService {
                     snapshots.size(),
                     snapshots.get(0).getSnapshotDate(),
                     snapshots.get(snapshots.size() - 1).getSnapshotDate(),
-                    rf
-            );
+                    rf);
         }
 
         BigDecimal mean = mean(returns);
@@ -68,9 +68,12 @@ public class RiskService {
         BigDecimal annualVol = stdev.multiply(BigDecimal.valueOf(Math.sqrt(TRADING_DAYS)), MC);
 
         BigDecimal dailyRf = rf.divide(BigDecimal.valueOf(TRADING_DAYS), MC);
-        BigDecimal sharpe = stdev.signum() == 0
-                ? BigDecimal.ZERO
-                : mean.subtract(dailyRf).divide(stdev, MC).multiply(BigDecimal.valueOf(Math.sqrt(TRADING_DAYS)), MC);
+        BigDecimal sharpe =
+                stdev.signum() == 0
+                        ? BigDecimal.ZERO
+                        : mean.subtract(dailyRf)
+                                .divide(stdev, MC)
+                                .multiply(BigDecimal.valueOf(Math.sqrt(TRADING_DAYS)), MC);
 
         BigDecimal drawdown = maxDrawdown(snapshots);
 
@@ -91,8 +94,7 @@ public class RiskService {
                 scale(worst),
                 scale(mean),
                 rf,
-                true
-        );
+                true);
     }
 
     private static List<BigDecimal> dailyReturns(List<PortfolioSnapshot> snapshots) {

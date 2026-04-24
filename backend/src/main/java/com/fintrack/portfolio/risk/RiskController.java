@@ -2,13 +2,12 @@ package com.fintrack.portfolio.risk;
 
 import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.portfolio.risk.dto.RiskMetricsResponse;
+import java.math.BigDecimal;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/portfolios/{portfolioId}/risk")

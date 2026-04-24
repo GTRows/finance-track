@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
@@ -13,13 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.UUID;
-
 /**
- * Assigns a unique requestId to every HTTP request via MDC.
- * Logs method, path, status, duration, userId, and client IP.
- * The requestId is included in all log lines and in error responses.
+ * Assigns a unique requestId to every HTTP request via MDC. Logs method, path, status, duration,
+ * userId, and client IP. The requestId is included in all log lines and in error responses.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -32,9 +30,9 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     private static final int SHORT_UUID_LENGTH = 8;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         String requestId = UUID.randomUUID().toString().substring(0, SHORT_UUID_LENGTH);
         long startTime = System.currentTimeMillis();
 
@@ -50,7 +48,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                 MDC.put(USER_ID_KEY, userId);
             }
 
-            log.info("HTTP {} {} {} {}ms ip={} user={}",
+            log.info(
+                    "HTTP {} {} {} {}ms ip={} user={}",
                     request.getMethod(),
                     request.getRequestURI(),
                     response.getStatus(),
@@ -64,7 +63,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private String resolveUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof com.fintrack.auth.FinTrackUserDetails userDetails) {
+        if (auth != null
+                && auth.isAuthenticated()
+                && auth.getPrincipal()
+                        instanceof com.fintrack.auth.FinTrackUserDetails userDetails) {
             return userDetails.getId().toString();
         }
         return null;

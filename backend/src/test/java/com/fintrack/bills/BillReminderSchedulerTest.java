@@ -1,25 +1,5 @@
 package com.fintrack.bills;
 
-import com.fintrack.auth.UserRepository;
-import com.fintrack.common.entity.Bill;
-import com.fintrack.common.entity.BillPayment;
-import com.fintrack.common.entity.BillPayment.PaymentStatus;
-import com.fintrack.common.entity.User;
-import com.fintrack.notification.MailService;
-import com.fintrack.push.PushService;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,6 +8,25 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.auth.UserRepository;
+import com.fintrack.common.entity.Bill;
+import com.fintrack.common.entity.BillPayment;
+import com.fintrack.common.entity.BillPayment.PaymentStatus;
+import com.fintrack.common.entity.User;
+import com.fintrack.notification.MailService;
+import com.fintrack.push.PushService;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class BillReminderSchedulerTest {
@@ -44,17 +43,25 @@ class BillReminderSchedulerTest {
 
     private User user(boolean emailVerified) {
         return User.builder()
-                .id(userId).username("ali").email("ali@example.com")
-                .password("pw").emailVerified(emailVerified).build();
+                .id(userId)
+                .username("ali")
+                .email("ali@example.com")
+                .password("pw")
+                .emailVerified(emailVerified)
+                .build();
     }
 
     private Bill bill(int dueDay, int remindDaysBefore, LocalDate lastRemindedOn, boolean active) {
         return Bill.builder()
-                .id(UUID.randomUUID()).userId(userId)
-                .name("Internet").amount(new BigDecimal("150"))
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name("Internet")
+                .amount(new BigDecimal("150"))
                 .currency("TRY")
-                .dueDay(dueDay).remindDaysBefore(remindDaysBefore)
-                .lastRemindedOn(lastRemindedOn).active(active)
+                .dueDay(dueDay)
+                .remindDaysBefore(remindDaysBefore)
+                .lastRemindedOn(lastRemindedOn)
+                .active(active)
                 .build();
     }
 
@@ -88,12 +95,20 @@ class BillReminderSchedulerTest {
     @Test
     void skipsBillAlreadyPaidThisPeriod() {
         Bill paid = billDueToday(3, null, true);
-        BillPayment p = BillPayment.builder()
-                .id(UUID.randomUUID()).billId(paid.getId())
-                .period(LocalDate.now().getYear() + "-" + String.format("%02d", LocalDate.now().getMonthValue()))
-                .amount(new BigDecimal("150")).status(PaymentStatus.PAID).build();
+        BillPayment p =
+                BillPayment.builder()
+                        .id(UUID.randomUUID())
+                        .billId(paid.getId())
+                        .period(
+                                LocalDate.now().getYear()
+                                        + "-"
+                                        + String.format("%02d", LocalDate.now().getMonthValue()))
+                        .amount(new BigDecimal("150"))
+                        .status(PaymentStatus.PAID)
+                        .build();
         when(billRepo.findAll()).thenReturn(List.of(paid));
-        when(paymentRepo.findByBillIdAndPeriod(eq(paid.getId()), anyString())).thenReturn(Optional.of(p));
+        when(paymentRepo.findByBillIdAndPeriod(eq(paid.getId()), anyString()))
+                .thenReturn(Optional.of(p));
 
         scheduler.checkReminders();
 

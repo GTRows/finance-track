@@ -1,15 +1,12 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.Instant;
-import java.util.UUID;
-
-/**
- * Server-side refresh token storage. Enables revocation and logout from all devices.
- */
+/** Server-side refresh token storage. Enables revocation and logout from all devices. */
 @Entity
 @Table(name = "refresh_tokens")
 @Getter

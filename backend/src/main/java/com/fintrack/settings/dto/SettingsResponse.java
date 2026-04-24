@@ -5,6 +5,4 @@ public record SettingsResponse(
         String language,
         String theme,
         String timezone,
-        boolean onboardingCompleted
-) {
-}
+        boolean onboardingCompleted) {}

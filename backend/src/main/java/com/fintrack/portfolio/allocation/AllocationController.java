@@ -4,12 +4,11 @@ import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.portfolio.allocation.dto.AllocationSummary;
 import com.fintrack.portfolio.allocation.dto.SetAllocationRequest;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/portfolios/{portfolioId}/allocation")
@@ -20,8 +19,7 @@ public class AllocationController {
 
     @GetMapping
     public ResponseEntity<AllocationSummary> get(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @PathVariable UUID portfolioId) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @PathVariable UUID portfolioId) {
         return ResponseEntity.ok(service.summarize(user.getId(), portfolioId));
     }
 

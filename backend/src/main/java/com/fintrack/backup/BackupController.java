@@ -3,6 +3,8 @@ package com.fintrack.backup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fintrack.auth.FinTrackUserDetails;
+import java.time.LocalDate;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,9 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDate;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/backup")
@@ -43,13 +42,15 @@ public class BackupController {
 
     @PostMapping("/import")
     public ResponseEntity<Map<String, Object>> restore(
-            @AuthenticationPrincipal FinTrackUserDetails user,
-            @RequestBody BackupPayload payload) {
+            @AuthenticationPrincipal FinTrackUserDetails user, @RequestBody BackupPayload payload) {
         backupService.restore(user.getId(), payload);
-        return ResponseEntity.ok(Map.of(
-                "status", "restored",
-                "transactions", payload.transactions() != null ? payload.transactions().size() : 0,
-                "portfolios", payload.portfolios() != null ? payload.portfolios().size() : 0,
-                "bills", payload.bills() != null ? payload.bills().size() : 0));
+        return ResponseEntity.ok(
+                Map.of(
+                        "status", "restored",
+                        "transactions",
+                                payload.transactions() != null ? payload.transactions().size() : 0,
+                        "portfolios",
+                                payload.portfolios() != null ? payload.portfolios().size() : 0,
+                        "bills", payload.bills() != null ? payload.bills().size() : 0));
     }
 }

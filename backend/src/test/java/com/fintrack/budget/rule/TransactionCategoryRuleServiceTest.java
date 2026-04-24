@@ -1,5 +1,12 @@
 package com.fintrack.budget.rule;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fintrack.budget.ExpenseCategoryRepository;
 import com.fintrack.budget.IncomeCategoryRepository;
 import com.fintrack.budget.rule.dto.CategoryRuleResponse;
@@ -9,23 +16,15 @@ import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
 import com.fintrack.common.entity.TransactionCategoryRule;
 import com.fintrack.common.exception.ResourceNotFoundException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionCategoryRuleServiceTest {
@@ -39,14 +38,25 @@ class TransactionCategoryRuleServiceTest {
     private final UUID userId = UUID.randomUUID();
 
     private IncomeCategory incomeCat(String name, String color) {
-        return IncomeCategory.builder().id(UUID.randomUUID()).userId(userId).name(name).color(color).build();
+        return IncomeCategory.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .color(color)
+                .build();
     }
 
     private ExpenseCategory expenseCat(String name, String color) {
-        return ExpenseCategory.builder().id(UUID.randomUUID()).userId(userId).name(name).color(color).build();
+        return ExpenseCategory.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .name(name)
+                .color(color)
+                .build();
     }
 
-    private TransactionCategoryRule rule(String pattern, UUID categoryId, TxnType type, int priority) {
+    private TransactionCategoryRule rule(
+            String pattern, UUID categoryId, TxnType type, int priority) {
         return TransactionCategoryRule.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
@@ -73,7 +83,8 @@ class TransactionCategoryRuleServiceTest {
         TransactionCategoryRule r1 = rule("ACME", salary.getId(), TxnType.INCOME, 10);
         TransactionCategoryRule r2 = rule("MARKET", food.getId(), TxnType.EXPENSE, 20);
 
-        when(ruleRepo.findByUserIdOrderByPriorityAscCreatedAtAsc(userId)).thenReturn(List.of(r1, r2));
+        when(ruleRepo.findByUserIdOrderByPriorityAscCreatedAtAsc(userId))
+                .thenReturn(List.of(r1, r2));
         when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(salary));
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(food));
 
@@ -105,15 +116,20 @@ class TransactionCategoryRuleServiceTest {
         when(expenseRepo.findByIdAndUserId(food.getId(), userId)).thenReturn(Optional.of(food));
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(food));
         when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of());
-        when(ruleRepo.save(any(TransactionCategoryRule.class))).thenAnswer(inv -> {
-            TransactionCategoryRule r = inv.getArgument(0);
-            r.setId(UUID.randomUUID());
-            return r;
-        });
+        when(ruleRepo.save(any(TransactionCategoryRule.class)))
+                .thenAnswer(
+                        inv -> {
+                            TransactionCategoryRule r = inv.getArgument(0);
+                            r.setId(UUID.randomUUID());
+                            return r;
+                        });
 
-        service.create(userId, new UpsertCategoryRuleRequest("  market  ", food.getId(), TxnType.EXPENSE, 50));
+        service.create(
+                userId,
+                new UpsertCategoryRuleRequest("  market  ", food.getId(), TxnType.EXPENSE, 50));
 
-        ArgumentCaptor<TransactionCategoryRule> captor = ArgumentCaptor.forClass(TransactionCategoryRule.class);
+        ArgumentCaptor<TransactionCategoryRule> captor =
+                ArgumentCaptor.forClass(TransactionCategoryRule.class);
         verify(ruleRepo).save(captor.capture());
         TransactionCategoryRule saved = captor.getValue();
         assertThat(saved.getPattern()).isEqualTo("market");
@@ -127,11 +143,14 @@ class TransactionCategoryRuleServiceTest {
         when(incomeRepo.findByIdAndUserId(salary.getId(), userId)).thenReturn(Optional.of(salary));
         when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(salary));
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of());
-        when(ruleRepo.save(any(TransactionCategoryRule.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ruleRepo.save(any(TransactionCategoryRule.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        service.create(userId, new UpsertCategoryRuleRequest("x", salary.getId(), TxnType.INCOME, null));
+        service.create(
+                userId, new UpsertCategoryRuleRequest("x", salary.getId(), TxnType.INCOME, null));
 
-        ArgumentCaptor<TransactionCategoryRule> captor = ArgumentCaptor.forClass(TransactionCategoryRule.class);
+        ArgumentCaptor<TransactionCategoryRule> captor =
+                ArgumentCaptor.forClass(TransactionCategoryRule.class);
         verify(ruleRepo).save(captor.capture());
         assertThat(captor.getValue().getPriority()).isEqualTo(100);
     }
@@ -141,8 +160,12 @@ class TransactionCategoryRuleServiceTest {
         UUID catId = UUID.randomUUID();
         when(incomeRepo.findByIdAndUserId(catId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.create(userId,
-                new UpsertCategoryRuleRequest("x", catId, TxnType.INCOME, 10)))
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        userId,
+                                        new UpsertCategoryRuleRequest(
+                                                "x", catId, TxnType.INCOME, 10)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Income");
 
@@ -154,8 +177,12 @@ class TransactionCategoryRuleServiceTest {
         UUID catId = UUID.randomUUID();
         when(expenseRepo.findByIdAndUserId(catId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.create(userId,
-                new UpsertCategoryRuleRequest("x", catId, TxnType.EXPENSE, 10)))
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        userId,
+                                        new UpsertCategoryRuleRequest(
+                                                "x", catId, TxnType.EXPENSE, 10)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Expense");
     }
@@ -164,13 +191,16 @@ class TransactionCategoryRuleServiceTest {
     void updateMutatesAllFields() {
         ExpenseCategory food = expenseCat("Food", "#f00");
         TransactionCategoryRule existing = rule("old", food.getId(), TxnType.EXPENSE, 100);
-        when(ruleRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(ruleRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
         when(expenseRepo.findByIdAndUserId(food.getId(), userId)).thenReturn(Optional.of(food));
         when(ruleRepo.save(existing)).thenReturn(existing);
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(food));
         when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of());
 
-        service.update(userId, existing.getId(),
+        service.update(
+                userId,
+                existing.getId(),
                 new UpsertCategoryRuleRequest("  new  ", food.getId(), TxnType.EXPENSE, 5));
 
         assertThat(existing.getPattern()).isEqualTo("new");
@@ -181,13 +211,16 @@ class TransactionCategoryRuleServiceTest {
     void updateKeepsExistingPriorityWhenNullInRequest() {
         ExpenseCategory food = expenseCat("Food", "#f00");
         TransactionCategoryRule existing = rule("x", food.getId(), TxnType.EXPENSE, 42);
-        when(ruleRepo.findByIdAndUserId(existing.getId(), userId)).thenReturn(Optional.of(existing));
+        when(ruleRepo.findByIdAndUserId(existing.getId(), userId))
+                .thenReturn(Optional.of(existing));
         when(expenseRepo.findByIdAndUserId(food.getId(), userId)).thenReturn(Optional.of(food));
         when(ruleRepo.save(existing)).thenReturn(existing);
         when(expenseRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of(food));
         when(incomeRepo.findByUserIdOrderByNameAsc(userId)).thenReturn(List.of());
 
-        service.update(userId, existing.getId(),
+        service.update(
+                userId,
+                existing.getId(),
                 new UpsertCategoryRuleRequest("y", food.getId(), TxnType.EXPENSE, null));
 
         assertThat(existing.getPriority()).isEqualTo(42);
@@ -198,8 +231,13 @@ class TransactionCategoryRuleServiceTest {
         UUID id = UUID.randomUUID();
         when(ruleRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(userId, id,
-                new UpsertCategoryRuleRequest("x", UUID.randomUUID(), TxnType.EXPENSE, 1)))
+        assertThatThrownBy(
+                        () ->
+                                service.update(
+                                        userId,
+                                        id,
+                                        new UpsertCategoryRuleRequest(
+                                                "x", UUID.randomUUID(), TxnType.EXPENSE, 1)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -228,7 +266,8 @@ class TransactionCategoryRuleServiceTest {
     void matchForReturnsEmptyWhenDescriptionNullOrBlank() {
         assertThat(service.matchFor(userId, TxnType.EXPENSE, null)).isEmpty();
         assertThat(service.matchFor(userId, TxnType.EXPENSE, "   ")).isEmpty();
-        verify(ruleRepo, never()).findByUserIdAndTxnTypeOrderByPriorityAscCreatedAtAsc(any(), any());
+        verify(ruleRepo, never())
+                .findByUserIdAndTxnTypeOrderByPriorityAscCreatedAtAsc(any(), any());
     }
 
     @Test

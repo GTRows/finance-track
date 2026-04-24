@@ -1,27 +1,26 @@
 package com.fintrack.watchlist;
 
-import com.fintrack.asset.AssetRepository;
-import com.fintrack.common.entity.WatchlistEntry;
-import com.fintrack.common.exception.ResourceNotFoundException;
-import com.fintrack.watchlist.dto.AddWatchlistRequest;
-import com.fintrack.watchlist.dto.WatchlistEntryResponse;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.fintrack.asset.AssetRepository;
+import com.fintrack.common.entity.WatchlistEntry;
+import com.fintrack.common.exception.ResourceNotFoundException;
+import com.fintrack.watchlist.dto.AddWatchlistRequest;
+import com.fintrack.watchlist.dto.WatchlistEntryResponse;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class WatchlistServiceTest {
@@ -41,9 +40,8 @@ class WatchlistServiceTest {
     void listReturnsMappedRows() {
         UUID a1 = UUID.randomUUID();
         UUID a2 = UUID.randomUUID();
-        when(repository.findByUserIdOrderByCreatedAtDesc(userId)).thenReturn(List.of(
-                entry(a1, "n1"),
-                entry(a2, null)));
+        when(repository.findByUserIdOrderByCreatedAtDesc(userId))
+                .thenReturn(List.of(entry(a1, "n1"), entry(a2, null)));
 
         List<WatchlistEntryResponse> res = service.list(userId);
 

@@ -1,14 +1,11 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.util.UUID;
+import lombok.*;
 
-/**
- * User-defined expense categories with optional monthly budget limits.
- */
+/** User-defined expense categories with optional monthly budget limits. */
 @Entity
 @Table(name = "expense_categories")
 @Getter

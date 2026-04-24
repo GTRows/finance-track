@@ -6,8 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * WebClient beans for each external price source. Kept isolated per provider
- * so per-source timeouts, headers, and base URLs can diverge freely.
+ * WebClient beans for each external price source. Kept isolated per provider so per-source
+ * timeouts, headers, and base URLs can diverge freely.
  */
 @Configuration
 @EnableConfigurationProperties(PriceApiProperties.class)
@@ -30,14 +30,15 @@ public class PriceConfig {
     }
 
     /**
-     * WebClient targeting the TEFAS public site. Needs a browser-ish User-Agent
-     * and an explicit Accept/Origin or the endpoint returns HTML + a 403.
+     * WebClient targeting the TEFAS public site. Needs a browser-ish User-Agent and an explicit
+     * Accept/Origin or the endpoint returns HTML + a 403.
      */
     @Bean("tefasWebClient")
     public WebClient tefasWebClient(PriceApiProperties props) {
         return WebClient.builder()
                 .baseUrl(props.tefas().baseUrl())
-                .defaultHeader("User-Agent",
+                .defaultHeader(
+                        "User-Agent",
                         "Mozilla/5.0 (compatible; FinTrackPro/1.0; +https://github.com/)")
                 .defaultHeader("Accept", "application/json, text/javascript, */*; q=0.01")
                 .defaultHeader("X-Requested-With", "XMLHttpRequest")

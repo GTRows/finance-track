@@ -2,18 +2,17 @@ package com.fintrack.auth;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.UUID;
+import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.UUID;
-
 /**
- * JWT token generation and validation utility.
- * Access tokens carry user identity; refresh tokens are opaque references.
+ * JWT token generation and validation utility. Access tokens carry user identity; refresh tokens
+ * are opaque references.
  */
 @Slf4j
 @Component
@@ -35,9 +34,9 @@ public class JwtUtil {
     /**
      * Generates a short-lived access token containing user claims.
      *
-     * @param userId   the user's UUID
+     * @param userId the user's UUID
      * @param username the user's login name
-     * @param role     the user's role (USER or ADMIN)
+     * @param role the user's role (USER or ADMIN)
      * @return signed JWT string
      */
     public String generateAccessToken(String userId, String username, String role) {
@@ -54,8 +53,8 @@ public class JwtUtil {
     }
 
     /**
-     * Generates a short-lived (5 min) challenge token issued to clients after
-     * a correct username/password but before the TOTP code is verified.
+     * Generates a short-lived (5 min) challenge token issued to clients after a correct
+     * username/password but before the TOTP code is verified.
      */
     public String generateTotpChallengeToken(String userId) {
         long expiry = 5 * 60 * 1000L;
@@ -70,8 +69,8 @@ public class JwtUtil {
     }
 
     /**
-     * Validates a TOTP challenge token and returns the user id.
-     * Returns null if the token is invalid, expired, or not of type TOTP_CHALLENGE.
+     * Validates a TOTP challenge token and returns the user id. Returns null if the token is
+     * invalid, expired, or not of type TOTP_CHALLENGE.
      */
     public String validateTotpChallenge(String token) {
         try {
@@ -110,11 +109,7 @@ public class JwtUtil {
      * @throws JwtException if the token is invalid
      */
     public Claims validateAndParse(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
     }
 
     /** Returns true if the token is valid and not expired. */

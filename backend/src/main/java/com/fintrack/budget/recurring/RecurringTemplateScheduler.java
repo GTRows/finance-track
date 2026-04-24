@@ -1,15 +1,14 @@
 package com.fintrack.budget.recurring;
 
 import com.fintrack.common.entity.RecurringTemplate;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -27,8 +26,9 @@ public class RecurringTemplateScheduler {
         List<RecurringTemplate> templates = templateRepo.findByActiveTrue();
         int fired = 0;
         for (RecurringTemplate t : templates) {
-            LocalDate scheduled = RecurringTemplateService.scheduledDateFor(
-                    t.getDayOfMonth(), YearMonth.from(today));
+            LocalDate scheduled =
+                    RecurringTemplateService.scheduledDateFor(
+                            t.getDayOfMonth(), YearMonth.from(today));
             if (scheduled.isAfter(today)) continue;
             LocalDate last = t.getLastMaterializedOn();
             if (last != null && !last.isBefore(scheduled)) continue;
