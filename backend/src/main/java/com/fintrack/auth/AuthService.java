@@ -33,6 +33,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TotpService totpService;
+    private final TotpRecoveryCodeService recoveryCodeService;
     private final AuditService auditService;
     private final LoginRateLimiter loginRateLimiter;
     private final EmailVerificationService emailVerificationService;
@@ -162,7 +163,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void totpEnable(UUID userId, TotpEnableRequest request) {
+    public TotpEnableResponse totpEnable(UUID userId, TotpEnableRequest request) {
         User user =
                 userRepository
                         .findById(userId)
@@ -177,8 +178,10 @@ public class AuthService {
         }
         user.setTotpEnabled(true);
         userRepository.save(user);
+        java.util.List<String> recoveryCodes = recoveryCodeService.regenerate(user.getId());
         log.info("TOTP enabled for user: {}", user.getUsername());
         auditService.success(AuditAction.TOTP_ENABLE, user.getId(), user.getUsername());
+        return new TotpEnableResponse(recoveryCodes);
     }
 
     @Transactional
@@ -195,8 +198,71 @@ public class AuthService {
         user.setTotpEnabled(false);
         user.setTotpSecret(null);
         userRepository.save(user);
+        recoveryCodeService.invalidateAll(user.getId());
         log.info("TOTP disabled for user: {}", user.getUsername());
         auditService.success(AuditAction.TOTP_DISABLE, user.getId(), user.getUsername());
+    }
+
+    @Transactional
+    public RecoveryCodesResponse regenerateRecoveryCodes(UUID userId, TotpDisableRequest request) {
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (!user.isTotpEnabled()) {
+            throw new BusinessRuleException("TOTP not enabled for this user", "TOTP_NOT_ENABLED");
+        }
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            auditService.failure(
+                    AuditAction.TOTP_RECOVERY_REGENERATED,
+                    user.getId(),
+                    user.getUsername(),
+                    "wrong password");
+            throw new BusinessRuleException("Incorrect password", "PASSWORD_INVALID");
+        }
+        java.util.List<String> codes = recoveryCodeService.regenerate(user.getId());
+        auditService.success(
+                AuditAction.TOTP_RECOVERY_REGENERATED, user.getId(), user.getUsername());
+        return new RecoveryCodesResponse(codes);
+    }
+
+    @Transactional
+    public AuthResponse verifyRecoveryCode(TotpRecoveryVerifyRequest request) {
+        String userId = jwtUtil.validateTotpChallenge(request.challengeToken());
+        if (userId == null) {
+            auditService.failure(
+                    AuditAction.TOTP_RECOVERY_REDEEMED, null, "invalid challenge token");
+            throw new BusinessRuleException(
+                    "Invalid or expired challenge", "TOTP_CHALLENGE_INVALID");
+        }
+        User user =
+                userRepository
+                        .findById(UUID.fromString(userId))
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!user.isTotpEnabled()) {
+            auditService.failure(
+                    AuditAction.TOTP_RECOVERY_REDEEMED,
+                    user.getId(),
+                    user.getUsername(),
+                    "TOTP not enabled");
+            throw new BusinessRuleException("TOTP not enabled for this user", "TOTP_NOT_ENABLED");
+        }
+
+        if (!recoveryCodeService.redeem(user.getId(), request.recoveryCode())) {
+            auditService.failure(
+                    AuditAction.TOTP_RECOVERY_REDEEMED,
+                    user.getId(),
+                    user.getUsername(),
+                    "invalid recovery code");
+            throw new BusinessRuleException("Invalid recovery code", "RECOVERY_CODE_INVALID");
+        }
+
+        log.info("Recovery code redeemed; user logged in: {}", user.getUsername());
+        auditService.success(AuditAction.TOTP_RECOVERY_REDEEMED, user.getId(), user.getUsername());
+        auditService.success(
+                AuditAction.LOGIN, user.getId(), user.getUsername(), "with recovery code");
+        return buildAuthResponse(user);
     }
 
     @Transactional

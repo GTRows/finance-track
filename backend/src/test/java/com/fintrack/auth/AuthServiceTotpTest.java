@@ -39,6 +39,8 @@ class AuthServiceTotpTest {
     @Mock TotpService totpService;
     @Mock AuditService auditService;
     @Mock LoginRateLimiter loginRateLimiter;
+    @Mock TotpRecoveryCodeService recoveryCodeService;
+    @Mock EmailVerificationService emailVerificationService;
 
     @InjectMocks AuthService authService;
 

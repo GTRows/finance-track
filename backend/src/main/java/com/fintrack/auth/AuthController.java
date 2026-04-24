@@ -68,13 +68,15 @@ public class AuthController {
         return ResponseEntity.ok(authService.totpSetup(user.getId()));
     }
 
-    /** Verifies the first code from the authenticator app and activates TOTP. */
+    /**
+     * Verifies the first code from the authenticator app, activates TOTP, and returns the 10
+     * single-use recovery codes. These codes are only shown once.
+     */
     @PostMapping("/2fa/enable")
-    public ResponseEntity<Void> totpEnable(
+    public ResponseEntity<TotpEnableResponse> totpEnable(
             @AuthenticationPrincipal FinTrackUserDetails user,
             @Valid @RequestBody TotpEnableRequest request) {
-        authService.totpEnable(user.getId(), request);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(authService.totpEnable(user.getId(), request));
     }
 
     /** Disables TOTP after confirming the user's password. */
@@ -84,6 +86,21 @@ public class AuthController {
             @Valid @RequestBody TotpDisableRequest request) {
         authService.totpDisable(user.getId(), request);
         return ResponseEntity.noContent().build();
+    }
+
+    /** Regenerates the recovery-code set after confirming the user's password. */
+    @PostMapping("/2fa/recovery-codes/regenerate")
+    public ResponseEntity<RecoveryCodesResponse> regenerateRecoveryCodes(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @Valid @RequestBody TotpDisableRequest request) {
+        return ResponseEntity.ok(authService.regenerateRecoveryCodes(user.getId(), request));
+    }
+
+    /** Completes a login flow by redeeming a TOTP recovery code. */
+    @PostMapping("/2fa/recovery/verify")
+    public ResponseEntity<AuthResponse> verifyRecoveryCode(
+            @Valid @RequestBody TotpRecoveryVerifyRequest request) {
+        return ResponseEntity.ok(authService.verifyRecoveryCode(request));
     }
 
     /** Updates the authenticated user's password and revokes existing refresh tokens. */

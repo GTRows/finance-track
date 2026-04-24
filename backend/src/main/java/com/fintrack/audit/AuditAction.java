@@ -20,4 +20,6 @@ public final class AuditAction {
     public static final String EMAIL_VERIFICATION_CONFIRMED = "EMAIL_VERIFICATION_CONFIRMED";
     public static final String PASSWORD_RESET_REQUESTED = "PASSWORD_RESET_REQUESTED";
     public static final String PASSWORD_RESET_CONFIRMED = "PASSWORD_RESET_CONFIRMED";
+    public static final String TOTP_RECOVERY_REGENERATED = "TOTP_RECOVERY_REGENERATED";
+    public static final String TOTP_RECOVERY_REDEEMED = "TOTP_RECOVERY_REDEEMED";
 }
