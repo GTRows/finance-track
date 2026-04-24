@@ -69,7 +69,7 @@ user would see.
 |---|------|--------|--------|
 | D1 | ~~HTTP security-header review: CSP, HSTS, Referrer-Policy, Permissions-Policy~~ Shipped via Spring Security headers DSL. Integration test asserting the header set is a follow-up. | M | high |
 | D2 | Argon2id or scrypt password hashing migration from BCrypt (BCrypt is fine, but Argon2 is state of the art and Spring Security 6 has a wired `Argon2PasswordEncoder`) | S | med |
-| D3 | ~~TOTP recovery codes (one-time use, 10 codes shown once on enrollment)~~ Service layer shipped (V35 migration + TotpRecoveryCodeService). AuthController endpoints (generate, redeem on 2FA flow) still to wire up. | M | high |
+| D3 | ~~TOTP recovery codes~~ Shipped end to end (service, endpoints, enable/disable lifecycle). Frontend UI to surface the codes at enrollment is a follow-up. | M | high |
 | D4 | WebAuthn / passkeys as alternative sign-in, same `users` table with an `authenticators` child | L | high |
 | D5 | ~~Rate-limit password-reset, email-verification, and refresh endpoints~~ Shipped via `LoginRateLimiter.enforceSensitive(category)` + wired into reset/verify flows. | S | high |
 | D6 | Session fingerprint binding: store a hash of user-agent + IP-prefix on refresh token rows, reject refresh if it drifts more than N | M | med |
