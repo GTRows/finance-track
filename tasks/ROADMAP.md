@@ -190,6 +190,17 @@ Session of 2026-04-26:
 - Remaining Phase 23: A2, A7, A8, A9.
 - B3 BLOCKED: Husky + lint-staged needs root package.json which the
   protected-files guard refuses to write without explicit user OK.
+- H1 done: Mermaid sequence diagrams for login + token rotation,
+  price-sync fan-out, and backup/restore added to ARCHITECTURE.md.
+- H2 done: docs/OPERATIONS.md runbook covering manual + scheduled
+  backups, restore, VAPID key rotation, schema migrations, and
+  recovery from a bad migration.
+- H3 done: docs/THREAT_MODEL.md with STRIDE over auth + data layers
+  plus an explicit trust-boundary diagram and known residual risks.
+- H4 done: docs/QUICK_START.md walkthrough from first user to first
+  portfolio/holding/transaction/bill/budget entry.
+- Track H remaining: H5 (public demo instance) - low impact, leave for
+  later.
 
 ## Suggested phasing
 
