@@ -27,6 +27,7 @@ Import from that file is a future milestone.
 | Dev setup & common commands | `docs/DEV_SETUP.md` |
 | Operations runbook (backup, restore, key rotation, migrations) | `docs/OPERATIONS.md` |
 | Quick-start (first user -> first portfolio -> first bill) | `docs/QUICK_START.md` |
+| Threat model (STRIDE over auth + data layers) | `docs/THREAT_MODEL.md` |
 | Current progress & what's next | `tasks/TODO.md` |
 | Lessons learned (update after mistakes) | `tasks/LESSONS.md` |
 
