@@ -169,6 +169,11 @@ Session of 2026-04-26:
   765 tests; backend instruction coverage 77.5%, branch coverage 62.6%.
   AbstractWebMvcTestSupport pattern (addFilters=false + GlobalExceptionHandler import)
   established as the template for any future controller.
+- A3 substantially complete: added @testing-library/react and tests for 28 of 30
+  React Query hooks (skipped useLivePrices for STOMP integration and usePush for
+  browser SW APIs — both deserve dedicated harnesses). Frontend at 168 tests
+  across 38 files. Shared `createWrapper` helper in src/test-utils for QueryClient
+  isolation.
 - Remaining Phase 23: A2, A6, A7, A8, A9.
 
 ## Suggested phasing
