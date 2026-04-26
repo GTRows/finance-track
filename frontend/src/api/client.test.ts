@@ -68,9 +68,10 @@ describe('api client interceptors', () => {
 
   it('forwards non-401 errors without attempting refresh', async () => {
     const postSpy = vi.spyOn(axios, 'post');
-    client.defaults.adapter = (async (cfg) => {
+    const adapter: AdapterFn = async (cfg) => {
       throw fail(cfg, 500);
-    }) as never;
+    };
+    client.defaults.adapter = adapter as never;
 
     await expect(client.get('/boom')).rejects.toMatchObject({ response: { status: 500 } });
     expect(postSpy).not.toHaveBeenCalled();
@@ -78,9 +79,10 @@ describe('api client interceptors', () => {
 
   it('does not retry 401 on /auth/login', async () => {
     const postSpy = vi.spyOn(axios, 'post');
-    client.defaults.adapter = (async (cfg) => {
+    const adapter: AdapterFn = async (cfg) => {
       throw fail(cfg, 401);
-    }) as never;
+    };
+    client.defaults.adapter = adapter as never;
 
     await expect(
       client.post('/auth/login', { username: 'x', password: 'y' }),
@@ -93,7 +95,7 @@ describe('api client interceptors', () => {
 
     const calls: Array<{ url?: string; auth?: string }> = [];
     let first = true;
-    client.defaults.adapter = (async (cfg) => {
+    const adapter: AdapterFn = async (cfg) => {
       calls.push({
         url: cfg.url,
         auth: (cfg.headers as Record<string, string> | undefined)?.Authorization,
@@ -103,7 +105,8 @@ describe('api client interceptors', () => {
         throw fail(cfg, 401);
       }
       return ok(cfg, { done: true });
-    }) as never;
+    };
+    client.defaults.adapter = adapter as never;
 
     const postSpy = vi.spyOn(axios, 'post').mockResolvedValue({
       data: {
@@ -151,9 +154,10 @@ describe('api client interceptors', () => {
       },
     });
 
-    client.defaults.adapter = (async (cfg) => {
+    const adapter: AdapterFn = async (cfg) => {
       throw fail(cfg, 401);
-    }) as never;
+    };
+    client.defaults.adapter = adapter as never;
 
     await expect(client.get('/data')).rejects.toBeTruthy();
 
@@ -183,9 +187,10 @@ describe('api client interceptors', () => {
       },
     });
 
-    client.defaults.adapter = (async (cfg) => {
+    const adapter: AdapterFn = async (cfg) => {
       throw fail(cfg, 401);
-    }) as never;
+    };
+    client.defaults.adapter = adapter as never;
     vi.spyOn(axios, 'post').mockRejectedValue(new Error('refresh denied'));
 
     await expect(client.get('/data')).rejects.toBeTruthy();

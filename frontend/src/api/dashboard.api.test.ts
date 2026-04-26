@@ -3,10 +3,11 @@ import { dashboardApi } from './dashboard.api';
 import client from './client';
 
 describe('dashboardApi', () => {
-  let getSpy: ReturnType<typeof vi.spyOn>;
+  let getSpy: ReturnType<typeof spy>;
+  const spy = () => vi.spyOn(client, 'get');
 
   beforeEach(() => {
-    getSpy = vi.spyOn(client, 'get');
+    getSpy = spy();
   });
 
   afterEach(() => {
