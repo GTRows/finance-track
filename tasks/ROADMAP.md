@@ -164,6 +164,13 @@ Session of 2026-04-24 (this branch):
   service layer only), D5 (rate-limit reset/verify/refresh),
   D10 (refresh replay protection verified). Remaining Phase 24: D2, D4, D6, D7, D8, D9.
 
+Session of 2026-04-26:
+- A1 complete: WebMvcTest suites for all 42 `@RestController`s. Suite at
+  765 tests; backend instruction coverage 77.5%, branch coverage 62.6%.
+  AbstractWebMvcTestSupport pattern (addFilters=false + GlobalExceptionHandler import)
+  established as the template for any future controller.
+- Remaining Phase 23: A2, A6, A7, A8, A9.
+
 ## Suggested phasing
 
 If I had to ship these in order, I'd do:
