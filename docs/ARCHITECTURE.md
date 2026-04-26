@@ -189,3 +189,86 @@ If load ever requires scaling:
 - PostgreSQL: connection pooling via HikariCP (already configured)
 - Redis: session/cache shared across instances (already designed this way)
 - WebSocket: would need Redis pub/sub for multi-instance (future concern)
+
+## Sequence Diagrams
+
+The diagrams below use Mermaid syntax; they render natively on GitHub.
+
+### Login + access/refresh token rotation
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend (axios + Zustand)
+    participant B as Backend (AuthController)
+    participant DB as Postgres
+
+    U->>F: enter username + password
+    F->>B: POST /api/v1/auth/login
+    B->>DB: SELECT user, verify BCrypt
+    alt TOTP enabled
+        B-->>F: 200 { requiresTotp: true, totpChallengeToken }
+        U->>F: enter 6-digit code
+        F->>B: POST /api/v1/auth/2fa/verify
+        B->>DB: validate TOTP, mint tokens, INSERT refresh_token row
+        B-->>F: { user, accessToken, refreshToken }
+    else no TOTP
+        B->>DB: mint tokens, INSERT refresh_token row
+        B-->>F: { user, accessToken, refreshToken }
+    end
+    F->>F: store accessToken in memory + refreshToken in localStorage
+
+    Note over F,B: Later: protected request hits 401
+    F->>B: POST /api/v1/auth/refresh { refreshToken }
+    B->>DB: SELECT + DELETE old refresh row, INSERT new one
+    B-->>F: { accessToken, refreshToken } (rotated)
+    F->>F: replace stored tokens, retry the original request
+```
+
+### Price sync (scheduled refresh + WebSocket fan-out)
+
+```mermaid
+sequenceDiagram
+    participant S as PriceSyncService (scheduled)
+    participant T as TefasClient / CoinGeckoClient / YahooFinanceClient
+    participant DB as Postgres
+    participant WS as PriceBroadcaster (STOMP)
+    participant FE as Frontend (useLivePrices)
+
+    S->>T: fetchLatest(asset)
+    T-->>S: price points
+    S->>DB: UPDATE assets.price + INSERT price_history rows
+    S->>WS: broadcastAll()
+    WS-->>FE: STOMP frame on /topic/prices (JSON batch)
+    FE->>FE: applyBatch -> useLivePricesStore
+    FE->>FE: invalidate ['portfolios'] + ['dashboard'] caches
+    Note over FE: React Query refetches affected queries; UI re-renders
+```
+
+### Backup + restore (per-user JSON envelope)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend (Settings -> Backup)
+    participant B as Backend (BackupController)
+    participant S as BackupService
+    participant DB as Postgres
+
+    U->>F: click "Export"
+    F->>B: GET /api/v1/backup/export
+    B->>S: export(userId)
+    S->>DB: SELECT all per-user rows (portfolios, holdings, txns, bills, etc.)
+    S-->>B: BackupPayload record
+    B->>B: ObjectMapper.writeValueAsBytes (pretty-printed)
+    B-->>F: application/json attachment fintrack-backup-YYYY-MM-DD.json
+    F->>U: download
+
+    Note over U,F: Restore on the same or a new instance
+    U->>F: choose backup file -> click "Restore"
+    F->>B: POST /api/v1/backup/import (BackupPayload body)
+    B->>S: restore(userId, payload)
+    S->>DB: TRUNCATE + INSERT under @Transactional (per-user wipe)
+    S-->>B: counts
+    B-->>F: { status: "restored", transactions, portfolios, bills }
+```
