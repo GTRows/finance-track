@@ -25,6 +25,7 @@ Import from that file is a future milestone.
 | Security model (JWT, auth flow) | `docs/SECURITY.md` |
 | External price APIs & integration | `docs/PRICE_APIS.md` |
 | Dev setup & common commands | `docs/DEV_SETUP.md` |
+| Operations runbook (backup, restore, key rotation, migrations) | `docs/OPERATIONS.md` |
 | Current progress & what's next | `tasks/TODO.md` |
 | Lessons learned (update after mistakes) | `tasks/LESSONS.md` |
 
