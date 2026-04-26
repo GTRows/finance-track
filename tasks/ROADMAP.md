@@ -174,7 +174,14 @@ Session of 2026-04-26:
   browser SW APIs — both deserve dedicated harnesses). Frontend at 168 tests
   across 38 files. Shared `createWrapper` helper in src/test-utils for QueryClient
   isolation.
-- Remaining Phase 23: A2, A6, A7, A8, A9.
+- A6 done: FlywayMigrationTest now @EnabledIf("dockerAvailable") — `mvn test`
+  passes cleanly on Docker-less hosts (test reports as Skipped); CI on Linux
+  still runs the migration check.
+- B2 done: bootstrapped frontend ESLint config; enabled
+  no-floating-promises + consistent-type-imports as errors; voided 109 floating
+  promise sites; converted import() type annotations; npm run lint now passes
+  with --max-warnings 0.
+- Remaining Phase 23: A2, A7, A8, A9.
 
 ## Suggested phasing
 
