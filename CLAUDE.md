@@ -26,6 +26,7 @@ Import from that file is a future milestone.
 | External price APIs & integration | `docs/PRICE_APIS.md` |
 | Dev setup & common commands | `docs/DEV_SETUP.md` |
 | Operations runbook (backup, restore, key rotation, migrations) | `docs/OPERATIONS.md` |
+| Quick-start (first user -> first portfolio -> first bill) | `docs/QUICK_START.md` |
 | Current progress & what's next | `tasks/TODO.md` |
 | Lessons learned (update after mistakes) | `tasks/LESSONS.md` |
 
