@@ -181,7 +181,14 @@ Session of 2026-04-26:
   no-floating-promises + consistent-type-imports as errors; voided 109 floating
   promise sites; converted import() type annotations; npm run lint now passes
   with --max-warnings 0.
-- Remaining Phase 23: A2, A7, A8, A9.
+- A4 kickoff: added @testing-library/user-event; component tests for
+  AddPortfolioDialog (form submit, validation, api error), AddTransactionDialog
+  (open, type toggle, save enable/disable), and LoginPage (sign-in success,
+  totp challenge, error surfacing, register-mode toggle). Frontend at 181
+  tests / 41 files. fireEvent rather than userEvent because Radix Dialog +
+  jsdom + scroll-locked body breaks pointer-event assertions.
+- Remaining Phase 23: A2, A7, A8, A9. A4 has more pages worth covering
+  (DashboardPage, BudgetPage, PortfolioDetailPage).
 
 ## Suggested phasing
 
