@@ -16,7 +16,7 @@ export function useCreateBudgetRule() {
   return useMutation({
     mutationFn: (req: CreateBudgetRuleRequest) => budgetRulesApi.create(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: rulesKey() });
+      void qc.invalidateQueries({ queryKey: rulesKey() });
     },
   });
 }
@@ -26,7 +26,7 @@ export function useDeleteBudgetRule() {
   return useMutation({
     mutationFn: (id: string) => budgetRulesApi.delete(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: rulesKey() });
+      void qc.invalidateQueries({ queryKey: rulesKey() });
     },
   });
 }

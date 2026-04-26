@@ -17,8 +17,8 @@ export function useCreateTag() {
   return useMutation({
     mutationFn: (req: UpsertTagRequest) => tagsApi.create(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: tagsKey() });
-      qc.invalidateQueries({ queryKey: ['budget', 'transactions'] });
+      void qc.invalidateQueries({ queryKey: tagsKey() });
+      void qc.invalidateQueries({ queryKey: ['budget', 'transactions'] });
     },
   });
 }
@@ -29,8 +29,8 @@ export function useUpdateTag() {
     mutationFn: ({ id, req }: { id: string; req: UpsertTagRequest }) =>
       tagsApi.update(id, req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: tagsKey() });
-      qc.invalidateQueries({ queryKey: ['budget', 'transactions'] });
+      void qc.invalidateQueries({ queryKey: tagsKey() });
+      void qc.invalidateQueries({ queryKey: ['budget', 'transactions'] });
     },
   });
 }
@@ -40,8 +40,8 @@ export function useDeleteTag() {
   return useMutation({
     mutationFn: (id: string) => tagsApi.remove(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: tagsKey() });
-      qc.invalidateQueries({ queryKey: ['budget', 'transactions'] });
+      void qc.invalidateQueries({ queryKey: tagsKey() });
+      void qc.invalidateQueries({ queryKey: ['budget', 'transactions'] });
     },
   });
 }

@@ -21,7 +21,7 @@ export function useCreateSavingsGoal() {
   return useMutation({
     mutationFn: (req: UpsertSavingsGoalRequest) => savingsApi.create(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: goalsKey() });
+      void qc.invalidateQueries({ queryKey: goalsKey() });
     },
   });
 }
@@ -32,7 +32,7 @@ export function useUpdateSavingsGoal() {
     mutationFn: ({ id, req }: { id: string; req: UpsertSavingsGoalRequest }) =>
       savingsApi.update(id, req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: goalsKey() });
+      void qc.invalidateQueries({ queryKey: goalsKey() });
     },
   });
 }
@@ -42,7 +42,7 @@ export function useArchiveSavingsGoal() {
   return useMutation({
     mutationFn: (id: string) => savingsApi.archive(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: goalsKey() });
+      void qc.invalidateQueries({ queryKey: goalsKey() });
     },
   });
 }
@@ -62,8 +62,8 @@ export function useAddSavingsContribution() {
     mutationFn: ({ id, req }: { id: string; req: SavingsContributionRequest }) =>
       savingsApi.addContribution(id, req),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: goalsKey() });
-      qc.invalidateQueries({ queryKey: contributionsKey(id) });
+      void qc.invalidateQueries({ queryKey: goalsKey() });
+      void qc.invalidateQueries({ queryKey: contributionsKey(id) });
     },
   });
 }
@@ -74,8 +74,8 @@ export function useDeleteSavingsContribution() {
     mutationFn: ({ id, contributionId }: { id: string; contributionId: string }) =>
       savingsApi.deleteContribution(id, contributionId),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: goalsKey() });
-      qc.invalidateQueries({ queryKey: contributionsKey(id) });
+      void qc.invalidateQueries({ queryKey: goalsKey() });
+      void qc.invalidateQueries({ queryKey: contributionsKey(id) });
     },
   });
 }

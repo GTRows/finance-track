@@ -223,7 +223,7 @@ export function AddTransactionDialog({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleCreateTag();
+                    void handleCreateTag();
                   }
                 }}
                 className="h-8 text-xs"

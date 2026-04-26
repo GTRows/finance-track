@@ -19,7 +19,7 @@ export function useReplaceCashFlowBuckets() {
   return useMutation({
     mutationFn: (buckets: CashFlowBucketInput[]) => cashFlowApi.replaceBuckets(buckets),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: bucketsKey });
+      void qc.invalidateQueries({ queryKey: bucketsKey });
     },
   });
 }

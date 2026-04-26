@@ -13,6 +13,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useFire } from '@/hooks/useFire';
+import type { FireResult } from '@/types/fire.types';
 import { formatTRY } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 import { Flame, Target, TrendingUp, Wallet, Clock, RotateCcw } from 'lucide-react';
@@ -251,7 +252,7 @@ export function FireCalculatorCard() {
   );
 }
 
-function HeroTile({ data }: { data: import('@/types/fire.types').FireResult }) {
+function HeroTile({ data }: { data: FireResult }) {
   const { t } = useTranslation();
   return (
     <div className="relative rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-5 overflow-hidden">
@@ -271,7 +272,7 @@ function HeroTile({ data }: { data: import('@/types/fire.types').FireResult }) {
   );
 }
 
-function TimeTile({ data }: { data: import('@/types/fire.types').FireResult }) {
+function TimeTile({ data }: { data: FireResult }) {
   const { t } = useTranslation();
   const reached = data.progressRatio >= 1;
   const unreachable = !reached && data.monthsToFi == null;

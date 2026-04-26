@@ -16,7 +16,7 @@ export function useCreateCategoryRule() {
   return useMutation({
     mutationFn: (req: UpsertCategoryRuleRequest) => categoryRulesApi.create(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: rulesKey() });
+      void qc.invalidateQueries({ queryKey: rulesKey() });
     },
   });
 }
@@ -27,7 +27,7 @@ export function useUpdateCategoryRule() {
     mutationFn: ({ id, req }: { id: string; req: UpsertCategoryRuleRequest }) =>
       categoryRulesApi.update(id, req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: rulesKey() });
+      void qc.invalidateQueries({ queryKey: rulesKey() });
     },
   });
 }
@@ -37,7 +37,7 @@ export function useDeleteCategoryRule() {
   return useMutation({
     mutationFn: (id: string) => categoryRulesApi.delete(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: rulesKey() });
+      void qc.invalidateQueries({ queryKey: rulesKey() });
     },
   });
 }

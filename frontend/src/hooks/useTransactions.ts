@@ -18,9 +18,9 @@ export function useRecordTransaction(portfolioId: string) {
   return useMutation({
     mutationFn: (request: RecordTransactionRequest) => transactionApi.record(portfolioId, request),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: transactionsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: transactionsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -30,9 +30,9 @@ export function useDeleteTransaction(portfolioId: string) {
   return useMutation({
     mutationFn: (txnId: string) => transactionApi.delete(portfolioId, txnId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: transactionsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: transactionsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

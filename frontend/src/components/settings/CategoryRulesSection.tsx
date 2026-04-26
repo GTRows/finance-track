@@ -107,7 +107,7 @@ export function CategoryRulesSection() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              handleCreate();
+              void handleCreate();
             }
           }}
           placeholder={t('categoryRules.patternPlaceholder')}
@@ -159,7 +159,7 @@ export function CategoryRulesSection() {
                       value={editPattern}
                       onChange={(e) => setEditPattern(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') submitEdit();
+                        if (e.key === 'Enter') void submitEdit();
                         if (e.key === 'Escape') setEditingId(null);
                       }}
                       className="h-8 flex-1 min-w-[160px]"

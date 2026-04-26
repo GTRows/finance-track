@@ -39,11 +39,11 @@ export function AssetDetailPage() {
   const refresh = useMutation({
     mutationFn: () => priceApi.refreshAsset(id!),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['asset', id] });
-      qc.invalidateQueries({ queryKey: ['asset-history', id] });
-      qc.invalidateQueries({ queryKey: ['assets'] });
-      qc.invalidateQueries({ queryKey: ['portfolios'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['asset', id] });
+      void qc.invalidateQueries({ queryKey: ['asset-history', id] });
+      void qc.invalidateQueries({ queryKey: ['assets'] });
+      void qc.invalidateQueries({ queryKey: ['portfolios'] });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 

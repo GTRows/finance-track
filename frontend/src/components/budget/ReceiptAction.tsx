@@ -19,7 +19,7 @@ export function ReceiptAction({ transactionId, hasReceipt, month }: Props) {
   const [busy, setBusy] = useState<null | 'upload' | 'remove' | 'view'>(null);
 
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
+    void qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
   };
 
   const handleFile = async (file: File) => {
@@ -70,7 +70,7 @@ export function ReceiptAction({ transactionId, hasReceipt, month }: Props) {
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleFile(file);
+            if (file) void handleFile(file);
             e.target.value = '';
           }}
         />

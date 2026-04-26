@@ -7,7 +7,7 @@ import tr from './locales/tr.json';
 export const SUPPORTED_LANGUAGES = ['tr', 'en'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
-i18n
+void i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({

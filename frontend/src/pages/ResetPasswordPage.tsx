@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import { KeyRound, MailCheck, ShieldCheck, ShieldX, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

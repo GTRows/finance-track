@@ -44,9 +44,9 @@ export function useCreateTransaction(month: string) {
   return useMutation({
     mutationFn: (req: CreateTransactionRequest) => budgetApi.createTransaction(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
-      qc.invalidateQueries({ queryKey: summaryKey(month) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
+      void qc.invalidateQueries({ queryKey: summaryKey(month) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -56,9 +56,9 @@ export function useDeleteTransaction(month: string) {
   return useMutation({
     mutationFn: (id: string) => budgetApi.deleteTransaction(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
-      qc.invalidateQueries({ queryKey: summaryKey(month) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
+      void qc.invalidateQueries({ queryKey: summaryKey(month) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -68,9 +68,9 @@ export function useBulkDeleteTransactions(month: string) {
   return useMutation({
     mutationFn: (ids: string[]) => budgetApi.bulkDelete(ids),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
-      qc.invalidateQueries({ queryKey: summaryKey(month) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
+      void qc.invalidateQueries({ queryKey: summaryKey(month) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -80,8 +80,8 @@ export function useBulkUpdateTransactions(month: string) {
   return useMutation({
     mutationFn: (payload: Parameters<typeof budgetApi.bulkUpdate>[0]) => budgetApi.bulkUpdate(payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
-      qc.invalidateQueries({ queryKey: summaryKey(month) });
+      void qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
+      void qc.invalidateQueries({ queryKey: summaryKey(month) });
     },
   });
 }
@@ -91,7 +91,7 @@ export function useCaptureSnapshot(month: string) {
   return useMutation({
     mutationFn: () => budgetApi.captureSnapshot(month),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: summariesKey() });
+      void qc.invalidateQueries({ queryKey: summariesKey() });
     },
   });
 }
@@ -118,8 +118,8 @@ export function useUpdateExpenseCategory(month?: string) {
     mutationFn: ({ id, req }: { id: string; req: Parameters<typeof budgetApi.updateExpenseCategory>[1] }) =>
       budgetApi.updateExpenseCategory(id, req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: categoriesKey() });
-      if (month) qc.invalidateQueries({ queryKey: summaryKey(month) });
+      void qc.invalidateQueries({ queryKey: categoriesKey() });
+      if (month) void qc.invalidateQueries({ queryKey: summaryKey(month) });
     },
   });
 }

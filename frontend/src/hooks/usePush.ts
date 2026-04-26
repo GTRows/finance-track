@@ -51,7 +51,7 @@ export function usePush() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   const subscribe = useCallback(async () => {

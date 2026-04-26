@@ -58,8 +58,8 @@ export function useLivePrices() {
         } catch {
           // Ignore malformed frames; holdings will still refetch below.
         }
-        queryClient.invalidateQueries({ queryKey: ['portfolios'] });
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        void queryClient.invalidateQueries({ queryKey: ['portfolios'] });
+        void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       });
     };
 
@@ -68,7 +68,7 @@ export function useLivePrices() {
 
     return () => {
       if (clientRef.current?.active) {
-        clientRef.current.deactivate();
+        void clientRef.current.deactivate();
       }
     };
   }, [queryClient]);

@@ -17,7 +17,7 @@ export function useCreateNetWorthEvent() {
   return useMutation({
     mutationFn: (req: UpsertEventRequest) => netWorthApi.createEvent(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: timelineKey() });
+      void qc.invalidateQueries({ queryKey: timelineKey() });
     },
   });
 }
@@ -28,7 +28,7 @@ export function useUpdateNetWorthEvent() {
     mutationFn: ({ id, req }: { id: string; req: UpsertEventRequest }) =>
       netWorthApi.updateEvent(id, req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: timelineKey() });
+      void qc.invalidateQueries({ queryKey: timelineKey() });
     },
   });
 }
@@ -38,7 +38,7 @@ export function useDeleteNetWorthEvent() {
   return useMutation({
     mutationFn: (id: string) => netWorthApi.deleteEvent(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: timelineKey() });
+      void qc.invalidateQueries({ queryKey: timelineKey() });
     },
   });
 }

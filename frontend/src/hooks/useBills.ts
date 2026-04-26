@@ -17,8 +17,8 @@ export function useCreateBill() {
   return useMutation({
     mutationFn: (req: CreateBillRequest) => billsApi.create(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: billsKey() });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: billsKey() });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -28,8 +28,8 @@ export function useDeleteBill() {
   return useMutation({
     mutationFn: (id: string) => billsApi.delete(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: billsKey() });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: billsKey() });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -39,8 +39,8 @@ export function usePayBill() {
   return useMutation({
     mutationFn: ({ id, req }: { id: string; req: PayBillRequest }) => billsApi.pay(id, req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: billsKey() });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: billsKey() });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -57,8 +57,8 @@ export function useMarkBillUsed() {
   return useMutation({
     mutationFn: (id: string) => billsApi.markUsed(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: billsKey() });
-      qc.invalidateQueries({ queryKey: billsAuditKey() });
+      void qc.invalidateQueries({ queryKey: billsKey() });
+      void qc.invalidateQueries({ queryKey: billsAuditKey() });
     },
   });
 }

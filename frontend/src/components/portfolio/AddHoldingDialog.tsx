@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Search, Check } from 'lucide-react';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import type { ApiError } from '@/types/auth.types';
 import type { Asset } from '@/types/portfolio.types';
 import { useAssets } from '@/hooks/useAssets';

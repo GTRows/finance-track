@@ -73,9 +73,9 @@ export function ImportExcelSection() {
       const result = await upload('/import/excel/commit');
       setSummary(result);
       setCommitted(true);
-      qc.invalidateQueries({ queryKey: ['portfolios'] });
-      qc.invalidateQueries({ queryKey: ['transactions'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['portfolios'] });
+      void qc.invalidateQueries({ queryKey: ['transactions'] });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (e) {
       setError(e instanceof Error ? e.message : t('settings.importFailed'));
     } finally {

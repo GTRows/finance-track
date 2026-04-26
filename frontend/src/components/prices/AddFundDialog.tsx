@@ -33,10 +33,10 @@ export function AddFundDialog() {
     mutationFn: (row: { code: string; type: 'YAT' | 'EMK' }) =>
       assetApi.importTefas(row.code, row.type),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['assets'] });
-      qc.invalidateQueries({ queryKey: ['portfolios'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
-      qc.invalidateQueries({ queryKey: ['tefas-search'] });
+      void qc.invalidateQueries({ queryKey: ['assets'] });
+      void qc.invalidateQueries({ queryKey: ['portfolios'] });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['tefas-search'] });
     },
   });
 

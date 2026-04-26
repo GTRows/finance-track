@@ -76,7 +76,7 @@ export function TagsSection() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              handleCreate();
+              void handleCreate();
             }
           }}
           placeholder={t('tag.newTagPlaceholder')}
@@ -114,7 +114,7 @@ export function TagsSection() {
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') submitEdit();
+                        if (e.key === 'Enter') void submitEdit();
                         if (e.key === 'Escape') setEditingId(null);
                       }}
                       className="h-8 flex-1"

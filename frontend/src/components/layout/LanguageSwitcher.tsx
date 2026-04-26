@@ -33,7 +33,7 @@ export function LanguageSwitcher() {
   }, [open]);
 
   const handleSelect = (code: LanguageOption['code']) => {
-    i18n.changeLanguage(code);
+    void i18n.changeLanguage(code);
     setOpen(false);
   };
 

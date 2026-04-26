@@ -41,9 +41,9 @@ export function useRunRecurring() {
   return useMutation({
     mutationFn: (id: string) => recurringApi.runNow(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: key() });
-      qc.invalidateQueries({ queryKey: ['budget'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: key() });
+      void qc.invalidateQueries({ queryKey: ['budget'] });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

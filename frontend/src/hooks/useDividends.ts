@@ -17,8 +17,8 @@ export function useRecordDividend(portfolioId: string) {
   return useMutation({
     mutationFn: (request: RecordDividendRequest) => dividendApi.record(portfolioId, request),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: dividendsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: dividendsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -28,8 +28,8 @@ export function useDeleteDividend(portfolioId: string) {
   return useMutation({
     mutationFn: (dividendId: string) => dividendApi.remove(portfolioId, dividendId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: dividendsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: dividendsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

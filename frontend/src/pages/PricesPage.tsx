@@ -35,18 +35,18 @@ export function PricesPage() {
     onMutate: (assetId) => setBusyId(assetId),
     onSettled: () => setBusyId(null),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['assets'] });
-      qc.invalidateQueries({ queryKey: ['portfolios'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['assets'] });
+      void qc.invalidateQueries({ queryKey: ['portfolios'] });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 
   const refreshAll = useMutation({
     mutationFn: () => priceApi.refresh(),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['assets'] });
-      qc.invalidateQueries({ queryKey: ['portfolios'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['assets'] });
+      void qc.invalidateQueries({ queryKey: ['portfolios'] });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 

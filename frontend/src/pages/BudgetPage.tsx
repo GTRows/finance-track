@@ -112,7 +112,7 @@ export function BudgetPage() {
   };
 
   const summary = summaryQuery.data;
-  const transactions = txnQuery.data?.content ?? [];
+  const transactions = useMemo(() => txnQuery.data?.content ?? [], [txnQuery.data]);
   const incomeCategories = catQuery.data?.income ?? [];
   const expenseCategories = catQuery.data?.expense ?? [];
   const availableTags = tagsQuery.data ?? [];

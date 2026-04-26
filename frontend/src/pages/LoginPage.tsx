@@ -8,7 +8,7 @@ import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/api/auth.api';
 import type { ApiError } from '@/types/auth.types';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import {
   TrendingUp,
   Shield,

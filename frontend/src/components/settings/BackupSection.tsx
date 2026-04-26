@@ -62,7 +62,7 @@ export function BackupSection() {
           bills: result.bills,
         })
       );
-      qc.invalidateQueries();
+      void qc.invalidateQueries();
     } catch (e) {
       setError(e instanceof Error ? e.message : t('settings.backupImportFailed'));
     } finally {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import { Loader2, Search, Check } from 'lucide-react';
 import {
   Dialog,

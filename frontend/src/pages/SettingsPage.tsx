@@ -62,7 +62,7 @@ export function SettingsPage() {
   const updateSettings = useUpdateSettings();
 
   const handleLanguageChange = (code: 'tr' | 'en') => {
-    i18n.changeLanguage(code);
+    void i18n.changeLanguage(code);
     updateSettings.mutate({ language: code });
   };
 

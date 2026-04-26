@@ -16,7 +16,7 @@ import { useCreatePortfolio } from '@/hooks/usePortfolios';
 import type { PortfolioType } from '@/types/portfolio.types';
 import { Loader2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import type { ApiError } from '@/types/auth.types';
 import { PORTFOLIO_TYPES } from './portfolio-types';
 

@@ -18,7 +18,7 @@ export function useCreateAlert() {
   return useMutation({
     mutationFn: (req: CreateAlertRequest) => alertsApi.create(req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: alertsKey() });
+      void qc.invalidateQueries({ queryKey: alertsKey() });
     },
   });
 }
@@ -28,7 +28,7 @@ export function useDeleteAlert() {
   return useMutation({
     mutationFn: (id: string) => alertsApi.delete(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: alertsKey() });
+      void qc.invalidateQueries({ queryKey: alertsKey() });
     },
   });
 }
@@ -54,8 +54,8 @@ export function useMarkRead() {
   return useMutation({
     mutationFn: (id: string) => notificationsApi.markRead(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: notificationsKey() });
-      qc.invalidateQueries({ queryKey: unreadKey() });
+      void qc.invalidateQueries({ queryKey: notificationsKey() });
+      void qc.invalidateQueries({ queryKey: unreadKey() });
     },
   });
 }
@@ -65,8 +65,8 @@ export function useMarkAllRead() {
   return useMutation({
     mutationFn: () => notificationsApi.markAllRead(),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: notificationsKey() });
-      qc.invalidateQueries({ queryKey: unreadKey() });
+      void qc.invalidateQueries({ queryKey: notificationsKey() });
+      void qc.invalidateQueries({ queryKey: unreadKey() });
     },
   });
 }

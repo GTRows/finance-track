@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,7 +51,7 @@ export function TotpSection() {
       setSetup(null);
       setCode('');
       setError(null);
-      qc.invalidateQueries({ queryKey: ['auth', 'totp', 'status'] });
+      void qc.invalidateQueries({ queryKey: ['auth', 'totp', 'status'] });
     },
     onError: (err) => {
       const axiosError = err as AxiosError<ApiError>;
@@ -65,7 +65,7 @@ export function TotpSection() {
       setMode('idle');
       setPassword('');
       setError(null);
-      qc.invalidateQueries({ queryKey: ['auth', 'totp', 'status'] });
+      void qc.invalidateQueries({ queryKey: ['auth', 'totp', 'status'] });
     },
     onError: (err) => {
       const axiosError = err as AxiosError<ApiError>;

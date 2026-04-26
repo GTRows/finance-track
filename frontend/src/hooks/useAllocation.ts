@@ -17,7 +17,7 @@ export function useSetAllocation(portfolioId: string) {
   return useMutation({
     mutationFn: (req: SetAllocationRequest) => allocationApi.set(portfolioId, req),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: key(portfolioId) });
+      void qc.invalidateQueries({ queryKey: key(portfolioId) });
     },
   });
 }

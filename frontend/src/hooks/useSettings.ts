@@ -19,7 +19,7 @@ export function useSettings() {
     if (!query.data) return;
     setSettings(query.data);
     if (i18n.resolvedLanguage !== query.data.language) {
-      i18n.changeLanguage(query.data.language);
+      void i18n.changeLanguage(query.data.language);
     }
     const theme = query.data.theme as Theme;
     if (['light', 'dark', 'system'].includes(theme)) {
@@ -38,7 +38,7 @@ export function useUpdateSettings() {
     mutationFn: (data: UpdateSettingsRequest) => settingsApi.update(data),
     onSuccess: (data) => {
       setSettings(data);
-      qc.setQueryData(['settings'], data);
+      void qc.setQueryData(['settings'], data);
     },
   });
 }
@@ -48,7 +48,7 @@ export function useCompleteOnboarding() {
   return useMutation({
     mutationFn: () => settingsApi.completeOnboarding(),
     onSuccess: (data) => {
-      qc.setQueryData(['settings'], data);
+      void qc.setQueryData(['settings'], data);
     },
   });
 }

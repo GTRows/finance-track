@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import { Loader2, Plus, Trash2, Landmark } from 'lucide-react';
 import {
   Dialog,
@@ -32,7 +32,7 @@ export function DividendLedger({ portfolioId }: DividendLedgerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const dividendsQuery = useDividends(portfolioId);
   const deleteDividend = useDeleteDividend(portfolioId);
-  const dividends = dividendsQuery.data ?? [];
+  const dividends = useMemo(() => dividendsQuery.data ?? [], [dividendsQuery.data]);
 
   const totalTry = useMemo(
     () => dividends.reduce((acc, d) => acc + d.netAmountTry, 0),

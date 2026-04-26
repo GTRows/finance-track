@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import { MailCheck, MailX, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { authApi } from '@/api/auth.api';

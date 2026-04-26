@@ -91,8 +91,8 @@ export function NetWorthHistoryCard() {
   const [editing, setEditing] = useState<NetWorthEvent | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const series = data?.series ?? [];
-  const events = data?.events ?? [];
+  const series = useMemo(() => data?.series ?? [], [data?.series]);
+  const events = useMemo(() => data?.events ?? [], [data?.events]);
 
   const chartData = useMemo(() => {
     return series.map((p) => ({

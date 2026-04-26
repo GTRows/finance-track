@@ -53,8 +53,8 @@ export function useAddDebtPayment() {
     mutationFn: ({ id, req }: { id: string; req: DebtPaymentRequest }) =>
       debtsApi.addPayment(id, req),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: debtsKey() });
-      qc.invalidateQueries({ queryKey: paymentsKey(id) });
+      void qc.invalidateQueries({ queryKey: debtsKey() });
+      void qc.invalidateQueries({ queryKey: paymentsKey(id) });
     },
   });
 }
@@ -65,8 +65,8 @@ export function useDeleteDebtPayment() {
     mutationFn: ({ id, paymentId }: { id: string; paymentId: string }) =>
       debtsApi.deletePayment(id, paymentId),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: debtsKey() });
-      qc.invalidateQueries({ queryKey: paymentsKey(id) });
+      void qc.invalidateQueries({ queryKey: debtsKey() });
+      void qc.invalidateQueries({ queryKey: paymentsKey(id) });
     },
   });
 }

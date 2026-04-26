@@ -28,7 +28,7 @@ export function useToggleWatchlist() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: watchlistKey() });
+      void qc.invalidateQueries({ queryKey: watchlistKey() });
     },
   });
 }

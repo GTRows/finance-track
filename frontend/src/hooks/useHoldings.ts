@@ -22,8 +22,8 @@ export function useAddHolding(portfolioId: string) {
   return useMutation({
     mutationFn: (request: AddHoldingRequest) => holdingApi.add(portfolioId, request),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -34,8 +34,8 @@ export function useDeleteHolding(portfolioId: string) {
   return useMutation({
     mutationFn: (holdingId: string) => holdingApi.delete(portfolioId, holdingId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -52,7 +52,7 @@ export function useToggleHoldingPin(portfolioId: string) {
         holdingsKey(portfolioId)
       );
       if (prev) {
-        qc.setQueryData(
+        void qc.setQueryData(
           holdingsKey(portfolioId),
           prev.map((h) => (h.id === holdingId ? { ...h, pinned: !h.pinned } : h))
         );
@@ -63,7 +63,7 @@ export function useToggleHoldingPin(portfolioId: string) {
       if (ctx?.prev) qc.setQueryData(holdingsKey(portfolioId), ctx.prev);
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
+      void qc.invalidateQueries({ queryKey: holdingsKey(portfolioId) });
     },
   });
 }

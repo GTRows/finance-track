@@ -10,9 +10,9 @@ export function useRefreshPrices() {
   return useMutation({
     mutationFn: priceApi.refresh,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['assets'] });
-      qc.invalidateQueries({ queryKey: ['portfolios'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['assets'] });
+      void qc.invalidateQueries({ queryKey: ['portfolios'] });
+      void qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
