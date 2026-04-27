@@ -187,7 +187,13 @@ Session of 2026-04-26:
   ResetPassword, VerifyEmail). Frontend at 202 tests / 54 files. fireEvent
   rather than userEvent because Radix Dialog + jsdom + scroll-locked body
   breaks pointer-event assertions.
-- Remaining Phase 23: A2, A7, A8, A9.
+- A2 underway: shared `AbstractDataJpaTestSupport` runs Postgres via
+  Testcontainers + dynamic datasource registration; concrete suites are
+  gated on Docker availability (skip cleanly on hosts without Docker).
+  Coverage so far: User, Portfolio, BudgetTransaction, Bill, Tag, Debt
+  repositories - 22 test cases, all green or skipped depending on Docker.
+  Tests seed parent `User` rows so FK-checked inserts work on CI.
+- Remaining Phase 23: A2 wider (more repositories), A7, A8, A9.
 - B3 BLOCKED: Husky + lint-staged needs root package.json which the
   protected-files guard refuses to write without explicit user OK.
 - H1 done: Mermaid sequence diagrams for login + token rotation,
