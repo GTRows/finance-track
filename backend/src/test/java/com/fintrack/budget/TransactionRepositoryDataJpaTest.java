@@ -2,9 +2,11 @@ package com.fintrack.budget;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fintrack.auth.UserRepository;
 import com.fintrack.common.AbstractDataJpaTestSupport;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.BudgetTransaction.TxnType;
+import com.fintrack.common.entity.User;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -19,6 +21,18 @@ import org.springframework.data.domain.PageRequest;
 class TransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
     @Autowired TransactionRepository repo;
+    @Autowired UserRepository userRepo;
+
+    private UUID seedUser(String username) {
+        return userRepo.save(
+                        User.builder()
+                                .username(username)
+                                .email(username + "@example.com")
+                                .password("bcrypt-hash")
+                                .role(User.Role.USER)
+                                .build())
+                .getId();
+    }
 
     private BudgetTransaction txn(UUID userId, TxnType type, String amount, LocalDate date) {
         return BudgetTransaction.builder()
@@ -31,8 +45,8 @@ class TransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
     @Test
     void findByIdAndUserIdEnforcesOwnership() {
-        UUID a = UUID.randomUUID();
-        UUID b = UUID.randomUUID();
+        UUID a = seedUser("ali");
+        UUID b = seedUser("baris");
         BudgetTransaction t = repo.save(txn(a, TxnType.EXPENSE, "100", LocalDate.of(2026, 4, 1)));
 
         assertThat(repo.findByIdAndUserId(t.getId(), a)).isPresent();
@@ -41,7 +55,7 @@ class TransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
     @Test
     void pageByDateRangeOrdersDescending() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = seedUser("ada");
         repo.save(txn(userId, TxnType.EXPENSE, "1", LocalDate.of(2026, 4, 1)));
         repo.save(txn(userId, TxnType.EXPENSE, "2", LocalDate.of(2026, 4, 15)));
         repo.save(txn(userId, TxnType.EXPENSE, "3", LocalDate.of(2026, 4, 30)));
@@ -61,7 +75,7 @@ class TransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
     @Test
     void filterByTypeOnlyReturnsMatchingType() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = seedUser("kemal");
         repo.save(txn(userId, TxnType.INCOME, "1000", LocalDate.of(2026, 4, 5)));
         repo.save(txn(userId, TxnType.EXPENSE, "200", LocalDate.of(2026, 4, 5)));
 
@@ -80,7 +94,7 @@ class TransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
     @Test
     void sumByUserAndTypeAggregatesAmount() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = seedUser("ozge");
         repo.save(txn(userId, TxnType.EXPENSE, "100", LocalDate.of(2026, 4, 1)));
         repo.save(txn(userId, TxnType.EXPENSE, "250", LocalDate.of(2026, 4, 10)));
         repo.save(txn(userId, TxnType.INCOME, "5000", LocalDate.of(2026, 4, 15)));
@@ -97,7 +111,7 @@ class TransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
     @Test
     void sumOutsideRangeReturnsZero() {
-        UUID userId = UUID.randomUUID();
+        UUID userId = seedUser("yusuf");
         repo.save(txn(userId, TxnType.EXPENSE, "100", LocalDate.of(2026, 4, 1)));
 
         BigDecimal sum =
