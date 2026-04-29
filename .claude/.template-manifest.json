@@ -1,0 +1,30 @@
+{
+  "files": {
+    ".claude/TIPS.md": "df33ef9dcd42cb7359e332cb63b16b61c9e66547b314901826d4a6bcfc5e0857",
+    ".claude/VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
+    ".claude/commands/doctor.md": "fbb2bdf3b18bd7b533e95cd5f3bf59f90890912296ae686a72d42b7e0d94f9e8",
+    ".claude/commands/menu.md": "f8824c09d1ee3f8db17b854995c32bca0cacd052deed2641f82e0bc1a3d93f46",
+    ".claude/commands/new-backend-module.md": "107605a504b88ddb404bcce0c3e473bbc9e6c0081b2838a35f18ee9711731391",
+    ".claude/commands/new-frontend-feature.md": "a007b5169367cbda4ae0ba3b3126e9b335974b6f756095b5c3b2a652163faef5",
+    ".claude/commands/new-migration.md": "3a031b394f9a7170c0fe88465440448549724fe39c0085093d87a4f7e9fed3be",
+    ".claude/commands/review.md": "4e1b087b03b88ccde60324a8332cb626e23280cd45998f6753d6170349b956f5",
+    ".claude/commands/tpl.md": "7e836ce1f7200bde91bb46a88719d2a12b691a46957dcd2d296e73471509e6be",
+    ".claude/commands/update.md": "945d5c38abb33f2f7de2793c711a51fe580bdfec3188a256debb2a37ca5e370f",
+    ".claude/hooks/optional/pre_warn_win32_danger.py": "5da11e649f61943369bbf5efe30076114f0420ecfadc5c89c68477f51a776ede",
+    ".claude/hooks/post_validate_syntax.py": "b1b9edf4b5cb9c051621e2f0d8404ba24e8a9d66b57ebc86c860cb7b17ef9e62",
+    ".claude/hooks/pre_check_setup.py": "9e759b3fb00e0e5ce6a0a3f10d259636390fdc7e632aab938d6d71d426d7dca4",
+    ".claude/hooks/pre_guard_env_secrets.py": "2029085f23b17822cef91779c7148d8ea5439367e1fb36e29311b2979a5953c5",
+    ".claude/hooks/pre_guard_release_files.py": "c9471e1174801a67abd618032c67055a06adff66f5197ce58f479a9fea09a493",
+    ".claude/hooks/pre_guard_security.py": "b245872e5392bf7d8a6357c3cf4d990b8ff2f09435eda63e40fe7be16cdcef45",
+    ".claude/hooks/session_check_setup.py": "19d7375f8b0392e71ec0f6126795bad8bfde66b9d4155c9bc87f1d7ed7eb8355",
+    ".claude/scripts/manifest.py": "94b36b0297e369d9d505ae658820bca82e0a08915daacc3ad791c11c662a60c9",
+    ".claude/settings.json": "f1b75e431f464ee461f015141bd9a94d354e813ba7c5c77d572843aa754f706d",
+    ".editorconfig": "0cd6fbdeea1d66f799cd7907029e0788e7b35329317356bc6c10582918b2de8b",
+    ".github/ISSUE_TEMPLATE/bug_report.md": "877ff2afe86817cbbe2991d8aeee169fc2b30206dc6e0b2dc4c79fcdc33d732f",
+    ".github/ISSUE_TEMPLATE/feature_request.md": "89a45d75e18005edb3d37457d6137f9a418fecea8c357a4d3189979db1526163",
+    ".github/PULL_REQUEST_TEMPLATE.md": "d67f0a687336e8af1250c0b7248c87cf51b7f64422d0b3dac5f689c73ef00b18",
+    ".gitignore": "bacdea6e19579a4bf8bea749ab0b0a1a20776621787e536559040deaf0cfba59",
+    "CLAUDE.md": "deb2e17e4bb1dea7167b224ffecc8048a2dcaac13aba10b3fec9578057e912f9"
+  },
+  "version": "1.0.0"
+}

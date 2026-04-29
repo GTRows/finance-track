@@ -21,6 +21,8 @@
     "ask": [
       "Bash(docker compose down:*)",
       "Bash(docker system prune:*)",
+      "Bash(npm publish:*)",
+      "Bash(pip publish:*)",
       "Bash(git push:*)",
       "Bash(gh pr merge:*)",
       "Write(.github/workflows/**)",
@@ -28,6 +30,29 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_check_setup.py\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/pre_check_setup.py\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit",

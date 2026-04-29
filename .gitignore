@@ -12,6 +12,10 @@ Yatirim_Takip*.xlsx
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .claude/skills/ui-ux-pro-max/
+.claude/.setup-complete
+
+# Template upstream working copy (created on demand by /update)
+.cct-upstream/
 
 # TypeScript / Vite build artifacts
 frontend/tsconfig*.tsbuildinfo
