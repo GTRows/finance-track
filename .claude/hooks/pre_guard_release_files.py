@@ -19,14 +19,23 @@ import sys
 PROTECTED_EXACT = {
     "package.json",
     "package-lock.json",
-    "pom.xml",
-    "mvnw",
-    "mvnw.cmd",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "setup.py",
+    "setup.cfg",
+    "pyproject.toml",
+    "cargo.toml",
+    "cargo.lock",
+    "go.mod",
+    "go.sum",
+    "project.yaml",
     "changelog.md",
+    "release.md",
+    "requirements.txt",
+    "requirements-dev.txt",
     "dockerfile",
     "docker-compose.yml",
     "docker-compose.yaml",
-    "docker-compose.traefik.yml",
 }
 
 # File suffixes that are always protected
@@ -49,6 +58,7 @@ EXEMPT_DIRS = (
     ".claude/skills",
     ".claude/hooks",
     ".claude/agents",
+    ".claude/scripts",
 )
 # -----------------------------------
 
@@ -71,6 +81,17 @@ def is_protected(path: str) -> bool:
     return any(f"/{d}/" in normalized or normalized.startswith(f"{d}/") for d in PROTECTED_DIRS)
 
 
+
+# --- audit ---
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+try:
+    from _audit import record_block as _record_block
+except Exception:
+    def _record_block(*_args, **_kwargs):
+        pass
+# --- end audit ---
+
 def main() -> None:
     try:
         data = json.load(sys.stdin)
@@ -87,6 +108,7 @@ def main() -> None:
             "Confirm with the user before proceeding.",
             file=sys.stderr,
         )
+        _record_block("pre_guard_release_files", file_path=file_path, reason=f"protected file: {os.path.basename(file_path)}")
         sys.exit(2)
 
 

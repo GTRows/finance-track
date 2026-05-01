@@ -25,6 +25,8 @@
       "Bash(pip publish:*)",
       "Bash(git push:*)",
       "Bash(gh pr merge:*)",
+      "Write(.claude/**)",
+      "Edit(.claude/**)",
       "Write(.github/workflows/**)",
       "Edit(.github/workflows/**)"
     ]
@@ -86,6 +88,20 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_log_usage.py\"",
+            "timeout": 5000
+          }
+        ]
+      }
     ]
+  },
+  "enabledPlugins": {
+    "oh-my-claudecode@omc": true
   }
 }

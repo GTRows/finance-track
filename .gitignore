@@ -60,3 +60,50 @@ backups/
 # Test coverage
 backend/target/site/
 frontend/coverage/
+
+# --- merged from claude-code-template upstream ---
+
+# Dependencies
+node_modules/
+vendor/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Build output
+dist/
+build/
+out/
+*.egg-info/
+
+# OS
+Desktop.ini
+
+# Environment and secrets
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+service-account.json
+
+# Test coverage
+coverage/
+.coverage
+htmlcov/
+.nyc_output/
+
+# OMC (oh-my-claudecode) local session state
+.omc/
+
+# Snapshots taken by /gtr:update before applying breaking migrations
+.claude/commands.pre-*/
+.claude/migration-log.md
+
+# Token usage telemetry (per-clone, never shipped)
+.claude/usage-log.jsonl
+
+# Hook block audit (per-clone, never shipped)
+.claude/hook-audit.log
