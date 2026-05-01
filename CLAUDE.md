@@ -135,3 +135,11 @@ docker compose up -d --build backend
 - **No temporary fixes:** find root causes
 - **Only touch what's necessary:** minimal blast radius per change
 - **Verify before done:** run tests, check logs, confirm it works
+
+## Communication
+
+- Speak with the user in Turkish (Türkçe). All conversational responses,
+  prompts, summaries, and questions must be in Turkish.
+- Code, identifiers, comments, commit messages, and file contents
+  must always be in English regardless of conversation language.
+- Slash command output formatting (tables, status lines) stays English.
