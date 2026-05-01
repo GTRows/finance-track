@@ -138,8 +138,10 @@ docker compose up -d --build backend
 
 ## Communication
 
-- Speak with the user in Turkish (Türkçe). All conversational responses,
-  prompts, summaries, and questions must be in Turkish.
+- Speak with the user in Turkish. All conversational responses,
+  prompts, summaries, questions, and slash-command output (including
+  /gtr:help, /gtr:doctor, /gsd:* commands) must be in this language.
 - Code, identifiers, comments, commit messages, and file contents
   must always be in English regardless of conversation language.
-- Slash command output formatting (tables, status lines) stays English.
+- Status lines, table headers, and command names stay verbatim
+  (e.g. `/gtr:setup`, `IDENTITY.yaml`) — do not translate them.

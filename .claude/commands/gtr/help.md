@@ -4,7 +4,18 @@ description: "[TEMPLATE] Detailed help for /gtr:* and /gsd:* commands. Pass a to
 
 You are the **template help system**. Job: explain commands and topics in depth so the user does not have to memorise GSD or `/gtr:*` namespaces.
 
-**Output language.** Read `## Communication` from `CLAUDE.md` and produce all explanatory prose, headings, and bullets in that language. Command names, file paths, code blocks, and the literal table-of-contents column (`/gtr:*`, `/gsd:*` slugs) stay verbatim. If `## Communication` is missing, default to the language the user wrote the request in. Do **not** fall back to English just because this file is written in English — translate as you print.
+**Output language.** Read `## Communication` from `CLAUDE.md` and render every human-readable phrase in that language — including the **right-hand description column** of the table-of-contents code block, the section labels above it (e.g. "TOPICS — high-level guides", "GTR COMMANDS — template lifecycle"), the INTENT cheat-sheet phrases in quotes, and every "Why / After this / Topic" body paragraph below.
+
+Keep these tokens verbatim, regardless of language:
+- Slash-command names: `/gtr:setup`, `/gsd:plan-phase`, `/commit`, etc.
+- File paths and filenames: `CLAUDE.md`, `IDENTITY.yaml`, `.planning/PROJECT.md`, `.claude/.setup-complete`.
+- Shell commands inside code blocks: `git push`, `python .claude/scripts/manifest.py --write`.
+- Version strings: `v0.6.0`, `0.6.3`.
+- Markdown / YAML / config keys: `## Communication`, `release.platforms`, `### Added`.
+
+So a TOC line like `/gtr:doctor    Read-only health check (also predictive)` becomes (when language is Turkish): `/gtr:doctor    Salt-okunur sağlık kontrolü (ön-öngörülü de)`. The slash token stays, the description is translated.
+
+If `## Communication` is missing, default to the language the user wrote the request in. Do **not** fall back to English just because this file is written in English — translate as you print.
 
 `$ARGUMENTS` is the lookup target. Three cases:
 
@@ -30,6 +41,7 @@ TOPICS — high-level guides
   permissions   allow / ask / deny layers in settings.json
 
 GTR COMMANDS — template lifecycle
+  /gtr:next              "What should I do right now?" (state-aware advisor)
   /gtr:menu              Interactive entry point
   /gtr:setup             First-time wizard (also /gtr:setup --extras)
   /gtr:onboard           Merge template into an existing project
@@ -67,6 +79,7 @@ GSD COMMANDS — planning and execution
   /gsd:help              GSD's own command reference
 
 INTENT -> COMMAND (quick map — pick the row that matches what you want to do)
+  "What should I do right now?"                       /gtr:next
   "Set up this project for the first time"            /gtr:setup
   "Read my whole project, summarise structure"        /gsd:map-codebase
   "Define the project's vision and goals"             /gsd:new-project
@@ -321,6 +334,32 @@ Defense in depth: pattern matching catches blatant cases cheaply, hooks catch su
 
 ---
 
+## Command: /gtr:next
+
+State-aware advisor. Reads the project's state (setup marker, IDENTITY, CLAUDE.md, `.planning/*`, source-file count) and prints the **single next command** to run, with a short reason and the likely follow-ups.
+
+Use this when you do not know what to do — e.g. just cloned the template, or just came back to the project after a break, or finished a plan and are not sure whether to verify, plan the next phase, or cut a release.
+
+Output layout:
+
+```
+RIGHT NOW
+  <command>
+
+WHY
+  <one-line reason from observed state>
+
+AFTER THIS (likely next steps)
+  <next 1-3 commands>
+
+PROJECT STATE
+  <bullet list of what was found>
+```
+
+Does **not** execute the recommended command. Print-and-stop is the default. If you reply with "do it", the advisor dispatches.
+
+---
+
 ## Command: /gtr:setup
 
 First-time project wizard. Detects the stack, fills `CLAUDE.md`, writes `IDENTITY.yaml`, installs recommended plugins, hands off planning to GSD on opt-in, writes the setup marker.
@@ -438,4 +477,4 @@ Run this **before** `/gsd:new-project` on existing repos so the brief sees real 
 
 - For commands not listed above, run `/gsd:help` for GSD's own reference.
 - All template commands are namespaced under `/gtr:*`. All planning commands are under `/gsd:*`. Plugin commands live in plugin-specific namespaces (e.g. `/commit-commands:commit`).
-- The conversation language for the project is set in `CLAUDE.md` `## Communication`. Help output is rendered in that language; only command names, file paths, and code stay verbatim.
+- The conversation language for the project is set in `CLAUDE.md` `## Communication`. Help output is rendered in that language — including the description column of the TOC code block. Only slash-command names, file paths, version strings, and shell commands stay verbatim.
