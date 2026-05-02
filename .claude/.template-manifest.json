@@ -1,9 +1,9 @@
 {
   "files": {
     ".claude/TIPS.md": "5f9d9187b6af38601fb20163ccfea202aa8a88352de6fb92e8994d0ff15378e8",
-    ".claude/VERSION": "c2f2fc398169dfaf4b6a16077a5938b7361aefac1143f532b17ea18c3229cf3a",
+    ".claude/VERSION": "b0e9dad898b99c10ad2965748463c096b10e514cba38e72374078e2202b3b36a",
     ".claude/commands/gtr/doctor.md": "d71aab43763447e47e5d02c5d90c41839c3b60c56bc32861c23ce4bd54bf3b17",
-    ".claude/commands/gtr/help.md": "356a52a08349fcd4816c1708a36503be109f7fa189eb07770796f430d15ccf5b",
+    ".claude/commands/gtr/help.md": "a556f80c2a565b54fd65338a54aca7da23a07fa48b3ab171741f0a1aac93d0ef",
     ".claude/commands/gtr/menu.md": "e96e70474934e4d30a6cf3cca64c4456ca87e675ca8b36af53d28eb01f6b3664",
     ".claude/commands/gtr/new-adr.md": "388180f170f21397147e34ef7c001c208f5f265c6064c62bb5260904a2aa23fa",
     ".claude/commands/gtr/new-migration.md": "69ba7dac673a8f124a23459d6ef0e6abcbc7ccdaabb5e4e32a567013f6efc06a",
@@ -54,5 +54,5 @@
     "IMPLEMENT.md": "3bc658ae7dee8b928280d14fa2e1c1afc4bbe22dfab053412b0e4546e65ed3f1",
     "RELEASE.md": "ec9d1dece9e08205406b7edda5be04f5b048ed53286c8cafdc251ede3620c4c9"
   },
-  "version": "0.5.0"
+  "version": "0.6.5"
 }
