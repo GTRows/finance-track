@@ -1,19 +1,19 @@
 {
   "files": {
     ".claude/TIPS.md": "5f9d9187b6af38601fb20163ccfea202aa8a88352de6fb92e8994d0ff15378e8",
-    ".claude/VERSION": "b0e9dad898b99c10ad2965748463c096b10e514cba38e72374078e2202b3b36a",
-    ".claude/commands/gtr/doctor.md": "d71aab43763447e47e5d02c5d90c41839c3b60c56bc32861c23ce4bd54bf3b17",
-    ".claude/commands/gtr/help.md": "a556f80c2a565b54fd65338a54aca7da23a07fa48b3ab171741f0a1aac93d0ef",
-    ".claude/commands/gtr/menu.md": "e96e70474934e4d30a6cf3cca64c4456ca87e675ca8b36af53d28eb01f6b3664",
+    ".claude/VERSION": "1076e9b67dd8c5b0721effc09f34012572c0fb636999a6d43fdfd94912cd2f6d",
+    ".claude/commands/gtr/doctor.md": "9fcc50d00c0fb3f5f96e108daee1d35e74115f098b4ed63e74f141873c8623d3",
+    ".claude/commands/gtr/help.md": "721264f39f3dd46785f2a1e6b12c99dd6625b3e7b118a8d1cd5a5194e40a1a85",
+    ".claude/commands/gtr/menu.md": "c45a37882683084e9db52e1f8b878078a694c7033395fc5d34aca5d5743caeb7",
     ".claude/commands/gtr/new-adr.md": "388180f170f21397147e34ef7c001c208f5f265c6064c62bb5260904a2aa23fa",
     ".claude/commands/gtr/new-migration.md": "69ba7dac673a8f124a23459d6ef0e6abcbc7ccdaabb5e4e32a567013f6efc06a",
     ".claude/commands/gtr/new-rule.md": "99615dcfce728da0c50b7d6a9327663ea09d3e44a5c14bb7cc3e2560e56d9b5e",
     ".claude/commands/gtr/new-skill.md": "3acead712a3b4bc3e68139b7262199704df58ef7320c9c8b9096a2cdd8951d90",
-    ".claude/commands/gtr/next.md": "f239f86f7c78b4b500bcd59840952e3acafcc1d8813a64aa74bb2e5df2c7d450",
-    ".claude/commands/gtr/onboard.md": "a582c7d55bab0df9005b449330947f5466b33dbec9c4977d22621e5b72ff0a8a",
-    ".claude/commands/gtr/release.md": "49c0fbf68bcdee26ba71a467caa684635f0695027410270c69cb12412e8eef27",
-    ".claude/commands/gtr/setup.md": "ec12d75b4fbae64c73931981c0e9638b3f69635fcf526b570f77fbdec9c2f36a",
-    ".claude/commands/gtr/update.md": "aca774a04340a91a3000027bf8c35738cfab553bd24263025c5f5f3fc35e63b3",
+    ".claude/commands/gtr/next.md": "90fa2e3dd318dd2e0ea116afcadfdd4aac24cddbda755dd250ba1714d3380736",
+    ".claude/commands/gtr/onboard.md": "21760713988e832c187bc1b82c9d5a9e587495ac46f70bfa8adb154ad93dcf41",
+    ".claude/commands/gtr/release.md": "1402ea69e7c2a0e1c138a9eff7eb6f36f45a71bdf36537b8742cf74a4344ef1c",
+    ".claude/commands/gtr/setup.md": "061ea761d716709aa49d4953b2877110a26e9101864d82d92b9f8cd71bc503fb",
+    ".claude/commands/gtr/update.md": "2b60c539d797bd15ce3363042ebb42c209e1dc97557c4310115b12c5219804d4",
     ".claude/commands/new-backend-module.md": "107605a504b88ddb404bcce0c3e473bbc9e6c0081b2838a35f18ee9711731391",
     ".claude/commands/new-frontend-feature.md": "a007b5169367cbda4ae0ba3b3126e9b335974b6f756095b5c3b2a652163faef5",
     ".claude/commands/review.md": "4e1b087b03b88ccde60324a8332cb626e23280cd45998f6753d6170349b956f5",
@@ -22,6 +22,7 @@
     ".claude/docs/deferred-work.md": "cfb410d62f8da1d6458395d8bbed04ba0e62e7bd3a3d1c827944b488deb62c9c",
     ".claude/docs/hooks.md": "e5184ab9481bc5410df2ba9a1a739e3ec7e1f4082dcae9675ce07a34533f68e2",
     ".claude/docs/mcp.md": "55d909d38b542b277e4ed1691cfffa05b7a89cec7edf1ee2942aafee56d94218",
+    ".claude/docs/output-style.md": "83af5bd088430f25087ba80725c8ac31d301e3635ce38ecb9b3de20fd40eab7a",
     ".claude/docs/permissions.md": "799f1a8352f92d90456509e2434f23831733c6a6de84266b1ccd5fa69e1d8a99",
     ".claude/docs/releases.md": "cf821860aac5d631497f96fdea5d01d4079b237857c85308b955e30a6cc213d4",
     ".claude/docs/setup-flow.md": "c4f00bdf56b1e6fa7e513d257061c0ca5d057563de78ceeafbbb2305aca7d4d9",
@@ -54,5 +55,5 @@
     "IMPLEMENT.md": "3bc658ae7dee8b928280d14fa2e1c1afc4bbe22dfab053412b0e4546e65ed3f1",
     "RELEASE.md": "ec9d1dece9e08205406b7edda5be04f5b048ed53286c8cafdc251ede3620c4c9"
   },
-  "version": "0.6.5"
+  "version": "0.6.6"
 }
