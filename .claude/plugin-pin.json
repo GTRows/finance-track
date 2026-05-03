@@ -1,0 +1,12 @@
+{
+  "plugins": [
+    "claude-md-management@claude-plugins-official",
+    "code-simplifier@claude-plugins-official",
+    "commit-commands@claude-plugins-official",
+    "frontend-design@claude-plugins-official",
+    "oh-my-claudecode@omc",
+    "pr-review-toolkit@claude-plugins-official",
+    "security-guidance@claude-plugins-official",
+    "skill-creator@claude-plugins-official"
+  ]
+}
