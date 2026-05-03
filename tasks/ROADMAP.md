@@ -20,7 +20,7 @@ user would see.
 | # | Item | Effort | Impact |
 |---|------|--------|--------|
 | A1 | `@WebMvcTest` suites for every `@RestController` (request shape, validation errors, auth rules, problem-details) | M | med |
-| A2 | `@DataJpaTest` + Testcontainers Postgres for all `*Repository` query methods | M | med |
+| A2 | ~~`@DataJpaTest` + Testcontainers Postgres for all `*Repository` query methods~~ | M | med |
 | A3 | Frontend: add `@testing-library/react` and write hook tests for every `useX` that wraps React Query | M | med |
 | A4 | Frontend: component tests for critical dialogs (`AddTransactionDialog`, `AddPortfolioDialog`, `PayBillDialog`) and pages (`LoginPage`, `DashboardPage`, `BudgetPage`) | L | med |
 | A5 | ~~Enforce JaCoCo line/branch minimums in `pom.xml`~~ Shipped: `jacoco:check` at 60% instruction / 45% branch | S | low |
@@ -207,6 +207,15 @@ Session of 2026-04-26:
   portfolio/holding/transaction/bill/budget entry.
 - Track H remaining: H5 (public demo instance) - low impact, leave for
   later.
+
+Session of 2026-05-04 (plan 23-01):
+- A2 complete: @DataJpaTest coverage extended to 25 additional repositories
+  (35 of 37 covered; AdminSettingRepository and UserSettingsRepository
+  intentionally skipped — no custom queries beyond JpaRepository defaults).
+  All new suites gated on Docker via @EnabledIf — skip cleanly on hosts
+  without Docker. Coverage gate (60% instruction / 45% branch) unchanged
+  on this Docker-less host; CI on Linux exercises every new suite.
+- Remaining Phase 23: A7 (PIT), A8 (contract tests), A9 (receipt OCR).
 
 ## Suggested phasing
 
