@@ -172,6 +172,49 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>mutation</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>1.17.4</version>
+            <dependencies>
+              <dependency>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-junit5-plugin</artifactId>
+                <version>1.2.1</version>
+              </dependency>
+            </dependencies>
+            <configuration>
+              <targetClasses>
+                <param>com.fintrack.*.*Service*</param>
+              </targetClasses>
+              <targetTests>
+                <param>com.fintrack.*.*Test</param>
+              </targetTests>
+              <mutationThreshold>60</mutationThreshold>
+              <coverageThreshold>70</coverageThreshold>
+              <outputFormats>
+                <outputFormat>HTML</outputFormat>
+                <outputFormat>XML</outputFormat>
+              </outputFormats>
+              <timestampedReports>false</timestampedReports>
+              <excludedClasses>
+                <param>com.fintrack.common.entity.*</param>
+                <param>com.fintrack.**.dto.*</param>
+                <param>com.fintrack.**.config.*</param>
+                <param>com.fintrack.FinTrackApplication</param>
+              </excludedClasses>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
       <plugin>
