@@ -10,6 +10,7 @@ import { useUpdateSettings } from '@/hooks/useSettings';
 import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet, ScrollText, Tag as TagIcon, Wand2, Database } from 'lucide-react';
 import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
 import { TotpSection } from '@/components/settings/TotpSection';
+import { PasskeySection } from '@/components/settings/PasskeySection';
 import { PasswordSection } from '@/components/settings/PasswordSection';
 import { SessionsSection } from '@/components/settings/SessionsSection';
 import { AuditLogSection } from '@/components/settings/AuditLogSection';
@@ -240,6 +241,7 @@ export function SettingsPage() {
       >
         <div className="space-y-5">
           <TotpSection />
+          <PasskeySection />
           <PasswordSection />
           <SessionsSection />
         </div>
