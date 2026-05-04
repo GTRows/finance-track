@@ -43,15 +43,17 @@ Plans:
 **Depends on**: Phase 23 (need broader integration coverage before swapping password encoder and audit emission paths)
 **Research**: Likely (Argon2id migration playbook with Spring Security 6, WebAuthn/passkey library choice, OWASP Dependency Check vs. Renovate vulnerability gate)
 **Research topics**: `Argon2PasswordEncoder` parameters and rehash-on-login pattern, `webauthn4j` vs. `yubico/java-webauthn-server`, OWASP Dependency Check Maven plugin failure thresholds, audit-log retention SQL pattern
-**Plans**: TBD (estimate 5-6 plans)
+**Plans**: 8 (D4 split across 2 plans for backend ceremony + frontend integration; D8/D9 split for atomicity; AuditService domain coverage as its own plan)
 
 Plans:
 - [ ] 24-01: D2 — Argon2id password hashing migration with rehash-on-login fallback
-- [ ] 24-02: D4 — WebAuthn/passkeys as alternative sign-in (`authenticators` child table)
-- [ ] 24-03: D6 — Refresh-token session fingerprint binding (UA + IP-prefix hash)
-- [ ] 24-04: D7 — Audit log retention policy + automatic PII redaction
-- [ ] 24-05: D8 + D9 — Signed URL scheme for receipts; OWASP Dependency Check in CI failing on new CRITICAL CVEs
-- [ ] 24-06: Prod-profile fail-fast (CORS bound to `CORS_ALLOWED_ORIGINS`, Redis password required) + AuditService coverage for portfolio/budget/bill mutations
+- [ ] 24-02: D4 — WebAuthn passkey foundation + registration ceremony (`authenticators` child table, library decision, register endpoints)
+- [ ] 24-03: D4 — WebAuthn assertion ceremony + frontend integration (login endpoints, list/revoke, React hooks + UI)
+- [ ] 24-04: D6 — Refresh-token session fingerprint binding (UA + IP-prefix SHA-256)
+- [ ] 24-05: D7 — Audit log retention policy + automatic PII redaction
+- [ ] 24-06: D8 — Signed URL scheme for receipts (HMAC-SHA256, 5-minute TTL)
+- [ ] 24-07: D9 — OWASP Dependency Check in CI + prod-profile fail-fast (CORS, Redis password, JWT/receipt secrets, WebAuthn config)
+- [ ] 24-08: AuditService coverage for portfolio/budget/bill mutations
 
 ### Phase 25: Architecture Cleanup
 **Goal**: Track C1 + C2 plus the reactive price-client refactor flagged in CONCERNS.md. Move cross-cutting wiring to `ApplicationEventPublisher`, add Spring Cache + Caffeine on hot reads with explicit invalidation, and replace `WebClient.block()` + `Thread.sleep` in the price clients with virtual-thread or async composition.
@@ -130,8 +132,8 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 23. Coverage Completion | 2/4 | In progress | - |
-| 24. Security Hardening | 0/6 | Not started | - |
+| 23. Coverage Completion | 4/4 | Complete | 2026-05-04 |
+| 24. Security Hardening | 0/8 | Not started | - |
 | 25. Architecture Cleanup | 0/3 | Not started | - |
 | 26. Observability | 0/3 | Not started | - |
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
