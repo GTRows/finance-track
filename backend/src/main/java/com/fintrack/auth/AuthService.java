@@ -92,6 +92,13 @@ public class AuthService {
 
         loginRateLimiter.recordSuccess(request.username());
 
+        if (passwordEncoder.upgradeEncoding(user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(request.password()));
+            userRepository.save(user);
+            auditService.success(
+                    AuditAction.PASSWORD_REHASHED, user.getId(), user.getUsername(), "argon2id");
+        }
+
         if (user.isTotpEnabled()) {
             String challenge = jwtUtil.generateTotpChallengeToken(user.getId().toString());
             log.info("TOTP challenge issued for user: {}", user.getUsername());
