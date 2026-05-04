@@ -127,7 +127,7 @@ function computeMonthGrid(bills: Bill[], locale: string): { cells: DayCell[]; mo
     date.setDate(gridStart.getDate() + i);
     const inMonth = date.getMonth() === month;
     const dueBills = inMonth
-      ? bills.filter((b) => b.isActive && effectiveDueDay(b.dueDay, lastOfMonth.getDate()) === date.getDate())
+      ? bills.filter((b) => b.active && effectiveDueDay(b.dueDay, lastOfMonth.getDate()) === date.getDate())
       : [];
     cells.push({ date, inMonth, bills: dueBills });
   }

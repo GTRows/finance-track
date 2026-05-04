@@ -3,6 +3,9 @@ import client from './client';
 export interface PriceSyncResult {
   cryptoUpdated: number;
   currencyUpdated: number;
+  fundUpdated: number;
+  metalUpdated: number;
+  stockUpdated: number;
   runAt: string;
 }
 

@@ -73,7 +73,7 @@ export function BillsPage() {
   const markUsed = useMarkBillUsed();
 
   const bills = billsQuery.data ?? [];
-  const activeBills = bills.filter((b) => b.isActive);
+  const activeBills = bills.filter((b) => b.active);
   const totalDue = activeBills.reduce((sum, b) => sum + b.amount, 0);
   const paidBills = activeBills.filter((b) => b.currentPeriodStatus === 'PAID');
   const paidTotal = paidBills.reduce((sum, b) => sum + b.amount, 0);

@@ -17,9 +17,12 @@ export interface Bill {
   id: string;
   name: string;
   amount: number;
+  currency: string;
   dueDay: number;
-  isActive: boolean;
+  active: boolean;
+  autoPay: boolean;
   category: string;
+  notes: string | null;
   remindDaysBefore: number;
   currentPeriodStatus: PaymentStatus;
   currentPeriodDueDate: string;
