@@ -3,7 +3,9 @@ package com.fintrack.common.config;
 import com.fintrack.auth.AutheliaForwardAuthFilter;
 import com.fintrack.auth.FinTrackUserDetailsService;
 import com.fintrack.auth.JwtAuthFilter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +19,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -150,9 +154,14 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    /** BCrypt password encoder with strength 12. */
+    /** Delegating password encoder — Argon2id default, BCrypt for legacy hashes. */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
+        encoders.put("argon2", Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8());
+        encoders.put("bcrypt", new BCryptPasswordEncoder(12));
+        DelegatingPasswordEncoder delegating = new DelegatingPasswordEncoder("argon2", encoders);
+        delegating.setDefaultPasswordEncoderForMatches(new BCryptPasswordEncoder(12));
+        return delegating;
     }
 }
