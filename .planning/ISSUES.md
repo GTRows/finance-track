@@ -57,6 +57,16 @@ already passes at 63%; these items track the per-class lift work that did not fi
   5 surviving `MathMutator` and `ConditionalsBoundary` mutations on percent rounding. Smallest lift
   in the backlog; ~3 targeted tests around half-up rounding boundaries should clear it.
 
+### Plan 24-03 follow-up
+
+- **ISS-110** — Full WebAuthn ceremony E2E test using `com.webauthn4j.test.client.ClientPlatform`.
+  Discovered while executing plan 24-03 Task 3. Requires adding `com.webauthn4j:webauthn4j-test` as
+  a test-scope dependency, then synthesising a register-then-login round-trip against the running
+  HTTP boundary so a future refactor that breaks the ceremony cryptography (rather than the
+  service-level branches Task 1 already covers) is caught. Service-layer Mockito tests, the
+  `AuthenticatorControllerWebMvcTest`, and the existing `OpenApiSpecGeneratorTest` boot path cover
+  the immediate routing/security regressions, but a true cryptographic E2E remains an open gap.
+
 ## Closed
 
 (none)
