@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 ## Current Position
 
 Phase: 2 of 8 (Phase 24 — Security Hardening)
-Plan: 3 of 8 in current phase
+Plan: 4 of 8 in current phase
 Status: In progress
-Last activity: 2026-05-04 — Completed 24-03-PLAN.md
+Last activity: 2026-05-04 — Completed 24-04-PLAN.md
 
-Progress: ███░░░░░░░ 25%
+Progress: ███░░░░░░░ 27%
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Recent decisions affecting current work:
 - 2026-05-04 (plan 24-01): D2 closed. Argon2id is the default encoder via `DelegatingPasswordEncoder` (v5_8 params); legacy hashes either carry a `{bcrypt}` prefix from V37 or are caught by `setDefaultPasswordEncoderForMatches(BCryptPasswordEncoder(12))` during the rollout window. Rehash-on-login fires from `AuthService.login()` in the same `@Transactional` boundary via `passwordEncoder.upgradeEncoding(...)` and emits the new `PASSWORD_REHASHED` audit action. AuthService mutation kill rate 36% (above the 28% ISS-101 floor). bcprov-jdk18on 1.78.1 added.
 - 2026-05-04 (plan 24-02): D2 (library) closed. Picked `com.webauthn4j:webauthn4j-core 0.27.0` over yubico — Spring affinity, smaller surface, Apache 2.0 keeps the licensing block uniform. Yubico's main draw (broad attestation coverage) isn't needed for the FinTrack passkey UX. WebAuthn registration ceremony shipped: V38 `authenticators` table (FK to users.id ON DELETE CASCADE, unique credential_id, BYTEA columns), `WebAuthnRegistrationService.start/finish` with 32-byte SecureRandom challenges in Redis (5-min TTL, atomic `getAndDelete()` for replay protection), `POST /api/v1/auth/webauthn/register/{start,finish}` (authenticated, NOT in PUBLIC_PATHS), `WEBAUTHN_REGISTER_{STARTED,COMPLETED,FAILED}` audit actions. Sub-package `com.fintrack.auth.webauthn` isolates the passkey surface from existing TOTP/refresh-token code. OpenAPI artefacts regenerated.
 - 2026-05-04 (plan 24-03): D4 closed end-to-end. Backend assertion ceremony in `WebAuthnAssertionService.start(username)` + `finish(body)`: decoy Redis entry on unknown usernames (sentinel `DECOY_USER_ID`) removes the timing-based enumeration oracle; strict sign-count monotonicity (regression deletes the row, audits `WEBAUTHN_CLONE_DETECTED`, throws); TOTP gate preserved (returns `challengeToken` instead of access/refresh when user has TOTP on); `AuthResponse` parity with `AuthService.login`. Endpoints: public `POST /api/v1/auth/webauthn/login/{start,finish}` (added to PUBLIC_PATHS), authenticated `GET/DELETE /api/v1/auth/webauthn/authenticators[/{id}]`. Four new audit actions (`WEBAUTHN_LOGIN`, `_FAILED`, `_CLONE_DETECTED`, `_AUTHENTICATOR_REVOKED`). Frontend: `base64url.ts` round-trip helpers, `webauthn.api.ts` axios module, `useWebAuthn.ts` React Query hooks (register/login/list/delete + `isWebAuthnSupported`), `PasskeySection` in security settings, `WebAuthnLoginButton` below the password form on the login page (reuses existing `completeAuth` so TOTP flows transparently). en/tr i18n strings for `auth.passkey*` and `settings.passkey*`. Task 3 (full ClientPlatform-driven cryptographic E2E test) deferred to ISS-110 — service-layer Mockito tests cover every branch and the existing `OpenApiSpecGeneratorTest` boot path catches routing regressions.
+- 2026-05-04 (plan 24-04): D6 closed. Refresh-token rows now carry a `fingerprint CHAR(64)` column (V39, nullable). `RefreshTokenFingerprintService` computes deterministic SHA-256(`prefix|ua`) where IPv4 collapses to `a.b.c.0/24` and IPv6 to `g1:g2:g3::/48`; pipe delimiter avoids the IP/UA boundary collision. `RefreshTokenService.validate` is now 3-arg (`token, ua, ip`) and `@Transactional` (was readOnly): NULL fingerprint → bind on first refresh and audit `REFRESH_FINGERPRINT_BOUND` (one-shot grace, never reject); non-matching fingerprint → `deleteByToken`, audit `REFRESH_FINGERPRINT_MISMATCH` failure with first-8-hex prefixes only, throw `BusinessRuleException("REFRESH_FINGERPRINT_MISMATCH")`. `AuthService.refresh` forwards `RequestContext.userAgent()/clientIp()`. No feature flag — toggling defeats the gate. Frontend untouched (existing 400-on-refresh interceptor already triggers re-login). Mutation run skipped (pitest still flaky on JDK 21/Windows per 23-02); `mvnw verify` is the hard gate and remained green (936 tests).
 
 ### Deferred Issues
 
@@ -69,5 +70,5 @@ From `.planning/codebase/CONCERNS.md`, folded into upcoming phases:
 ## Session Continuity
 
 Last session: 2026-05-04
-Stopped at: Completed 24-03-PLAN.md (WebAuthn assertion ceremony + frontend integration; lint/typecheck/test/build all green; Task 3 cryptographic E2E deferred to ISS-110).
-Resume file: `.planning/phases/24-security-hardening/24-04-PLAN.md` — `/gsd:execute-plan` it (clear context first). Plan 24-04 covers D6 refresh-token session fingerprint binding (UA + IP-prefix SHA-256).
+Stopped at: Completed 24-04-PLAN.md (refresh-token fingerprint binding; V39 schema, fingerprint service, validate gating, full unit coverage; mvnw verify green; mutation run skipped).
+Resume file: `.planning/phases/24-security-hardening/24-05-PLAN.md` — `/gsd:execute-plan` it (clear context first). Plan 24-05 covers D7 audit log retention policy + automatic PII redaction.
