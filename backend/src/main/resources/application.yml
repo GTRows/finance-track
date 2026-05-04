@@ -72,6 +72,10 @@ fintrack:
     batch-size: ${OCR_BATCH_SIZE:25}
     poll-interval-ms: ${OCR_POLL_INTERVAL_MS:60000}
     max-retries: ${OCR_MAX_RETRIES:3}
+  audit:
+    retention-days: ${AUDIT_RETENTION_DAYS:90}
+    batch-size: ${AUDIT_RETENTION_BATCH_SIZE:1000}
+    enabled: ${AUDIT_RETENTION_ENABLED:true}
   push:
     vapid-public-key: ${PUSH_VAPID_PUBLIC_KEY:}
     vapid-private-key: ${PUSH_VAPID_PRIVATE_KEY:}
