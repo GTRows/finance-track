@@ -34,7 +34,7 @@ None — full-stack Spring Boot + React + Postgres + Redis is already encoded in
 
 Plans:
 - [x] 23-01: A2 — Broaden `@DataJpaTest` + Testcontainers across remaining repositories
-- [ ] 23-02: A7 — PIT mutation testing on service layer at 60% mutation score
+- [x] 23-02: A7 — PIT mutation testing on service layer at 60% mutation score
 - [ ] 23-03: A8 — Frontend↔backend contract tests via OpenAPI generator (preferred) or Pact
 - [ ] 23-04: A9 — Receipt OCR via tess4j as a background worker
 
@@ -130,7 +130,7 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 23. Coverage Completion | 1/4 | In progress | - |
+| 23. Coverage Completion | 2/4 | In progress | - |
 | 24. Security Hardening | 0/6 | Not started | - |
 | 25. Architecture Cleanup | 0/3 | Not started | - |
 | 26. Observability | 0/3 | Not started | - |
