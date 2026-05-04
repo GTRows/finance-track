@@ -3,8 +3,10 @@ package com.fintrack.audit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.fintrack.common.entity.AuditLog;
 import java.util.UUID;
@@ -24,6 +26,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 class AuditServiceTest {
 
     @Mock AuditLogRepository repository;
+    @Mock AuditPiiRedactor redactor;
 
     @InjectMocks AuditService service;
 
@@ -35,6 +38,7 @@ class AuditServiceTest {
         request.setRemoteAddr("10.0.0.5");
         request.addHeader("User-Agent", "unit-agent/1.0");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        lenient().when(redactor.redact(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @AfterEach
@@ -174,5 +178,16 @@ class AuditServiceTest {
 
         verify(repository, org.mockito.Mockito.times(1)).save(any());
         verify(repository, never()).delete(any());
+    }
+
+    @Test
+    void recordRunsDetailThroughRedactorBeforeTruncate() {
+        when(redactor.redact("hi user@example.com")).thenReturn("hi [REDACTED:email]");
+
+        service.record("ACT", AuditLog.Status.SUCCESS, userId, "ali", "hi user@example.com");
+
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().getDetail()).isEqualTo("hi [REDACTED:email]");
     }
 }

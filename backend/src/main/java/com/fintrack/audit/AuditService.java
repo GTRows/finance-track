@@ -18,13 +18,14 @@ public class AuditService {
     private static final int DETAIL_MAX = 500;
 
     private final AuditLogRepository repository;
+    private final AuditPiiRedactor redactor;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(
             String action, AuditLog.Status status, UUID userId, String username, String detail) {
         String ip = RequestContext.clientIp();
         String ua = truncate(RequestContext.userAgent(), USER_AGENT_MAX);
-        String safeDetail = truncate(detail, DETAIL_MAX);
+        String safeDetail = truncate(redactor.redact(detail), DETAIL_MAX);
 
         AuditLog entry =
                 AuditLog.builder()
