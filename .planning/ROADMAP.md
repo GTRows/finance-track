@@ -46,7 +46,7 @@ Plans:
 **Plans**: 8 (D4 split across 2 plans for backend ceremony + frontend integration; D8/D9 split for atomicity; AuditService domain coverage as its own plan)
 
 Plans:
-- [ ] 24-01: D2 — Argon2id password hashing migration with rehash-on-login fallback
+- [x] 24-01: D2 — Argon2id password hashing migration with rehash-on-login fallback
 - [ ] 24-02: D4 — WebAuthn passkey foundation + registration ceremony (`authenticators` child table, library decision, register endpoints)
 - [ ] 24-03: D4 — WebAuthn assertion ceremony + frontend integration (login endpoints, list/revoke, React hooks + UI)
 - [ ] 24-04: D6 — Refresh-token session fingerprint binding (UA + IP-prefix SHA-256)
@@ -133,7 +133,7 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 23. Coverage Completion | 4/4 | Complete | 2026-05-04 |
-| 24. Security Hardening | 0/8 | Not started | - |
+| 24. Security Hardening | 1/8 | In progress | - |
 | 25. Architecture Cleanup | 0/3 | Not started | - |
 | 26. Observability | 0/3 | Not started | - |
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
