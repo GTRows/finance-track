@@ -3,10 +3,16 @@ package com.fintrack.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.RefreshToken;
 import com.fintrack.common.exception.BusinessRuleException;
 import java.time.Instant;
@@ -14,10 +20,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,10 +32,21 @@ class RefreshTokenServiceTest {
 
     @Mock RefreshTokenRepository refreshTokenRepository;
     @Mock JwtUtil jwtUtil;
+    @Mock AuditService auditService;
 
-    @InjectMocks RefreshTokenService service;
+    private final RefreshTokenFingerprintService fingerprintService =
+            new RefreshTokenFingerprintService();
+
+    private RefreshTokenService service;
 
     private final UUID userId = UUID.randomUUID();
+
+    @BeforeEach
+    void setUp() {
+        service =
+                new RefreshTokenService(
+                        refreshTokenRepository, jwtUtil, fingerprintService, auditService);
+    }
 
     @Test
     void createPersistsEntityWithExpiryAndMetadata() {
@@ -48,6 +65,8 @@ class RefreshTokenServiceTest {
         assertThat(saved.getIpAddress()).isEqualTo("1.2.3.4");
         assertThat(saved.getExpiresAt()).isAfter(Instant.now().plusMillis(50_000L));
         assertThat(saved.getLastUsedAt()).isNotNull();
+        assertThat(saved.getFingerprint())
+                .isEqualTo(fingerprintService.compute("Mozilla/5.0", "1.2.3.4"));
     }
 
     @Test
@@ -67,24 +86,28 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    void validateReturnsEntityWhenPresentAndNotExpired() {
+    void validateReturnsEntityWhenFingerprintMatches() {
+        String fp = fingerprintService.compute("ua", "1.2.3.4");
         RefreshToken entity =
                 RefreshToken.builder()
                         .id(UUID.randomUUID())
                         .userId(userId)
                         .token("t")
                         .expiresAt(Instant.now().plusSeconds(60))
+                        .fingerprint(fp)
                         .build();
         when(refreshTokenRepository.findByToken("t")).thenReturn(Optional.of(entity));
 
-        assertThat(service.validate("t")).isSameAs(entity);
+        assertThat(service.validate("t", "ua", "1.2.3.4")).isSameAs(entity);
+        verify(refreshTokenRepository, never()).save(any());
+        verify(refreshTokenRepository, never()).deleteByToken(any());
     }
 
     @Test
     void validateThrowsWhenTokenMissing() {
         when(refreshTokenRepository.findByToken("missing")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.validate("missing"))
+        assertThatThrownBy(() -> service.validate("missing", "ua", "ip"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Invalid");
     }
@@ -100,9 +123,69 @@ class RefreshTokenServiceTest {
                         .build();
         when(refreshTokenRepository.findByToken("t")).thenReturn(Optional.of(entity));
 
-        assertThatThrownBy(() -> service.validate("t"))
+        assertThatThrownBy(() -> service.validate("t", "ua", "ip"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("expired");
+    }
+
+    @Test
+    void validateBindsFingerprintOnLegacyNullRow() {
+        RefreshToken entity =
+                RefreshToken.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .fingerprint(null)
+                        .build();
+        when(refreshTokenRepository.findByToken("t")).thenReturn(Optional.of(entity));
+
+        RefreshToken result = service.validate("t", "ua", "1.2.3.4");
+
+        assertThat(result).isSameAs(entity);
+        ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
+        verify(refreshTokenRepository).save(captor.capture());
+        RefreshToken saved = captor.getValue();
+        assertThat(saved.getFingerprint())
+                .isNotNull()
+                .hasSize(64)
+                .isEqualTo(fingerprintService.compute("ua", "1.2.3.4"));
+        verify(auditService)
+                .success(
+                        eq(AuditAction.REFRESH_FINGERPRINT_BOUND),
+                        eq(userId),
+                        isNull(),
+                        eq("legacy upgrade"));
+        verify(refreshTokenRepository, never()).deleteByToken(any());
+    }
+
+    @Test
+    void validateRejectsAndDeletesOnFingerprintMismatch() {
+        String storedFp = fingerprintService.compute("old-ua", "9.9.9.9");
+        RefreshToken entity =
+                RefreshToken.builder()
+                        .id(UUID.randomUUID())
+                        .userId(userId)
+                        .token("t")
+                        .expiresAt(Instant.now().plusSeconds(60))
+                        .fingerprint(storedFp)
+                        .build();
+        when(refreshTokenRepository.findByToken("t")).thenReturn(Optional.of(entity));
+
+        assertThatThrownBy(() -> service.validate("t", "new-ua", "1.2.3.4"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleException) ex).getCode())
+                                        .isEqualTo("REFRESH_FINGERPRINT_MISMATCH"));
+
+        verify(refreshTokenRepository).deleteByToken("t");
+        verify(auditService)
+                .failure(
+                        eq(AuditAction.REFRESH_FINGERPRINT_MISMATCH),
+                        eq(userId),
+                        isNull(),
+                        matches("\\(stored=[0-9a-f]{8}, current=[0-9a-f]{8}\\)"));
     }
 
     @Test
@@ -128,6 +211,8 @@ class RefreshTokenServiceTest {
         verify(refreshTokenRepository).save(captor.capture());
         assertThat(captor.getValue().getUserAgent()).isEqualTo("ua");
         assertThat(captor.getValue().getIpAddress()).isEqualTo("ip");
+        assertThat(captor.getValue().getFingerprint())
+                .isEqualTo(fingerprintService.compute("ua", "ip"));
     }
 
     @Test
@@ -145,12 +230,14 @@ class RefreshTokenServiceTest {
         when(jwtUtil.generateRefreshToken(userId.toString())).thenReturn("new-token");
         when(jwtUtil.getRefreshExpiryMs()).thenReturn(1_000L);
 
-        service.rotate("old", userId, "new-ua", "new-ip");
+        service.rotate("old", userId, "new-ua", "1.2.3.4");
 
         ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
-        verify(refreshTokenRepository).save(captor.capture());
+        verify(refreshTokenRepository, times(1)).save(captor.capture());
         assertThat(captor.getValue().getUserAgent()).isEqualTo("new-ua");
-        assertThat(captor.getValue().getIpAddress()).isEqualTo("new-ip");
+        assertThat(captor.getValue().getIpAddress()).isEqualTo("1.2.3.4");
+        assertThat(captor.getValue().getFingerprint())
+                .isEqualTo(fingerprintService.compute("new-ua", "1.2.3.4"));
     }
 
     @Test
