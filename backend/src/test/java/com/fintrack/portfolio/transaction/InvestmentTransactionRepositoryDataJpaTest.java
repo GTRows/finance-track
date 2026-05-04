@@ -40,13 +40,14 @@ class InvestmentTransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupp
     }
 
     private UUID seedPortfolio(UUID userId, String name) {
-        return portfolioRepo.save(
-                        Portfolio.builder().userId(userId).name(name).active(true).build())
+        return portfolioRepo
+                .save(Portfolio.builder().userId(userId).name(name).active(true).build())
                 .getId();
     }
 
     private UUID seedAsset(String symbol) {
-        return assetRepo.save(
+        return assetRepo
+                .save(
                         Asset.builder()
                                 .symbol(symbol)
                                 .name(symbol)
@@ -79,9 +80,27 @@ class InvestmentTransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupp
         UUID userId = seedUser("ali");
         UUID portfolio = seedPortfolio(userId, "Main");
         UUID asset = seedAsset("AAPL");
-        repo.save(txn(portfolio, asset, InvestmentTransaction.TxnType.BUY, LocalDate.of(2026, 1, 5), null));
-        repo.save(txn(portfolio, asset, InvestmentTransaction.TxnType.BUY, LocalDate.of(2026, 4, 5), null));
-        repo.save(txn(portfolio, asset, InvestmentTransaction.TxnType.BUY, LocalDate.of(2026, 2, 5), null));
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.BUY,
+                        LocalDate.of(2026, 1, 5),
+                        null));
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.BUY,
+                        LocalDate.of(2026, 4, 5),
+                        null));
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.BUY,
+                        LocalDate.of(2026, 2, 5),
+                        null));
 
         assertThat(repo.findByPortfolioIdOrderByTxnDateDescCreatedAtDesc(portfolio))
                 .extracting(InvestmentTransaction::getTxnDate)
@@ -99,7 +118,12 @@ class InvestmentTransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupp
         UUID asset = seedAsset("MSFT");
         InvestmentTransaction own =
                 repo.save(
-                        txn(p1, asset, InvestmentTransaction.TxnType.BUY, LocalDate.of(2026, 4, 5), null));
+                        txn(
+                                p1,
+                                asset,
+                                InvestmentTransaction.TxnType.BUY,
+                                LocalDate.of(2026, 4, 5),
+                                null));
 
         assertThat(repo.findByIdAndPortfolioId(own.getId(), p1)).isPresent();
         assertThat(repo.findByIdAndPortfolioId(own.getId(), p2)).isEmpty();
@@ -125,8 +149,7 @@ class InvestmentTransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupp
                         LocalDate.of(2026, 1, 2),
                         "manual buy"));
 
-        var matched =
-                repo.findByPortfolioIdInAndNotesStartingWith(List.of(portfolio), "AUTO:");
+        var matched = repo.findByPortfolioIdInAndNotesStartingWith(List.of(portfolio), "AUTO:");
 
         assertThat(matched).hasSize(1);
     }

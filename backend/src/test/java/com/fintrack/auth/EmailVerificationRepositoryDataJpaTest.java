@@ -32,11 +32,7 @@ class EmailVerificationRepositoryDataJpaTest extends AbstractDataJpaTestSupport 
     }
 
     private EmailVerification token(UUID userId, String token, Instant expiresAt) {
-        return EmailVerification.builder()
-                .userId(userId)
-                .token(token)
-                .expiresAt(expiresAt)
-                .build();
+        return EmailVerification.builder().userId(userId).token(token).expiresAt(expiresAt).build();
     }
 
     @Test
@@ -53,8 +49,7 @@ class EmailVerificationRepositoryDataJpaTest extends AbstractDataJpaTestSupport 
         UUID userId = seedUser("ada");
         repo.save(token(userId, "a", Instant.now().plus(1, ChronoUnit.HOURS)));
         repo.save(token(userId, "b", Instant.now().plus(1, ChronoUnit.HOURS)));
-        EmailVerification consumed =
-                token(userId, "c", Instant.now().plus(1, ChronoUnit.HOURS));
+        EmailVerification consumed = token(userId, "c", Instant.now().plus(1, ChronoUnit.HOURS));
         consumed.setConsumedAt(Instant.now());
         repo.save(consumed);
 

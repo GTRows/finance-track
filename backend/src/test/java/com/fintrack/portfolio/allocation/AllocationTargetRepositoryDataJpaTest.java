@@ -36,8 +36,8 @@ class AllocationTargetRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     }
 
     private UUID seedPortfolio(UUID userId, String name) {
-        return portfolioRepo.save(
-                        Portfolio.builder().userId(userId).name(name).active(true).build())
+        return portfolioRepo
+                .save(Portfolio.builder().userId(userId).name(name).active(true).build())
                 .getId();
     }
 

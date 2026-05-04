@@ -40,13 +40,14 @@ class DividendRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     }
 
     private UUID seedPortfolio(UUID userId, String name) {
-        return portfolioRepo.save(
-                        Portfolio.builder().userId(userId).name(name).active(true).build())
+        return portfolioRepo
+                .save(Portfolio.builder().userId(userId).name(name).active(true).build())
                 .getId();
     }
 
     private UUID seedAsset(String symbol) {
-        return assetRepo.save(
+        return assetRepo
+                .save(
                         Asset.builder()
                                 .symbol(symbol)
                                 .name(symbol)
@@ -119,8 +120,7 @@ class DividendRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
         repo.save(dividend(portfolio, asset, LocalDate.of(2026, 1, 1), "100"));
         repo.save(dividend(portfolio, asset, LocalDate.of(2026, 4, 1), "150"));
 
-        assertThat(repo.sumNetByPortfolioAndAsset(portfolio, asset))
-                .isEqualByComparingTo("250");
+        assertThat(repo.sumNetByPortfolioAndAsset(portfolio, asset)).isEqualByComparingTo("250");
     }
 
     @Test

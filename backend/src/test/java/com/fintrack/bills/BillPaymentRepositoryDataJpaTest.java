@@ -78,9 +78,7 @@ class BillPaymentRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
                 repo.findTop2ByBillIdAndStatusOrderByPeriodDesc(
                         bill.getId(), BillPayment.PaymentStatus.PAID);
 
-        assertThat(top2)
-                .extracting(BillPayment::getPeriod)
-                .containsExactly("2026-03", "2026-02");
+        assertThat(top2).extracting(BillPayment::getPeriod).containsExactly("2026-03", "2026-02");
     }
 
     @Test

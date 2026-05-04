@@ -32,11 +32,7 @@ class PasswordResetRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     }
 
     private PasswordReset reset(UUID userId, String token, Instant expiresAt) {
-        return PasswordReset.builder()
-                .userId(userId)
-                .token(token)
-                .expiresAt(expiresAt)
-                .build();
+        return PasswordReset.builder().userId(userId).token(token).expiresAt(expiresAt).build();
     }
 
     @Test

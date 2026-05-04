@@ -23,7 +23,8 @@ class PriceHistoryRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     @Autowired AssetRepository assetRepo;
 
     private UUID seedAsset(String symbol) {
-        return assetRepo.save(
+        return assetRepo
+                .save(
                         Asset.builder()
                                 .symbol(symbol)
                                 .name(symbol)

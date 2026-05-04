@@ -32,11 +32,7 @@ class AlertNotificationRepositoryDataJpaTest extends AbstractDataJpaTestSupport 
     }
 
     private AlertNotification notification(UUID userId, String message, Instant readAt) {
-        return AlertNotification.builder()
-                .userId(userId)
-                .message(message)
-                .readAt(readAt)
-                .build();
+        return AlertNotification.builder().userId(userId).message(message).readAt(readAt).build();
     }
 
     @Test

@@ -38,13 +38,14 @@ class HoldingRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     }
 
     private UUID seedPortfolio(UUID userId, String name) {
-        return portfolioRepo.save(
-                        Portfolio.builder().userId(userId).name(name).active(true).build())
+        return portfolioRepo
+                .save(Portfolio.builder().userId(userId).name(name).active(true).build())
                 .getId();
     }
 
     private UUID seedAsset(String symbol) {
-        return assetRepo.save(
+        return assetRepo
+                .save(
                         Asset.builder()
                                 .symbol(symbol)
                                 .name(symbol)

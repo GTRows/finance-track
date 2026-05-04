@@ -82,12 +82,7 @@ class RefreshTokenRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
         UUID a = seedUser("anna");
         UUID b = seedUser("bob");
         RefreshToken aToken =
-                repo.save(
-                        token(
-                                a,
-                                "x",
-                                Instant.now().plus(1, ChronoUnit.HOURS),
-                                Instant.now()));
+                repo.save(token(a, "x", Instant.now().plus(1, ChronoUnit.HOURS), Instant.now()));
 
         assertThat(repo.findByIdAndUserId(aToken.getId(), a)).isPresent();
         assertThat(repo.findByIdAndUserId(aToken.getId(), b)).isEmpty();
@@ -115,8 +110,7 @@ class RefreshTokenRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
                                 "keep",
                                 Instant.now().plus(1, ChronoUnit.HOURS),
                                 Instant.now()));
-        repo.save(
-                token(userId, "drop", Instant.now().plus(1, ChronoUnit.HOURS), Instant.now()));
+        repo.save(token(userId, "drop", Instant.now().plus(1, ChronoUnit.HOURS), Instant.now()));
 
         int removed = repo.deleteByUserIdExcept(userId, keep.getId());
 

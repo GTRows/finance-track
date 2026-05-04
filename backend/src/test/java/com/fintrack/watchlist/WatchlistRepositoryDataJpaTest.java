@@ -34,7 +34,8 @@ class WatchlistRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     }
 
     private UUID seedAsset(String symbol) {
-        return assetRepo.save(
+        return assetRepo
+                .save(
                         Asset.builder()
                                 .symbol(symbol)
                                 .name(symbol)
