@@ -1,0 +1,4 @@
+# tessdata files are fetched by the Dockerfile at build time and copied
+# into /app/tessdata in the runtime image. For local development, place
+# tur.traineddata and eng.traineddata here (download from
+# https://github.com/tesseract-ocr/tessdata_fast) and point fintrack.ocr.tessdata-path at this directory.

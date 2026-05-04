@@ -59,6 +59,16 @@ public class BudgetTransaction {
     @Column(name = "receipt_path", length = 512)
     private String receiptPath;
 
+    @Column(name = "ocr_status", length = 16)
+    @Enumerated(EnumType.STRING)
+    private OcrStatus ocrStatus;
+
+    @Column(name = "ocr_text", columnDefinition = "TEXT")
+    private String ocrText;
+
+    @Column(name = "ocr_completed_at")
+    private Instant ocrCompletedAt;
+
     @Column(name = "original_amount", precision = 12, scale = 2)
     private BigDecimal originalAmount;
 
@@ -76,5 +86,13 @@ public class BudgetTransaction {
     public enum TxnType {
         INCOME,
         EXPENSE
+    }
+
+    public enum OcrStatus {
+        PENDING,
+        IN_PROGRESS,
+        SUCCESS,
+        FAILED,
+        RETRY
     }
 }

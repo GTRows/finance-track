@@ -66,6 +66,12 @@ fintrack:
   monthly-report:
     enabled: ${MONTHLY_REPORT_ENABLED:false}
   receipt-dir: ${RECEIPT_DIR:/var/lib/fintrack/receipts}
+  ocr:
+    tessdata-path: ${TESSDATA_PATH:/app/tessdata}
+    languages: ${OCR_LANGUAGES:tur+eng}
+    batch-size: ${OCR_BATCH_SIZE:25}
+    poll-interval-ms: ${OCR_POLL_INTERVAL_MS:60000}
+    max-retries: ${OCR_MAX_RETRIES:3}
   push:
     vapid-public-key: ${PUSH_VAPID_PUBLIC_KEY:}
     vapid-private-key: ${PUSH_VAPID_PRIVATE_KEY:}

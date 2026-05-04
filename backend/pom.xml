@@ -118,6 +118,13 @@
       <version>5.2.5</version>
     </dependency>
 
+    <!-- OCR for transaction receipts (Tesseract bindings via JNA) -->
+    <dependency>
+      <groupId>net.sourceforge.tess4j</groupId>
+      <artifactId>tess4j</artifactId>
+      <version>5.13.0</version>
+    </dependency>
+
     <!-- Prometheus metrics (exposed via actuator) -->
     <dependency>
       <groupId>io.micrometer</groupId>

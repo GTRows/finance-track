@@ -86,6 +86,17 @@ public class ReceiptStorageService {
         }
 
         txn.setReceiptPath(relative);
+        // Queue OCR enrichment for image receipts; PDFs are stored but skipped
+        // by the worker because tess4j only handles raster image input here.
+        if (mime.startsWith("image/")) {
+            txn.setOcrStatus(BudgetTransaction.OcrStatus.PENDING);
+            txn.setOcrText(null);
+            txn.setOcrCompletedAt(null);
+        } else {
+            txn.setOcrStatus(null);
+            txn.setOcrText(null);
+            txn.setOcrCompletedAt(null);
+        }
         txnRepo.save(txn);
         log.info("Stored receipt for txn {} ({} bytes, {})", txnId, file.getSize(), mime);
         return new StoredReceipt(relative, mime, file.getSize());
@@ -115,6 +126,9 @@ public class ReceiptStorageService {
         if (relative == null) return;
         deleteFile(relative);
         txn.setReceiptPath(null);
+        txn.setOcrStatus(null);
+        txn.setOcrText(null);
+        txn.setOcrCompletedAt(null);
         txnRepo.save(txn);
     }
 
