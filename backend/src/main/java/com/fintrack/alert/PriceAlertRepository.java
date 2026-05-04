@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -16,10 +17,12 @@ public interface PriceAlertRepository extends JpaRepository<PriceAlert, UUID> {
                     + " a.createdAt DESC")
     List<PriceAlert> findAllByUserId(UUID userId);
 
-    @Query(
-            "SELECT a FROM PriceAlert a JOIN FETCH a.asset WHERE a.status ="
-                    + " com.fintrack.common.entity.PriceAlert.Status.ACTIVE")
-    List<PriceAlert> findAllActiveWithAsset();
+    @Query("SELECT a FROM PriceAlert a JOIN FETCH a.asset WHERE a.status = :status")
+    List<PriceAlert> findAllByStatusWithAsset(@Param("status") PriceAlert.Status status);
+
+    default List<PriceAlert> findAllActiveWithAsset() {
+        return findAllByStatusWithAsset(PriceAlert.Status.ACTIVE);
+    }
 
     Optional<PriceAlert> findByIdAndUserId(UUID id, UUID userId);
 }

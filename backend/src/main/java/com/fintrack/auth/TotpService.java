@@ -6,6 +6,7 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class TotpService {
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
 
+    @Autowired
     public TotpService(@Value("${fintrack.totp.issuer:FinTrack Pro}") String issuer) {
         this(issuer, Clock.systemUTC());
     }

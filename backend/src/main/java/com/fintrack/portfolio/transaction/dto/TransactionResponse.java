@@ -3,11 +3,13 @@ package com.fintrack.portfolio.transaction.dto;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.InvestmentTransaction;
 import com.fintrack.common.entity.InvestmentTransaction.TxnType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Schema(name = "InvestmentTransactionResponse")
 public record TransactionResponse(
         UUID id,
         UUID portfolioId,
