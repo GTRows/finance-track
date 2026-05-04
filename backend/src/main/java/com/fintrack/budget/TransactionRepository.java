@@ -2,6 +2,7 @@ package com.fintrack.budget;
 
 import com.fintrack.common.entity.BudgetTransaction;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -86,4 +87,14 @@ public interface TransactionRepository extends JpaRepository<BudgetTransaction, 
             BudgetTransaction.TxnType txnType, LocalDate from, LocalDate to);
 
     long countByTxnDate(LocalDate txnDate);
+
+    @Query(
+            "SELECT t FROM BudgetTransaction t WHERE t.ocrStatus IN :statuses "
+                    + "AND t.receiptPath IS NOT NULL "
+                    + "AND t.updatedAt < :olderThan "
+                    + "ORDER BY t.updatedAt ASC")
+    List<BudgetTransaction> findReceiptsForOcr(
+            @Param("statuses") Collection<BudgetTransaction.OcrStatus> statuses,
+            @Param("olderThan") Instant olderThan,
+            Pageable pageable);
 }

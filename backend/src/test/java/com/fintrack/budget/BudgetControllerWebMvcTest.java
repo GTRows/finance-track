@@ -65,6 +65,8 @@ class BudgetControllerWebMvcTest extends AbstractWebMvcTestSupport {
                 false,
                 List.of(),
                 false,
+                null,
+                null,
                 Instant.parse("2026-04-15T12:00:00Z"));
     }
 

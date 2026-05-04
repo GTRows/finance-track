@@ -23,6 +23,8 @@ public record TransactionResponse(
         boolean recurring,
         List<TagRef> tags,
         boolean hasReceipt,
+        BudgetTransaction.OcrStatus ocrStatus,
+        String ocrText,
         Instant createdAt) {
 
     public record TagRef(UUID id, String name, String color) {
@@ -48,6 +50,8 @@ public record TransactionResponse(
                 t.isRecurring(),
                 tags,
                 t.getReceiptPath() != null && !t.getReceiptPath().isBlank(),
+                t.getOcrStatus(),
+                t.getOcrText(),
                 t.getCreatedAt());
     }
 }
