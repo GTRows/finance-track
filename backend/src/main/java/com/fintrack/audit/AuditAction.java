@@ -26,4 +26,8 @@ public final class AuditAction {
     public static final String WEBAUTHN_REGISTER_STARTED = "WEBAUTHN_REGISTER_STARTED";
     public static final String WEBAUTHN_REGISTER_COMPLETED = "WEBAUTHN_REGISTER_COMPLETED";
     public static final String WEBAUTHN_REGISTER_FAILED = "WEBAUTHN_REGISTER_FAILED";
+    public static final String WEBAUTHN_LOGIN = "WEBAUTHN_LOGIN";
+    public static final String WEBAUTHN_LOGIN_FAILED = "WEBAUTHN_LOGIN_FAILED";
+    public static final String WEBAUTHN_CLONE_DETECTED = "WEBAUTHN_CLONE_DETECTED";
+    public static final String WEBAUTHN_AUTHENTICATOR_REVOKED = "WEBAUTHN_AUTHENTICATOR_REVOKED";
 }

@@ -172,6 +172,23 @@
         "required" : [ "assetType", "targetPercent" ],
         "type" : "object"
       },
+      "AllowedCredential" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "transports" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "AmortizationRow" : {
         "properties" : {
           "dueDate" : {
@@ -189,6 +206,60 @@
           },
           "remainingBalance" : {
             "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "AssertionFinishRequest" : {
+        "properties" : {
+          "authenticatorData" : {
+            "type" : "string"
+          },
+          "clientDataJSON" : {
+            "type" : "string"
+          },
+          "credentialId" : {
+            "type" : "string"
+          },
+          "signature" : {
+            "type" : "string"
+          },
+          "userHandle" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "authenticatorData", "clientDataJSON", "credentialId", "signature" ],
+        "type" : "object"
+      },
+      "AssertionStartRequest" : {
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "username" ],
+        "type" : "object"
+      },
+      "AssertionStartResponse" : {
+        "properties" : {
+          "allowCredentials" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AllowedCredential"
+            },
+            "type" : "array"
+          },
+          "challenge" : {
+            "type" : "string"
+          },
+          "rpId" : {
+            "type" : "string"
+          },
+          "timeout" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "userVerification" : {
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -245,6 +316,29 @@
           },
           "user" : {
             "$ref" : "#/components/schemas/UserProfileResponse"
+          }
+        },
+        "type" : "object"
+      },
+      "AuthenticatorResponse" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastUsedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "transports" : {
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -3907,7 +4001,7 @@
   "paths" : {
     "/api/v1/admin/audit" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "parameters" : [ {
           "in" : "query",
           "name" : "page",
@@ -4210,7 +4304,7 @@
     },
     "/api/v1/alerts" : {
       "get" : {
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "responses" : {
           "200" : {
             "content" : {
@@ -4366,7 +4460,7 @@
     },
     "/api/v1/assets" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "parameters" : [ {
           "in" : "query",
           "name" : "type",
@@ -5042,7 +5136,7 @@
     },
     "/api/v1/auth/sessions/{id}" : {
       "delete" : {
-        "operationId" : "revoke",
+        "operationId" : "revoke_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5058,6 +5152,103 @@
           }
         },
         "tags" : [ "session-controller" ]
+      }
+    },
+    "/api/v1/auth/webauthn/authenticators" : {
+      "get" : {
+        "operationId" : "list_17",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/AuthenticatorResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "authenticator-controller" ]
+      }
+    },
+    "/api/v1/auth/webauthn/authenticators/{id}" : {
+      "delete" : {
+        "operationId" : "revoke",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "authenticator-controller" ]
+      }
+    },
+    "/api/v1/auth/webauthn/login/finish" : {
+      "post" : {
+        "operationId" : "finish_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssertionFinishRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "web-authn-assertion-controller" ]
+      }
+    },
+    "/api/v1/auth/webauthn/login/start" : {
+      "post" : {
+        "operationId" : "start_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssertionStartRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AssertionStartResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "web-authn-assertion-controller" ]
       }
     },
     "/api/v1/auth/webauthn/register/finish" : {

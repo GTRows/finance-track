@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -171,7 +171,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post: operations["create_10"];
         delete?: never;
@@ -251,7 +251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -654,7 +654,71 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
+        delete: operations["revoke_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/webauthn/authenticators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_17"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/webauthn/authenticators/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
         delete: operations["revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/webauthn/login/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finish_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/webauthn/login/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start_1"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2007,6 +2071,11 @@ export interface components {
             assetType: "CRYPTO" | "STOCK" | "GOLD" | "FUND" | "CURRENCY" | "OTHER";
             targetPercent: number;
         };
+        AllowedCredential: {
+            id?: string;
+            transports?: string[];
+            type?: string;
+        };
         AmortizationRow: {
             /** Format: date */
             dueDate?: string;
@@ -2014,6 +2083,24 @@ export interface components {
             payment?: number;
             principal?: number;
             remainingBalance?: number;
+        };
+        AssertionFinishRequest: {
+            authenticatorData: string;
+            clientDataJSON: string;
+            credentialId: string;
+            signature: string;
+            userHandle?: string;
+        };
+        AssertionStartRequest: {
+            username: string;
+        };
+        AssertionStartResponse: {
+            allowCredentials?: components["schemas"]["AllowedCredential"][];
+            challenge?: string;
+            rpId?: string;
+            /** Format: int64 */
+            timeout?: number;
+            userVerification?: string;
         };
         AssetResponse: {
             /** @enum {string} */
@@ -2036,6 +2123,16 @@ export interface components {
             requiresTotp?: boolean;
             totpChallengeToken?: string;
             user?: components["schemas"]["UserProfileResponse"];
+        };
+        AuthenticatorResponse: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            lastUsedAt?: string;
+            name?: string;
+            transports?: string;
         };
         BackupMeta: {
             /** Format: date-time */
@@ -3404,7 +3501,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_19: {
+    list_20: {
         parameters: {
             query?: {
                 page?: number;
@@ -3655,7 +3752,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -3786,7 +3883,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query?: {
                 type?: "CRYPTO" | "STOCK" | "GOLD" | "FUND" | "CURRENCY" | "OTHER";
@@ -4365,6 +4462,46 @@ export interface operations {
             };
         };
     };
+    revoke_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_17: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AuthenticatorResponse"][];
+                };
+            };
+        };
+    };
     revoke: {
         parameters: {
             query?: never;
@@ -4382,6 +4519,54 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    finish_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssertionFinishRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AuthResponse"];
+                };
+            };
+        };
+    };
+    start_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssertionStartRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssertionStartResponse"];
+                };
             };
         };
     };

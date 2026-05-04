@@ -51,6 +51,8 @@ public class SecurityConfig {
         "/api/v1/auth/email-verify/confirm",
         "/api/v1/auth/password-reset/request",
         "/api/v1/auth/password-reset/confirm",
+        "/api/v1/auth/webauthn/login/start",
+        "/api/v1/auth/webauthn/login/finish",
         "/api/v1/health",
         "/api/v1/health/**",
         "/api/actuator/health",
