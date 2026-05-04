@@ -299,7 +299,11 @@ public class AuthService {
 
     @Transactional
     public AuthResponse refresh(RefreshRequest request) {
-        RefreshToken existing = refreshTokenService.validate(request.refreshToken());
+        RefreshToken existing =
+                refreshTokenService.validate(
+                        request.refreshToken(),
+                        RequestContext.userAgent(),
+                        RequestContext.clientIp());
         User user =
                 userRepository
                         .findById(existing.getUserId())

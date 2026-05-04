@@ -1,5 +1,7 @@
 package com.fintrack.auth;
 
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.RefreshToken;
 import com.fintrack.common.exception.BusinessRuleException;
 import java.time.Instant;
@@ -19,6 +21,8 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenFingerprintService fingerprintService;
+    private final AuditService auditService;
 
     /**
      * Creates and persists a new refresh token for the given user.
@@ -44,6 +48,7 @@ public class RefreshTokenService {
                         .ipAddress(truncate(ipAddress, 45))
                         .lastUsedAt(now)
                         .expiresAt(now.plusMillis(jwtUtil.getRefreshExpiryMs()))
+                        .fingerprint(fingerprintService.compute(userAgent, ipAddress))
                         .build();
         refreshTokenRepository.save(entity);
         log.debug("Created refresh token for user {}", userId);
@@ -56,14 +61,18 @@ public class RefreshTokenService {
     }
 
     /**
-     * Validates a refresh token: must exist in DB and not be expired.
+     * Validates a refresh token: must exist in DB, not be expired, and the current request's
+     * fingerprint must match the one bound to the row. Legacy rows with a NULL fingerprint are
+     * bound on first use (one-shot grace).
      *
      * @param token the raw refresh token string
+     * @param currentUserAgent the User-Agent of the inbound request
+     * @param currentIp the client IP of the inbound request
      * @return the RefreshToken entity
-     * @throws BusinessRuleException if the token is invalid or expired
+     * @throws BusinessRuleException if the token is invalid, expired, or the fingerprint mismatches
      */
-    @Transactional(readOnly = true)
-    public RefreshToken validate(String token) {
+    @Transactional
+    public RefreshToken validate(String token, String currentUserAgent, String currentIp) {
         RefreshToken entity =
                 refreshTokenRepository
                         .findByToken(token)
@@ -73,6 +82,32 @@ public class RefreshTokenService {
                                                 "Invalid refresh token", "INVALID_REFRESH_TOKEN"));
         if (entity.getExpiresAt().isBefore(Instant.now())) {
             throw new BusinessRuleException("Refresh token expired", "REFRESH_TOKEN_EXPIRED");
+        }
+        String currentFp = fingerprintService.compute(currentUserAgent, currentIp);
+        String storedFp = entity.getFingerprint();
+        if (storedFp == null) {
+            entity.setFingerprint(currentFp);
+            refreshTokenRepository.save(entity);
+            auditService.success(
+                    AuditAction.REFRESH_FINGERPRINT_BOUND,
+                    entity.getUserId(),
+                    null,
+                    "legacy upgrade");
+            return entity;
+        }
+        if (!storedFp.equals(currentFp)) {
+            refreshTokenRepository.deleteByToken(token);
+            auditService.failure(
+                    AuditAction.REFRESH_FINGERPRINT_MISMATCH,
+                    entity.getUserId(),
+                    null,
+                    "(stored="
+                            + storedFp.substring(0, 8)
+                            + ", current="
+                            + currentFp.substring(0, 8)
+                            + ")");
+            throw new BusinessRuleException(
+                    "Session fingerprint mismatch", "REFRESH_FINGERPRINT_MISMATCH");
         }
         return entity;
     }

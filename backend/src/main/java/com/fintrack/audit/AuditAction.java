@@ -30,4 +30,6 @@ public final class AuditAction {
     public static final String WEBAUTHN_LOGIN_FAILED = "WEBAUTHN_LOGIN_FAILED";
     public static final String WEBAUTHN_CLONE_DETECTED = "WEBAUTHN_CLONE_DETECTED";
     public static final String WEBAUTHN_AUTHENTICATOR_REVOKED = "WEBAUTHN_AUTHENTICATOR_REVOKED";
+    public static final String REFRESH_FINGERPRINT_BOUND = "REFRESH_FINGERPRINT_BOUND";
+    public static final String REFRESH_FINGERPRINT_MISMATCH = "REFRESH_FINGERPRINT_MISMATCH";
 }

@@ -38,6 +38,9 @@ public class RefreshToken {
     @Column(name = "last_used_at")
     private Instant lastUsedAt;
 
+    @Column(name = "fingerprint", length = 64)
+    private String fingerprint;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
