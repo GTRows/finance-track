@@ -143,6 +143,13 @@
       <version>2.5.0</version>
     </dependency>
 
+    <!-- WebAuthn / passkey ceremony -->
+    <dependency>
+      <groupId>com.webauthn4j</groupId>
+      <artifactId>webauthn4j-core</artifactId>
+      <version>0.29.1.RELEASE</version>
+    </dependency>
+
     <!-- Utilities -->
     <dependency>
       <groupId>org.projectlombok</groupId>
