@@ -26,8 +26,8 @@ user would see.
 | A5 | ~~Enforce JaCoCo line/branch minimums in `pom.xml`~~ Shipped: `jacoco:check` at 60% instruction / 45% branch | S | low |
 | A6 | Fix `FlywayMigrationTest` on Windows hosts: document Docker Desktop socket setup or swap to embedded Postgres via `pg-embedded` | S | low |
 | A7 | Mutation testing with PIT (`pitest-maven`), target 60% mutation score on service layer | M | med |
-| A8 | Contract tests between frontend `*.api.ts` modules and Spring REST endpoints (openapi-generator or Pact) | L | high |
-| A9 | Receipt OCR (noted as follow-up in phase 10.4) using Tesseract via tess4j, run as a background job | L | low |
+| A8 | ~~Contract tests between frontend `*.api.ts` modules and Spring REST endpoints (openapi-generator or Pact)~~ Shipped: openapi-typescript + Vitest type-level contract test, CI drift gates pin both directions (Phase 23.03). | L | high |
+| A9 | ~~Receipt OCR (noted as follow-up in phase 10.4) using Tesseract via tess4j, run as a background job~~ Shipped: tess4j-backed scheduled worker with virtual-thread fan-out, OCR text and status surfaced via `TransactionResponse` and the budget UI (Phase 23.04). | L | low |
 
 ---
 
@@ -43,7 +43,7 @@ user would see.
 | B6 | Lighthouse CI job that runs against `npm run preview` build, asserts a11y and performance ceilings | M | med |
 | B7 | Changelog automation: Conventional Commits + `release-please` action to cut versioned releases | M | low |
 | B8 | ~~springdoc-openapi + Swagger UI at `/swagger-ui.html`~~ Shipped. Annotating controllers with `@Operation` descriptions is a follow-up. | M | high |
-| B9 | Type-safe API client generated from OpenAPI spec (eliminates hand-written `*.api.ts` drift) | L | high |
+| B9 | Partially shipped: openapi-typescript emits `frontend/src/api/openapi.types.ts` and a Vitest contract test pins hand-written `*.api.ts` to those types. Full client generation (replacing the hand-written modules outright) remains future work. | L | high |
 
 ---
 
@@ -216,6 +216,12 @@ Session of 2026-05-04 (plan 23-01):
   without Docker. Coverage gate (60% instruction / 45% branch) unchanged
   on this Docker-less host; CI on Linux exercises every new suite.
 - Remaining Phase 23: A7 (PIT), A8 (contract tests), A9 (receipt OCR).
+
+Session of 2026-05-04 (plans 23-02 through 23-04):
+- A7 complete: opt-in `mutation` Maven profile (pitest 1.17.4) at 60% project-level kill rate; informational CI mutation job gated on service-layer paths. Per-class lift backlog tracked as ISS-100..ISS-109.
+- A8 complete: openapi-typescript wired via `npm run gen:api-types`, Vitest contract test pins six core surfaces; CI gates fail the build on any drift in `frontend/openapi.json` or `frontend/src/api/openapi.types.ts`. Surfaced and fixed real drift on `Bill` and `PriceSyncResult`, plus four latent boot bugs (AllocationController bean collision, TotpService missing @Autowired, two HQL inner-enum FQN parses, duplicate TransactionResponse DTO names).
+- A9 complete: tess4j receipt OCR runs as a `@Scheduled` worker with virtual-thread fan-out and bounded retry; `OcrStatus` plus extracted text persist in the `transactions` table and surface through `TransactionResponse` and the budget UI.
+- Phase 23 closed.
 
 ## Suggested phasing
 

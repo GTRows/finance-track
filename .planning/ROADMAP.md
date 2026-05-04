@@ -14,7 +14,7 @@ None — full-stack Spring Boot + React + Postgres + Redis is already encoded in
 - Integer phases (23, 24, …): Planned milestone work
 - Decimal phases (e.g., 24.1): Reserved for urgent insertions; none open today
 
-- [ ] **Phase 23: Coverage Completion** — Lift the safety net before refactors land
+- [x] **Phase 23: Coverage Completion** — Complete (2026-05-04)
 - [ ] **Phase 24: Security Hardening** — Close the residual auth and audit gaps
 - [ ] **Phase 25: Architecture Cleanup** — Decouple services and de-block the reactive price clients
 - [ ] **Phase 26: Observability** — End-to-end traces, errors, and SLO burn alerts
@@ -35,8 +35,8 @@ None — full-stack Spring Boot + React + Postgres + Redis is already encoded in
 Plans:
 - [x] 23-01: A2 — Broaden `@DataJpaTest` + Testcontainers across remaining repositories
 - [x] 23-02: A7 — PIT mutation testing on service layer at 60% mutation score
-- [ ] 23-03: A8 — Frontend↔backend contract tests via OpenAPI generator (preferred) or Pact
-- [ ] 23-04: A9 — Receipt OCR via tess4j as a background worker
+- [x] 23-03: A8 — Frontend↔backend contract tests via openapi-typescript + Vitest type-level assertions
+- [x] 23-04: A9 — Receipt OCR via tess4j as a background worker
 
 ### Phase 24: Security Hardening
 **Goal**: Close the residual auth/audit gaps from `tasks/ROADMAP.md` Track D plus the production-fail-fast misconfiguration risks from CONCERNS.md. Argon2id migration, passkeys, refresh-token fingerprinting, audit retention with PII redaction, signed receipt URLs, OWASP Dependency Check, and prod-profile guards (CORS, Redis password). Adds AuditService coverage to portfolio/budget/bill mutations.
