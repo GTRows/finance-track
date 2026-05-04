@@ -660,6 +660,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/webauthn/register/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/webauthn/register/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/backup/export": {
         parameters: {
             query?: never;
@@ -2889,6 +2921,11 @@ export interface components {
             /** Format: date-time */
             recordedAt?: string;
         };
+        PubKeyCredParam: {
+            /** Format: int64 */
+            alg?: number;
+            type?: string;
+        };
         RecordDividendRequest: {
             amountPerShare?: number;
             /** Format: uuid */
@@ -2964,6 +3001,31 @@ export interface components {
             email: string;
             password: string;
             username: string;
+        };
+        RegistrationFinishRequest: {
+            attestationObject: string;
+            clientDataJSON: string;
+            credentialId: string;
+            name: string;
+            transports: string[];
+        };
+        RegistrationFinishResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+        };
+        RegistrationStartResponse: {
+            attestation?: string;
+            challenge?: string;
+            pubKeyCredParams?: components["schemas"]["PubKeyCredParam"][];
+            residentKey?: string;
+            rpId?: string;
+            rpName?: string;
+            /** Format: int64 */
+            timeout?: number;
+            userId?: string;
+            userName?: string;
+            userVerification?: string;
         };
         RiskMetricsResponse: {
             annualVolatility?: number;
@@ -4320,6 +4382,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    finish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrationFinishRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistrationFinishResponse"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistrationStartResponse"];
+                };
             };
         };
     };

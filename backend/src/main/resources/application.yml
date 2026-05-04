@@ -76,6 +76,10 @@ fintrack:
     vapid-public-key: ${PUSH_VAPID_PUBLIC_KEY:}
     vapid-private-key: ${PUSH_VAPID_PRIVATE_KEY:}
     subject: ${PUSH_SUBJECT:mailto:admin@fintrack.local}
+  webauthn:
+    rpId: ${WEBAUTHN_RPID:localhost}
+    rpName: ${WEBAUTHN_RP_NAME:FinTrack Pro}
+    origin: ${WEBAUTHN_ORIGIN:http://localhost:5173}
 
   # Cache
   cache:

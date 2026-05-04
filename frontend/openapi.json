@@ -2630,6 +2630,18 @@
         },
         "type" : "object"
       },
+      "PubKeyCredParam" : {
+        "properties" : {
+          "alg" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "RecordDividendRequest" : {
         "properties" : {
           "amountPerShare" : {
@@ -2830,6 +2842,81 @@
           }
         },
         "required" : [ "email", "password", "username" ],
+        "type" : "object"
+      },
+      "RegistrationFinishRequest" : {
+        "properties" : {
+          "attestationObject" : {
+            "type" : "string"
+          },
+          "clientDataJSON" : {
+            "type" : "string"
+          },
+          "credentialId" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "transports" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "attestationObject", "clientDataJSON", "credentialId", "name", "transports" ],
+        "type" : "object"
+      },
+      "RegistrationFinishResponse" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "RegistrationStartResponse" : {
+        "properties" : {
+          "attestation" : {
+            "type" : "string"
+          },
+          "challenge" : {
+            "type" : "string"
+          },
+          "pubKeyCredParams" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PubKeyCredParam"
+            },
+            "type" : "array"
+          },
+          "residentKey" : {
+            "type" : "string"
+          },
+          "rpId" : {
+            "type" : "string"
+          },
+          "rpName" : {
+            "type" : "string"
+          },
+          "timeout" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "userId" : {
+            "type" : "string"
+          },
+          "userName" : {
+            "type" : "string"
+          },
+          "userVerification" : {
+            "type" : "string"
+          }
+        },
         "type" : "object"
       },
       "RiskMetricsResponse" : {
@@ -4971,6 +5058,52 @@
           }
         },
         "tags" : [ "session-controller" ]
+      }
+    },
+    "/api/v1/auth/webauthn/register/finish" : {
+      "post" : {
+        "operationId" : "finish",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegistrationFinishRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RegistrationFinishResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "web-authn-registration-controller" ]
+      }
+    },
+    "/api/v1/auth/webauthn/register/start" : {
+      "post" : {
+        "operationId" : "start",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RegistrationStartResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "web-authn-registration-controller" ]
       }
     },
     "/api/v1/backup/export" : {

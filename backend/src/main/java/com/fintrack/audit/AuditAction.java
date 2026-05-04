@@ -23,4 +23,7 @@ public final class AuditAction {
     public static final String TOTP_RECOVERY_REGENERATED = "TOTP_RECOVERY_REGENERATED";
     public static final String TOTP_RECOVERY_REDEEMED = "TOTP_RECOVERY_REDEEMED";
     public static final String PASSWORD_REHASHED = "PASSWORD_REHASHED";
+    public static final String WEBAUTHN_REGISTER_STARTED = "WEBAUTHN_REGISTER_STARTED";
+    public static final String WEBAUTHN_REGISTER_COMPLETED = "WEBAUTHN_REGISTER_COMPLETED";
+    public static final String WEBAUTHN_REGISTER_FAILED = "WEBAUTHN_REGISTER_FAILED";
 }
