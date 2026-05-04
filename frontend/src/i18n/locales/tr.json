@@ -426,7 +426,12 @@
       "remove": "Fişi kaldır",
       "uploading": "Yükleniyor...",
       "tooLarge": "Dosya çok büyük. En fazla 5 MB.",
-      "unsupported": "Desteklenmeyen dosya türü. JPG, PNG, WebP veya PDF kullanın."
+      "unsupported": "Desteklenmeyen dosya türü. JPG, PNG, WebP veya PDF kullanın.",
+      "ocrProcessing": "Fiş metni okunuyor...",
+      "ocrView": "Çıkarılan metni göster",
+      "ocrFailed": "Fiş metni okunamadı",
+      "ocrRetry": "Fiş OCR yeniden deneniyor...",
+      "ocrEmpty": "Metin çıkarılamadı"
     },
     "allocator": {
       "title": "Nakit akışı dağıtıcısı",

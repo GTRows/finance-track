@@ -808,6 +808,17 @@
           "notes" : {
             "type" : "string"
           },
+          "ocrCompletedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "ocrStatus" : {
+            "enum" : [ "PENDING", "IN_PROGRESS", "SUCCESS", "FAILED", "RETRY" ],
+            "type" : "string"
+          },
+          "ocrText" : {
+            "type" : "string"
+          },
           "originalAmount" : {
             "type" : "number"
           },
@@ -3353,6 +3364,13 @@
           },
           "id" : {
             "format" : "uuid",
+            "type" : "string"
+          },
+          "ocrStatus" : {
+            "enum" : [ "PENDING", "IN_PROGRESS", "SUCCESS", "FAILED", "RETRY" ],
+            "type" : "string"
+          },
+          "ocrText" : {
             "type" : "string"
           },
           "originalAmount" : {

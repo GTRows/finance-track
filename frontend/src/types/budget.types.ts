@@ -18,6 +18,9 @@ export interface TransactionTagRef {
   color: string | null;
 }
 
+/** OCR worker status for a receipt-bearing transaction. */
+export type OcrStatus = 'PENDING' | 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'RETRY';
+
 /** Budget transaction entry returned by the API. */
 export interface BudgetTransaction {
   id: string;
@@ -34,6 +37,8 @@ export interface BudgetTransaction {
   recurring: boolean;
   tags: TransactionTagRef[] | null;
   hasReceipt: boolean;
+  ocrStatus: OcrStatus | null;
+  ocrText: string | null;
   createdAt: string;
 }
 

@@ -431,6 +431,8 @@ export function BudgetPage() {
                     <ReceiptAction
                       transactionId={txn.id}
                       hasReceipt={txn.hasReceipt}
+                      ocrStatus={txn.ocrStatus}
+                      ocrText={txn.ocrText}
                       month={month}
                     />
 

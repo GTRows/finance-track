@@ -425,7 +425,12 @@
       "remove": "Remove receipt",
       "uploading": "Uploading...",
       "tooLarge": "File too large. Max 5 MB.",
-      "unsupported": "Unsupported file type. Use JPG, PNG, WebP or PDF."
+      "unsupported": "Unsupported file type. Use JPG, PNG, WebP or PDF.",
+      "ocrProcessing": "Reading receipt text...",
+      "ocrView": "Show extracted text",
+      "ocrFailed": "Could not read receipt text",
+      "ocrRetry": "Retrying receipt OCR...",
+      "ocrEmpty": "No text extracted"
     },
     "allocator": {
       "title": "Cash flow allocator",

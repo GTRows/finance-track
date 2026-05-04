@@ -2193,6 +2193,11 @@ export interface components {
             /** Format: uuid */
             id?: string;
             notes?: string;
+            /** Format: date-time */
+            ocrCompletedAt?: string;
+            /** @enum {string} */
+            ocrStatus?: "PENDING" | "IN_PROGRESS" | "SUCCESS" | "FAILED" | "RETRY";
+            ocrText?: string;
             originalAmount?: number;
             originalCurrency?: string;
             receiptPath?: string;
@@ -3172,6 +3177,9 @@ export interface components {
             hasReceipt?: boolean;
             /** Format: uuid */
             id?: string;
+            /** @enum {string} */
+            ocrStatus?: "PENDING" | "IN_PROGRESS" | "SUCCESS" | "FAILED" | "RETRY";
+            ocrText?: string;
             originalAmount?: number;
             originalCurrency?: string;
             recurring?: boolean;

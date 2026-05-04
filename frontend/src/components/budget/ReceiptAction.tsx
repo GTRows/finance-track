@@ -1,22 +1,39 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Paperclip, FileText, Loader2, X } from 'lucide-react';
+import {
+  AlertCircle,
+  FileText,
+  Loader2,
+  Paperclip,
+  ScanText,
+  X,
+} from 'lucide-react';
 import { receiptApi } from '@/api/receipt.api';
+import type { OcrStatus } from '@/types/budget.types';
 
 interface Props {
   transactionId: string;
   hasReceipt: boolean;
   month: string;
+  ocrStatus: OcrStatus | null;
+  ocrText: string | null;
 }
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 
-export function ReceiptAction({ transactionId, hasReceipt, month }: Props) {
+export function ReceiptAction({
+  transactionId,
+  hasReceipt,
+  month,
+  ocrStatus,
+  ocrText,
+}: Props) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState<null | 'upload' | 'remove' | 'view'>(null);
+  const [textOpen, setTextOpen] = useState(false);
 
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ['budget', 'transactions', month] });
@@ -92,7 +109,7 @@ export function ReceiptAction({ transactionId, hasReceipt, month }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="relative flex items-center gap-0.5">
       <button
         type="button"
         onClick={handleView}
@@ -106,6 +123,19 @@ export function ReceiptAction({ transactionId, hasReceipt, month }: Props) {
           <FileText className="w-3.5 h-3.5 text-sky-400" />
         )}
       </button>
+      <OcrIndicator
+        status={ocrStatus}
+        text={ocrText}
+        open={textOpen}
+        onToggle={() => setTextOpen((v) => !v)}
+        labels={{
+          processing: t('budget.receipt.ocrProcessing'),
+          success: t('budget.receipt.ocrView'),
+          failed: t('budget.receipt.ocrFailed'),
+          retry: t('budget.receipt.ocrRetry'),
+          empty: t('budget.receipt.ocrEmpty'),
+        }}
+      />
       <button
         type="button"
         onClick={handleRemove}
@@ -120,5 +150,73 @@ export function ReceiptAction({ transactionId, hasReceipt, month }: Props) {
         )}
       </button>
     </div>
+  );
+}
+
+interface OcrIndicatorProps {
+  status: OcrStatus | null;
+  text: string | null;
+  open: boolean;
+  onToggle: () => void;
+  labels: {
+    processing: string;
+    success: string;
+    failed: string;
+    retry: string;
+    empty: string;
+  };
+}
+
+function OcrIndicator({ status, text, open, onToggle, labels }: OcrIndicatorProps) {
+  if (status === null) return null;
+
+  if (status === 'PENDING' || status === 'IN_PROGRESS') {
+    return (
+      <span
+        title={labels.processing}
+        className="inline-flex items-center justify-center p-1"
+      >
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+      </span>
+    );
+  }
+
+  if (status === 'FAILED' || status === 'RETRY') {
+    return (
+      <span
+        title={status === 'RETRY' ? labels.retry : labels.failed}
+        className="inline-flex items-center justify-center p-1"
+      >
+        <AlertCircle className="w-3.5 h-3.5 text-amber-400/70" />
+      </span>
+    );
+  }
+
+  // SUCCESS
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onToggle}
+        title={labels.success}
+        className="p-1 rounded hover:bg-emerald-500/10 cursor-pointer"
+      >
+        <ScanText className="w-3.5 h-3.5 text-emerald-400" />
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          className="absolute z-30 top-full right-0 mt-1 w-72 rounded-md border border-border bg-popover shadow-lg p-2 text-xs text-popover-foreground"
+        >
+          {text && text.length > 0 ? (
+            <pre className="whitespace-pre-wrap break-words font-mono leading-snug max-h-48 overflow-auto">
+              {text}
+            </pre>
+          ) : (
+            <span className="text-muted-foreground">{labels.empty}</span>
+          )}
+        </div>
+      )}
+    </>
   );
 }
