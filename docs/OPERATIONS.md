@@ -213,6 +213,38 @@ Always:
   (default `/var/log/fintrack`); admins can tail them via the live SSE
   stream at `GET /api/v1/admin/logs/live`.
 
+## CI Security Gates
+
+CI runs an opt-in OWASP Dependency Check job (`dependency-check` in
+`.github/workflows/ci.yml`) that scans the Maven dependency tree for
+known CVEs. The job is gated by `dorny/paths-filter@v3` so it only
+executes when `backend/pom.xml` or `backend/owasp-suppressions.xml`
+change, and it is informational only — it is not part of
+`ci-complete`'s `needs[]`, so a CVE finding does not block unrelated
+merges. The build fails only on CVSS >= 9.0 (CRITICAL) findings; HIGH
+and MEDIUM are reported in the uploaded HTML/SARIF artefacts but do
+not break the build.
+
+### Obtaining an NVD API key
+
+The plugin pulls the National Vulnerability Database feed. Without an
+API key the public endpoint heavily rate-limits unauthenticated
+requests and the job runtime balloons. Request a free key at
+<https://nvd.nist.gov/developers/request-an-api-key>, then add it as a
+GitHub Actions repository secret named `NVD_API_KEY`. The job exposes
+it to Maven via the `NVD_API_KEY` env var which the `security` profile
+consumes through `${env.NVD_API_KEY}` in `backend/pom.xml`.
+
+The local opt-in run is:
+
+```bash
+cd backend && ./mvnw -B -ntp -P security org.owasp:dependency-check-maven:check
+```
+
+The first run downloads the full NVD feed and takes 3-5 minutes;
+subsequent runs reuse the cached feed inside the 24-hour validity
+window.
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`

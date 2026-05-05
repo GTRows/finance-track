@@ -266,6 +266,62 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  dependency-check:
+    name: OWASP Dependency Check (CRITICAL gate)
+    runs-on: ubuntu-latest
+    needs: backend
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Detect dependency changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            deps:
+              - 'backend/pom.xml'
+              - 'backend/owasp-suppressions.xml'
+
+      - name: Set up JDK 21
+        if: steps.filter.outputs.deps == 'true'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Make mvnw executable
+        if: steps.filter.outputs.deps == 'true'
+        run: chmod +x mvnw
+
+      - name: Run dependency check
+        if: steps.filter.outputs.deps == 'true'
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./mvnw -B -ntp -P security org.owasp:dependency-check-maven:check
+
+      - name: Upload SARIF
+        if: always() && steps.filter.outputs.deps == 'true'
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: backend/target/dependency-check-report.sarif
+          category: owasp-dependency-check
+
+      - name: Upload HTML report
+        if: always() && steps.filter.outputs.deps == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: owasp-dependency-check-report
+          path: backend/target/dependency-check-report.html
+          retention-days: 14
+          if-no-files-found: ignore
+
   ci-complete:
     name: CI complete
     runs-on: ubuntu-latest

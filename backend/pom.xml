@@ -193,6 +193,34 @@
 
   <profiles>
     <profile>
+      <id>security</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>11.1.1</version>
+            <configuration>
+              <failBuildOnCVSS>9.0</failBuildOnCVSS>
+              <suppressionFiles>
+                <suppressionFile>owasp-suppressions.xml</suppressionFile>
+              </suppressionFiles>
+              <formats>
+                <format>HTML</format>
+                <format>SARIF</format>
+              </formats>
+              <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+              <nvdApiDelay>2000</nvdApiDelay>
+              <nvdValidForHours>24</nvdValidForHours>
+              <skipProvidedScope>false</skipProvidedScope>
+              <skipRuntimeScope>false</skipRuntimeScope>
+              <skipTestScope>true</skipTestScope>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>mutation</id>
       <build>
         <plugins>

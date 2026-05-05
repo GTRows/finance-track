@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OWASP Dependency Check suppression file.
+
+  Add <suppress> blocks here for known-acceptable CVEs with CVSS >= 9.0
+  that the security profile would otherwise fail the build on.
+
+  Each entry MUST include:
+    - <notes>: justification for the suppression (why it does not apply to us
+      or why we accept the residual risk).
+    - A review date in the notes (e.g. "Review by 2026-12-01") so suppressions
+      do not silently outlive their relevance.
+
+  Run locally with:
+    cd backend && ./mvnw -B -ntp -P security org.owasp:dependency-check-maven:check
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+</suppressions>
