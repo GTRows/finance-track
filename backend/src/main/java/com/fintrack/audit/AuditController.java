@@ -1,6 +1,7 @@
 package com.fintrack.audit;
 
 import com.fintrack.audit.dto.AuditLogResponse;
+import com.fintrack.audit.dto.RetentionStatusResponse;
 import com.fintrack.common.entity.AuditLog;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ public class AuditController {
     private static final int MAX_SIZE = 200;
 
     private final AuditLogRepository repository;
+    private final AuditRetentionProperties properties;
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> list(
@@ -52,5 +54,15 @@ public class AuditController {
                         "size", result.getSize(),
                         "totalElements", result.getTotalElements(),
                         "totalPages", result.getTotalPages()));
+    }
+
+    @GetMapping("/retention")
+    public RetentionStatusResponse retention() {
+        return new RetentionStatusResponse(
+                properties.retentionDays(),
+                properties.batchSize(),
+                properties.enabled(),
+                repository.findOldestCreatedAt().orElse(null),
+                repository.count());
     }
 }

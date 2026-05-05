@@ -2,6 +2,7 @@ package com.fintrack.audit;
 
 import com.fintrack.common.entity.AuditLog;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,4 +31,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
                             + "ORDER BY id LIMIT :limit)",
             nativeQuery = true)
     int deleteOldestBatch(@Param("cutoff") Instant cutoff, @Param("limit") int limit);
+
+    @Query("SELECT MIN(a.createdAt) FROM AuditLog a")
+    Optional<Instant> findOldestCreatedAt();
 }

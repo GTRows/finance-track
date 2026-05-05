@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/audit/retention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["retention"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/logs": {
         parameters: {
             query?: never;
@@ -3124,6 +3140,17 @@ export interface components {
             userName?: string;
             userVerification?: string;
         };
+        RetentionStatusResponse: {
+            /** Format: int32 */
+            batchSize?: number;
+            enabled?: boolean;
+            /** Format: date-time */
+            oldestEntry?: string;
+            /** Format: int32 */
+            retentionDays?: number;
+            /** Format: int64 */
+            totalEntries?: number;
+        };
         RiskMetricsResponse: {
             annualVolatility?: number;
             averageDailyReturn?: number;
@@ -3524,6 +3551,26 @@ export interface operations {
                     "*/*": {
                         [key: string]: Record<string, never>;
                     };
+                };
+            };
+        };
+    };
+    retention: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RetentionStatusResponse"];
                 };
             };
         };

@@ -3013,6 +3013,30 @@
         },
         "type" : "object"
       },
+      "RetentionStatusResponse" : {
+        "properties" : {
+          "batchSize" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "oldestEntry" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "retentionDays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalEntries" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
       "RiskMetricsResponse" : {
         "properties" : {
           "annualVolatility" : {
@@ -4045,6 +4069,24 @@
                     "type" : "object"
                   },
                   "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "audit-controller" ]
+      }
+    },
+    "/api/v1/admin/audit/retention" : {
+      "get" : {
+        "operationId" : "retention",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetentionStatusResponse"
                 }
               }
             },
