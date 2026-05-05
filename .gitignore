@@ -107,3 +107,10 @@ htmlcov/
 
 # Hook block audit (per-clone, never shipped)
 .claude/hook-audit.log
+
+# from template upstream v0.7.0
+# Claude Code local settings (user-specific, not shared)
+# Package manager locks (uncomment the one you do NOT use)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
