@@ -57,6 +57,15 @@ already passes at 63%; these items track the per-class lift work that did not fi
   5 surviving `MathMutator` and `ConditionalsBoundary` mutations on percent rounding. Smallest lift
   in the backlog; ~3 targeted tests around half-up rounding boundaries should clear it.
 
+### Plan 24-08 follow-up
+
+- **ISS-111** — Extend AuditService coverage to TagService (`com.fintrack.tag.TagService`) and AllocationService
+  (`com.fintrack.portfolio.allocation.AllocationService`). Both throw `BusinessRuleException` from user-driven
+  mutating methods (tag rename collision, allocation percent overflow) but were not in plan 24-08's enumerated
+  service set, so they remain unaudited. Adding emission here is the same per-service pattern: inject
+  `AuditService`, append `TAG_*` and `ALLOCATION_*` constants to `AuditAction`, add a `*ServiceAuditTest`
+  fixture. Tractable in a small plan; left as a continuation of the 24-08 sweep.
+
 ### Plan 24-03 follow-up
 
 - **ISS-110** — Full WebAuthn ceremony E2E test using `com.webauthn4j.test.client.ClientPlatform`.

@@ -15,7 +15,7 @@ None — full-stack Spring Boot + React + Postgres + Redis is already encoded in
 - Decimal phases (e.g., 24.1): Reserved for urgent insertions; none open today
 
 - [x] **Phase 23: Coverage Completion** — Complete (2026-05-04)
-- [ ] **Phase 24: Security Hardening** — Close the residual auth and audit gaps
+- [x] **Phase 24: Security Hardening** — Complete (2026-05-05)
 - [ ] **Phase 25: Architecture Cleanup** — Decouple services and de-block the reactive price clients
 - [ ] **Phase 26: Observability** — End-to-end traces, errors, and SLO burn alerts
 - [ ] **Phase 27: Tax & Accounts (TR)** — Tax helper, bank account entity, TR bank CSV import
@@ -53,7 +53,7 @@ Plans:
 - [x] 24-05: D7 — Audit log retention policy + automatic PII redaction
 - [x] 24-06: D8 — Signed URL scheme for receipts (HMAC-SHA256, 5-minute TTL)
 - [x] 24-07: D9 — OWASP Dependency Check in CI + prod-profile fail-fast (CORS, Redis password, JWT/receipt secrets, WebAuthn config)
-- [ ] 24-08: AuditService coverage for portfolio/budget/bill mutations
+- [x] 24-08: AuditService coverage for portfolio/budget/bill mutations
 
 ### Phase 25: Architecture Cleanup
 **Goal**: Track C1 + C2 plus the reactive price-client refactor flagged in CONCERNS.md. Move cross-cutting wiring to `ApplicationEventPublisher`, add Spring Cache + Caffeine on hot reads with explicit invalidation, and replace `WebClient.block()` + `Thread.sleep` in the price clients with virtual-thread or async composition.
@@ -133,7 +133,7 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 23. Coverage Completion | 4/4 | Complete | 2026-05-04 |
-| 24. Security Hardening | 7/8 | In progress | - |
+| 24. Security Hardening | 8/8 | Complete | 2026-05-05 |
 | 25. Architecture Cleanup | 0/3 | Not started | - |
 | 26. Observability | 0/3 | Not started | - |
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
