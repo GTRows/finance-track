@@ -1,5 +1,7 @@
 package com.fintrack.budget;
 
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.*;
 import com.fintrack.budget.rule.TransactionCategoryRuleService;
 import com.fintrack.common.entity.BudgetTransaction;
@@ -21,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +46,7 @@ public class BudgetService {
     private final TagService tagService;
     private final UserSettingsRepository userSettingsRepo;
     private final FxConversionService fxConversionService;
+    private final AuditService auditService;
 
     // -- Transactions --
 
@@ -109,6 +114,11 @@ public class BudgetService {
                 txn.getId(),
                 txn.getTxnType(),
                 txn.getAmount());
+        auditService.success(
+                AuditAction.BUDGET_TRANSACTION_CREATED,
+                userId,
+                currentUsername(),
+                "id=" + txn.getId());
 
         List<UUID> ownedTagIds = tagService.resolveOwnedIds(userId, req.tagIds());
         tagService.setTransactionTags(txn.getId(), ownedTagIds);
@@ -150,6 +160,12 @@ public class BudgetService {
             log.warn("Budget rule evaluation failed: {}", e.getMessage());
         }
 
+        auditService.success(
+                AuditAction.BUDGET_TRANSACTION_UPDATED,
+                userId,
+                currentUsername(),
+                "id=" + txn.getId());
+
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup =
                 buildTagLookup(userId, List.of(txn.getId()));
@@ -163,6 +179,8 @@ public class BudgetService {
                         .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         txnRepo.delete(txn);
         log.info("Transaction deleted: id={}", txnId);
+        auditService.success(
+                AuditAction.BUDGET_TRANSACTION_DELETED, userId, currentUsername(), "id=" + txnId);
     }
 
     @Transactional
@@ -172,6 +190,11 @@ public class BudgetService {
         if (owned.isEmpty()) return 0;
         txnRepo.deleteAll(owned);
         log.info("Bulk delete transactions: requested={} deleted={}", ids.size(), owned.size());
+        auditService.success(
+                AuditAction.BUDGET_TRANSACTION_DELETED,
+                userId,
+                currentUsername(),
+                "bulk count=" + owned.size());
         return owned.size();
     }
 
@@ -242,6 +265,13 @@ public class BudgetService {
                 categoryId,
                 ownedAddTags.size(),
                 ownedRemoveTags.size());
+        if (affected > 0) {
+            auditService.success(
+                    AuditAction.BUDGET_TRANSACTION_UPDATED,
+                    userId,
+                    currentUsername(),
+                    "bulk count=" + affected);
+        }
         return affected;
     }
 
@@ -399,6 +429,11 @@ public class BudgetService {
             String currency,
             BigDecimal originalAmount,
             String originalCurrency) {}
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
+    }
 
     private TransactionResponse toResponse(
             BudgetTransaction t,

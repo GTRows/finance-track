@@ -1,6 +1,8 @@
 package com.fintrack.budget;
 
 import com.fintrack.alert.AlertNotificationRepository;
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.BudgetRuleResponse;
 import com.fintrack.budget.dto.CreateBudgetRuleRequest;
 import com.fintrack.common.entity.AlertNotification;
@@ -20,6 +22,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +39,7 @@ public class BudgetRuleService {
     private final TransactionRepository txnRepo;
     private final AlertNotificationRepository notificationRepo;
     private final BusinessMetrics businessMetrics;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<BudgetRuleResponse> listForUser(UUID userId) {
@@ -99,14 +104,16 @@ public class BudgetRuleService {
                         .findByIdAndUserId(req.categoryId(), userId)
                         .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
+        Optional<BudgetRule> existing =
+                ruleRepo.findByUserIdAndCategoryId(userId, req.categoryId());
+        boolean isUpdate = existing.isPresent();
         BudgetRule rule =
-                ruleRepo.findByUserIdAndCategoryId(userId, req.categoryId())
-                        .orElseGet(
-                                () ->
-                                        BudgetRule.builder()
-                                                .userId(userId)
-                                                .categoryId(req.categoryId())
-                                                .build());
+                existing.orElseGet(
+                        () ->
+                                BudgetRule.builder()
+                                        .userId(userId)
+                                        .categoryId(req.categoryId())
+                                        .build());
         rule.setMonthlyLimitTry(req.monthlyLimitTry());
         rule.setActive(true);
         rule = ruleRepo.save(rule);
@@ -116,6 +123,11 @@ public class BudgetRuleService {
                 rule.getId(),
                 cat.getName(),
                 rule.getMonthlyLimitTry());
+        auditService.success(
+                isUpdate ? AuditAction.BUDGET_RULE_UPDATED : AuditAction.BUDGET_RULE_CREATED,
+                userId,
+                currentUsername(),
+                "id=" + rule.getId());
         return BudgetRuleResponse.from(
                 rule, cat.getName(), cat.getColor(), BigDecimal.ZERO, BigDecimal.ZERO);
     }
@@ -127,6 +139,13 @@ public class BudgetRuleService {
                         .orElseThrow(() -> new ResourceNotFoundException("Rule not found"));
         ruleRepo.delete(rule);
         log.info("Budget rule deleted: id={}", ruleId);
+        auditService.success(
+                AuditAction.BUDGET_RULE_DELETED, userId, currentUsername(), "id=" + ruleId);
+    }
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
     }
 
     /**

@@ -45,4 +45,16 @@ public final class AuditAction {
     public static final String INVESTMENT_TRANSACTION_CREATED = "INVESTMENT_TRANSACTION_CREATED";
     public static final String INVESTMENT_TRANSACTION_UPDATED = "INVESTMENT_TRANSACTION_UPDATED";
     public static final String INVESTMENT_TRANSACTION_DELETED = "INVESTMENT_TRANSACTION_DELETED";
+
+    public static final String BUDGET_TRANSACTION_CREATED = "BUDGET_TRANSACTION_CREATED";
+    public static final String BUDGET_TRANSACTION_UPDATED = "BUDGET_TRANSACTION_UPDATED";
+    public static final String BUDGET_TRANSACTION_DELETED = "BUDGET_TRANSACTION_DELETED";
+
+    public static final String CATEGORY_CREATED = "CATEGORY_CREATED";
+    public static final String CATEGORY_UPDATED = "CATEGORY_UPDATED";
+    public static final String CATEGORY_DELETED = "CATEGORY_DELETED";
+
+    public static final String BUDGET_RULE_CREATED = "BUDGET_RULE_CREATED";
+    public static final String BUDGET_RULE_UPDATED = "BUDGET_RULE_UPDATED";
+    public static final String BUDGET_RULE_DELETED = "BUDGET_RULE_DELETED";
 }

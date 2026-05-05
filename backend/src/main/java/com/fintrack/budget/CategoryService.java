@@ -1,5 +1,7 @@
 package com.fintrack.budget;
 
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.CategoriesResponse;
 import com.fintrack.budget.dto.CategoryResponse;
 import com.fintrack.budget.dto.CreateCategoryRequest;
@@ -8,6 +10,8 @@ import com.fintrack.common.entity.IncomeCategory;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,7 @@ public class CategoryService {
 
     private final IncomeCategoryRepository incomeRepo;
     private final ExpenseCategoryRepository expenseRepo;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public CategoriesResponse listAll(UUID userId) {
@@ -40,7 +45,13 @@ public class CategoryService {
                         .icon(req.icon())
                         .color(req.color())
                         .build();
-        return CategoryResponse.from(incomeRepo.save(cat));
+        IncomeCategory saved = incomeRepo.save(cat);
+        auditService.success(
+                AuditAction.CATEGORY_CREATED,
+                userId,
+                currentUsername(),
+                "income id=" + saved.getId());
+        return CategoryResponse.from(saved);
     }
 
     @Transactional
@@ -54,7 +65,13 @@ public class CategoryService {
                         .budgetAmount(req.budgetAmount())
                         .rolloverEnabled(Boolean.TRUE.equals(req.rolloverEnabled()))
                         .build();
-        return CategoryResponse.from(expenseRepo.save(cat));
+        ExpenseCategory saved = expenseRepo.save(cat);
+        auditService.success(
+                AuditAction.CATEGORY_CREATED,
+                userId,
+                currentUsername(),
+                "expense id=" + saved.getId());
+        return CategoryResponse.from(saved);
     }
 
     @Transactional
@@ -67,6 +84,8 @@ public class CategoryService {
         cat.setName(req.name());
         cat.setIcon(req.icon());
         cat.setColor(req.color());
+        auditService.success(
+                AuditAction.CATEGORY_UPDATED, userId, currentUsername(), "income id=" + id);
         return CategoryResponse.from(cat);
     }
 
@@ -82,6 +101,8 @@ public class CategoryService {
         cat.setColor(req.color());
         cat.setBudgetAmount(req.budgetAmount());
         cat.setRolloverEnabled(Boolean.TRUE.equals(req.rolloverEnabled()));
+        auditService.success(
+                AuditAction.CATEGORY_UPDATED, userId, currentUsername(), "expense id=" + id);
         return CategoryResponse.from(cat);
     }
 
@@ -93,6 +114,8 @@ public class CategoryService {
                         .orElseThrow(
                                 () -> new ResourceNotFoundException("Income category not found"));
         incomeRepo.delete(cat);
+        auditService.success(
+                AuditAction.CATEGORY_DELETED, userId, currentUsername(), "income id=" + id);
     }
 
     @Transactional
@@ -103,5 +126,12 @@ public class CategoryService {
                         .orElseThrow(
                                 () -> new ResourceNotFoundException("Expense category not found"));
         expenseRepo.delete(cat);
+        auditService.success(
+                AuditAction.CATEGORY_DELETED, userId, currentUsername(), "expense id=" + id);
+    }
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
     }
 }

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fintrack.alert.AlertNotificationRepository;
+import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.BudgetRuleResponse;
 import com.fintrack.budget.dto.CreateBudgetRuleRequest;
 import com.fintrack.common.entity.AlertNotification;
@@ -42,6 +43,7 @@ class BudgetRuleServiceTest {
     @Mock TransactionRepository txnRepo;
     @Mock AlertNotificationRepository notificationRepo;
     @Mock BusinessMetrics businessMetrics;
+    @Mock AuditService auditService;
 
     @InjectMocks BudgetRuleService service;
 

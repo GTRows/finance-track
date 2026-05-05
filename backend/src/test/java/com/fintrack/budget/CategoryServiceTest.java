@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.CategoriesResponse;
 import com.fintrack.budget.dto.CategoryResponse;
 import com.fintrack.budget.dto.CreateCategoryRequest;
@@ -29,6 +30,7 @@ class CategoryServiceTest {
 
     @Mock IncomeCategoryRepository incomeRepo;
     @Mock ExpenseCategoryRepository expenseRepo;
+    @Mock AuditService auditService;
 
     @InjectMocks CategoryService service;
 

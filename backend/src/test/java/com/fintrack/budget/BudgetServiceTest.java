@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.BudgetSummaryResponse;
 import com.fintrack.budget.rule.TransactionCategoryRuleService;
 import com.fintrack.common.entity.BudgetTransaction;
@@ -37,6 +38,7 @@ class BudgetServiceTest {
     @Mock TagService tagService;
     @Mock UserSettingsRepository userSettingsRepo;
     @Mock FxConversionService fxConversionService;
+    @Mock AuditService auditService;
 
     @InjectMocks BudgetService service;
 
