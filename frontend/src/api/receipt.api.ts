@@ -6,6 +6,11 @@ export interface StoredReceipt {
   bytes: number;
 }
 
+export interface SignedReceiptUrl {
+  url: string;
+  expiresAt: string;
+}
+
 export const receiptApi = {
   upload: async (transactionId: string, file: File): Promise<StoredReceipt> => {
     const form = new FormData();
@@ -27,6 +32,13 @@ export const receiptApi = {
     const { data } = await client.get<Blob>(
       `/budget/transactions/${transactionId}/receipt`,
       { responseType: 'blob' }
+    );
+    return data;
+  },
+
+  signedUrl: async (transactionId: string): Promise<SignedReceiptUrl> => {
+    const { data } = await client.get<SignedReceiptUrl>(
+      `/budget/transactions/${transactionId}/receipt/url`
     );
     return data;
   },

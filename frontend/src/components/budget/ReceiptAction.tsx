@@ -54,10 +54,8 @@ export function ReceiptAction({
   const handleView = async () => {
     try {
       setBusy('view');
-      const blob = await receiptApi.download(transactionId);
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      const signed = await receiptApi.signedUrl(transactionId);
+      window.open(signed.url, '_blank', 'noopener,noreferrer');
     } catch {
       // silent
     } finally {
