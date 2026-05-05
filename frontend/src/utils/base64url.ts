@@ -11,13 +11,13 @@ export function bufferToBase64Url(buf: ArrayBuffer | Uint8Array): string {
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-/** Decode a base64url string into a Uint8Array. Pads if necessary. */
-export function base64UrlToBuffer(value: string): Uint8Array {
+/** Decode a base64url string into a Uint8Array backed by a non-shared ArrayBuffer. Pads if necessary. */
+export function base64UrlToBuffer(value: string): Uint8Array<ArrayBuffer> {
   const padded = value.replace(/-/g, '+').replace(/_/g, '/');
   const padLen = (4 - (padded.length % 4)) % 4;
   const base64 = padded + '='.repeat(padLen);
   const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
   for (let i = 0; i < binary.length; i += 1) {
     bytes[i] = binary.charCodeAt(i);
   }

@@ -5,6 +5,7 @@ import type * as RRD from 'react-router-dom';
 import { LoginPage } from './LoginPage';
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/store/auth.store';
+import { createWrapper } from '@/test-utils/queryWrapper';
 
 const SECRET = 'pw-fixture';
 
@@ -30,10 +31,13 @@ vi.mock('react-router-dom', async () => {
 });
 
 function renderLogin() {
+  const { Wrapper } = createWrapper();
   return render(
-    <MemoryRouter>
-      <LoginPage />
-    </MemoryRouter>,
+    <Wrapper>
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    </Wrapper>,
   );
 }
 
