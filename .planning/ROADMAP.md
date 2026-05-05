@@ -50,7 +50,7 @@ Plans:
 - [x] 24-02: D4 — WebAuthn passkey foundation + registration ceremony (`authenticators` child table, library decision, register endpoints)
 - [x] 24-03: D4 — WebAuthn assertion ceremony + frontend integration (login endpoints, list/revoke, React hooks + UI)
 - [x] 24-04: D6 — Refresh-token session fingerprint binding (UA + IP-prefix SHA-256)
-- [ ] 24-05: D7 — Audit log retention policy + automatic PII redaction
+- [x] 24-05: D7 — Audit log retention policy + automatic PII redaction
 - [ ] 24-06: D8 — Signed URL scheme for receipts (HMAC-SHA256, 5-minute TTL)
 - [ ] 24-07: D9 — OWASP Dependency Check in CI + prod-profile fail-fast (CORS, Redis password, JWT/receipt secrets, WebAuthn config)
 - [ ] 24-08: AuditService coverage for portfolio/budget/bill mutations
@@ -133,7 +133,7 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 23. Coverage Completion | 4/4 | Complete | 2026-05-04 |
-| 24. Security Hardening | 4/8 | In progress | - |
+| 24. Security Hardening | 5/8 | In progress | - |
 | 25. Architecture Cleanup | 0/3 | Not started | - |
 | 26. Observability | 0/3 | Not started | - |
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
