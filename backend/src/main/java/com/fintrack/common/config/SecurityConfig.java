@@ -10,6 +10,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -43,6 +44,8 @@ public class SecurityConfig {
     private final SignedReceiptTokenFilter signedReceiptTokenFilter;
     private final AutheliaForwardAuthFilter autheliaForwardAuthFilter;
     private final FinTrackUserDetailsService userDetailsService;
+    private final CorsProperties corsProperties;
+    private final Environment environment;
 
     private static final String[] PUBLIC_PATHS = {
         "/api/v1/auth/register",
@@ -128,11 +131,24 @@ public class SecurityConfig {
                 .build();
     }
 
-    /** CORS configuration: permissive for development, restrict for production. */
+    /**
+     * CORS configuration: bound to {@code fintrack.cors.allowed-origins} (env {@code
+     * CORS_ALLOWED_ORIGINS}). Falls back to the wildcard pattern only when the configured list is
+     * empty AND the active profile is not {@code production} — in production, {@link
+     * ProductionProfileGuard} fails startup before this bean is consulted, but defence-in-depth
+     * keeps the fallback gated by profile.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        List<String> configuredOrigins = corsProperties.allowedOrigins();
+        if (!configuredOrigins.isEmpty()) {
+            config.setAllowedOriginPatterns(configuredOrigins);
+        } else if (environment.matchesProfiles("!production")) {
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            config.setAllowedOriginPatterns(List.of());
+        }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

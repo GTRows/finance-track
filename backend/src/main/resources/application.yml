@@ -50,6 +50,8 @@ spring:
 
 # Application-specific mail settings
 fintrack:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   mail:
     enabled: ${SMTP_HOST:}
     from-address: ${SMTP_FROM:${SMTP_USER:noreply@fintrack.local}}
@@ -176,3 +178,10 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+---
+# Production profile — ProductionProfileGuard enforces required env vars at startup.
+spring:
+  config:
+    activate:
+      on-profile: production
