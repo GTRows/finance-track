@@ -69,14 +69,19 @@ Application limits (Redis counters, for fine-grained control):
 
 ## CORS
 
-Configured in `SecurityConfig.java`:
-- Development: allow all origins (`*`)
-- Production: restrict to your domain only
+Configured in `SecurityConfig.java` and bound from `CORS_ALLOWED_ORIGINS`
+(comma-separated) via `CorsProperties`:
 
-Change in `application.yml`:
-```yaml
-cors:
-  allowed-origins: "https://yourdomain.com"  # production
+- Development: when `CORS_ALLOWED_ORIGINS` is blank, the wildcard pattern
+  `*` is used as a fallback so localhost dev workflows work out of the box.
+  This fallback is gated to non-production profiles only.
+- Production: `CORS_ALLOWED_ORIGINS` must be set to an explicit list of
+  origins (e.g. `https://fintrack.example.com`). `ProductionProfileGuard`
+  refuses to start the application if the list is blank or contains `*`.
+
+Example:
+```bash
+CORS_ALLOWED_ORIGINS=https://fintrack.example.com,https://api.fintrack.example.com
 ```
 
 ## Security Headers (Nginx)
@@ -168,3 +173,52 @@ JWT_SECRET          — min 256 bits (32 chars), random
 POSTGRES_PASSWORD   — strong random password
 REDIS_PASSWORD      — strong random password
 ```
+
+## Production Configuration (Fail-Fast Guard)
+
+`ProductionProfileGuard` (`@Component @Profile("production")`) runs once
+during Spring context startup and refuses to boot the application if any
+of the following invariants fail. Every violation is aggregated into a
+single `IllegalStateException` so the operator sees the full remediation
+list on the first restart.
+
+| Env var | Required value |
+|---------|----------------|
+| `CORS_ALLOWED_ORIGINS` | Comma-separated list of explicit origins. Wildcard `*` is rejected. |
+| `SPRING_REDIS_PASSWORD` | Non-blank. An unauthenticated Redis is a session-store takeover risk. |
+| `JWT_SECRET` | Non-blank and not the in-tree dev default. |
+| `RECEIPT_SIGNING_SECRET` | Non-blank and not the in-tree dev default; at least 32 bytes recommended. |
+| `WEBAUTHN_RPID` | Non-blank and not `localhost`. Must be the deployment's registrable domain. |
+| `WEBAUTHN_ORIGIN` | Non-blank and not `http://localhost:5173`. Must be the production origin. |
+
+Generate strong secrets with:
+
+```bash
+openssl rand -base64 64    # JWT_SECRET
+openssl rand -base64 48    # RECEIPT_SIGNING_SECRET
+```
+
+The guard runs via `@PostConstruct`, so the embedded servlet container
+never opens a port when production is misconfigured. Non-production
+profiles (`default`, `development`, `test`) are unaffected — the guard
+bean is not instantiated.
+
+## Signed Receipt URLs
+
+Transaction receipt downloads support a stateless signed-URL flow so the
+frontend can render receipt thumbnails through `<img src>` without
+attaching a JWT to every request.
+
+- Token format: `base64url(userId:transactionId:expiry:hexMac)` where the
+  MAC is `HMAC-SHA256(RECEIPT_SIGNING_SECRET, "userId:transactionId:expiry")`.
+- TTL: 5 minutes (`fintrack.receipt.token-ttl=PT5M`).
+- Issuance: `GET /api/v1/budget/transactions/{id}/receipt/url` returns
+  `{ url, expiresAt }`. The frontend's `useReceiptUrl` hook refetches
+  every 4 minutes, comfortably inside the server TTL.
+- Verification: `SignedReceiptTokenFilter` runs before `JwtAuthFilter`
+  and installs an anonymous synthetic `Authentication` so Spring
+  Security's `anyRequest().authenticated()` rule passes; the actual
+  cryptographic gate is `ReceiptUrlSigner.verifyAndExtractUserId(...)`
+  in the controller (constant-time comparison via `MessageDigest.isEqual`).
+- Owner binding: the `userId` encoded in the token is checked against
+  the receipt's owner before the file is streamed back.

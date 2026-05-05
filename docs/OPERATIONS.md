@@ -245,6 +245,40 @@ The first run downloads the full NVD feed and takes 3-5 minutes;
 subsequent runs reuse the cached feed inside the 24-hour validity
 window.
 
+### Adding an OWASP suppression
+
+Suppressions live in `backend/owasp-suppressions.xml` and silence a
+specific CVE for a specific dependency. Use them sparingly — every
+suppression is a security debt with a half-life. Each entry MUST
+include a `<notes>` block stating why the suppression is acceptable
+and a target review date so the entry is revisited rather than
+becoming permanent.
+
+Example:
+
+```xml
+<suppress until="2026-09-01">
+  <notes><![CDATA[
+    CVE-XXXX-NNNNN affects only the unused stream-parser code path in
+    library X; we use the DOM API exclusively. Re-evaluate when the
+    library publishes a fixed release.
+  ]]></notes>
+  <packageUrl regex="true">^pkg:maven/group/artifact@.*$</packageUrl>
+  <cve>CVE-XXXX-NNNNN</cve>
+</suppress>
+```
+
+Conventions:
+
+- Always pin the suppression to the narrowest matcher possible
+  (`<cve>` or `<vulnerabilityName>` rather than a blanket
+  `<gav regex="true">.*</gav>`).
+- Set `until="YYYY-MM-DD"` no more than 12 months out so the gate
+  re-fires the finding when the date passes.
+- The CI dependency-check job is informational; once a suppression
+  is added, confirm the next CI run is clean before relying on the
+  gate.
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`
