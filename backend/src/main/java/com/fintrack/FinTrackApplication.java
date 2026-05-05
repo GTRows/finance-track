@@ -2,6 +2,7 @@ package com.fintrack;
 
 import com.fintrack.audit.AuditRetentionProperties;
 import com.fintrack.budget.receipt.OcrProperties;
+import com.fintrack.budget.receipt.ReceiptSigningProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,7 +14,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableCaching
 @EnableScheduling
-@EnableConfigurationProperties({OcrProperties.class, AuditRetentionProperties.class})
+@EnableConfigurationProperties({
+    OcrProperties.class,
+    AuditRetentionProperties.class,
+    ReceiptSigningProperties.class
+})
 public class FinTrackApplication {
     public static void main(String[] args) {
         SpringApplication.run(FinTrackApplication.class, args);
