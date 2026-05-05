@@ -17,7 +17,10 @@ import com.fintrack.auth.AbstractWebMvcTestSupport;
 import com.fintrack.auth.AutheliaForwardAuthFilter;
 import com.fintrack.auth.FinTrackUserDetailsService;
 import com.fintrack.auth.JwtAuthFilter;
+import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.GlobalExceptionHandler;
+import com.fintrack.notification.MailProperties;
+import java.time.Duration;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +40,14 @@ class ReceiptControllerWebMvcTest extends AbstractWebMvcTestSupport {
     @Autowired MockMvc mockMvc;
 
     @MockBean ReceiptStorageService storage;
+    @MockBean ReceiptUrlSigner signer;
+    @MockBean ReceiptSigningProperties signingProperties;
+    @MockBean MailProperties mailProperties;
     @MockBean JwtAuthFilter jwtAuthFilter;
     @MockBean AutheliaForwardAuthFilter autheliaForwardAuthFilter;
     @MockBean FinTrackUserDetailsService userDetailsService;
+
+    // --- existing upload / download / delete tests ---
 
     @Test
     void uploadReturnsStoredReceipt() throws Exception {
@@ -84,5 +92,93 @@ class ReceiptControllerWebMvcTest extends AbstractWebMvcTestSupport {
                 .andExpect(status().isNoContent());
 
         verify(storage).delete(eq(userId), eq(id));
+    }
+
+    // --- Task 2 new cases ---
+
+    @Test
+    void getSignedUrlReturnsUrlAndExpiresAt() throws Exception {
+        stubAuthenticatedUser();
+        UUID id = UUID.randomUUID();
+        when(signingProperties.tokenTtl()).thenReturn(Duration.ofMinutes(5));
+        when(mailProperties.getBaseUrl()).thenReturn("http://localhost");
+        when(signer.sign(eq(userId), eq(id))).thenReturn("signed-token");
+
+        mockMvc.perform(get("/api/v1/budget/transactions/" + id + "/receipt/url"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.url")
+                                .value(
+                                        "http://localhost/api/v1/budget/transactions/"
+                                                + id
+                                                + "/receipt?token=signed-token"))
+                .andExpect(jsonPath("$.expiresAt").isNotEmpty());
+    }
+
+    @Test
+    void downloadWithValidTokenReturnsBytes() throws Exception {
+        UUID id = UUID.randomUUID();
+        UUID tokenUserId = UUID.randomUUID();
+        byte[] body = new byte[] {0x0A, 0x0B};
+        when(signer.verifyAndExtractUserId(eq(id), eq("valid-token"))).thenReturn(tokenUserId);
+        when(storage.load(eq(tokenUserId), eq(id)))
+                .thenReturn(new ReceiptStorageService.Loaded(body, "image/jpeg"));
+
+        mockMvc.perform(
+                        get("/api/v1/budget/transactions/" + id + "/receipt")
+                                .param("token", "valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/jpeg"))
+                .andExpect(content().bytes(body));
+    }
+
+    @Test
+    void downloadWithTamperedTokenReturnsBadRequest() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(signer.verifyAndExtractUserId(eq(id), eq("tampered")))
+                .thenThrow(
+                        new BusinessRuleException("Invalid signed URL", "RECEIPT_TOKEN_INVALID"));
+
+        mockMvc.perform(
+                        get("/api/v1/budget/transactions/" + id + "/receipt")
+                                .param("token", "tampered"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("RECEIPT_TOKEN_INVALID"));
+    }
+
+    @Test
+    void downloadWithExpiredTokenReturnsBadRequest() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(signer.verifyAndExtractUserId(eq(id), eq("expired-token")))
+                .thenThrow(
+                        new BusinessRuleException("Invalid signed URL", "RECEIPT_TOKEN_INVALID"));
+
+        mockMvc.perform(
+                        get("/api/v1/budget/transactions/" + id + "/receipt")
+                                .param("token", "expired-token"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("RECEIPT_TOKEN_INVALID"));
+    }
+
+    @Test
+    void downloadWithoutAuthAndWithoutTokenReturnsBadRequest() throws Exception {
+        UUID id = UUID.randomUUID();
+        // no stubAuthenticatedUser() — user principal is null, no token param
+        mockMvc.perform(get("/api/v1/budget/transactions/" + id + "/receipt"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("RECEIPT_TOKEN_INVALID"));
+    }
+
+    @Test
+    void downloadWithJwtAndNoTokenReturnsBytes() throws Exception {
+        stubAuthenticatedUser();
+        UUID id = UUID.randomUUID();
+        byte[] body = new byte[] {0x05, 0x06};
+        when(storage.load(eq(userId), eq(id)))
+                .thenReturn(new ReceiptStorageService.Loaded(body, "image/png"));
+
+        mockMvc.perform(get("/api/v1/budget/transactions/" + id + "/receipt"))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(body));
     }
 }

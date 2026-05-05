@@ -2736,6 +2736,18 @@
         },
         "type" : "object"
       },
+      "ReceiptUrlResponse" : {
+        "properties" : {
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "url" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "RecordDividendRequest" : {
         "properties" : {
           "amountPerShare" : {
@@ -6454,6 +6466,13 @@
             "format" : "uuid",
             "type" : "string"
           }
+        }, {
+          "in" : "query",
+          "name" : "token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -6506,6 +6525,33 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/StoredReceipt"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "receipt-controller" ]
+      }
+    },
+    "/api/v1/budget/transactions/{id}/receipt/url" : {
+      "get" : {
+        "operationId" : "getSignedUrl",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReceiptUrlResponse"
                 }
               }
             },

@@ -3,6 +3,7 @@ package com.fintrack.common.config;
 import com.fintrack.auth.AutheliaForwardAuthFilter;
 import com.fintrack.auth.FinTrackUserDetailsService;
 import com.fintrack.auth.JwtAuthFilter;
+import com.fintrack.auth.SignedReceiptTokenFilter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final SignedReceiptTokenFilter signedReceiptTokenFilter;
     private final AutheliaForwardAuthFilter autheliaForwardAuthFilter;
     private final FinTrackUserDetailsService userDetailsService;
 
@@ -121,6 +123,7 @@ public class SecurityConfig {
                                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(signedReceiptTokenFilter, JwtAuthFilter.class)
                 .addFilterAfter(autheliaForwardAuthFilter, JwtAuthFilter.class)
                 .build();
     }
