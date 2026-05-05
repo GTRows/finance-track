@@ -57,4 +57,10 @@ public final class AuditAction {
     public static final String BUDGET_RULE_CREATED = "BUDGET_RULE_CREATED";
     public static final String BUDGET_RULE_UPDATED = "BUDGET_RULE_UPDATED";
     public static final String BUDGET_RULE_DELETED = "BUDGET_RULE_DELETED";
+
+    public static final String BILL_CREATED = "BILL_CREATED";
+    public static final String BILL_UPDATED = "BILL_UPDATED";
+    public static final String BILL_DELETED = "BILL_DELETED";
+
+    public static final String BILL_PAYMENT_RECORDED = "BILL_PAYMENT_RECORDED";
 }

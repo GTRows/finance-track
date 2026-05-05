@@ -1,5 +1,7 @@
 package com.fintrack.bills;
 
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.bills.dto.*;
 import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +28,7 @@ public class BillService {
 
     private final BillRepository billRepo;
     private final BillPaymentRepository paymentRepo;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<BillResponse> listForUser(UUID userId) {
@@ -59,6 +64,8 @@ public class BillService {
                 bill.getId(),
                 bill.getName(),
                 bill.getDueDay());
+        auditService.success(
+                AuditAction.BILL_CREATED, userId, currentUsername(), "id=" + bill.getId());
         return BillResponse.from(bill, null);
     }
 
@@ -75,6 +82,7 @@ public class BillService {
 
         String currentPeriod = currentPeriod();
         BillPayment payment = paymentRepo.findByBillIdAndPeriod(billId, currentPeriod).orElse(null);
+        auditService.success(AuditAction.BILL_UPDATED, userId, currentUsername(), "id=" + billId);
         return BillResponse.from(bill, payment);
     }
 
@@ -83,6 +91,7 @@ public class BillService {
         Bill bill = requireOwned(userId, billId);
         billRepo.delete(bill);
         log.info("Bill deleted: id={}", billId);
+        auditService.success(AuditAction.BILL_DELETED, userId, currentUsername(), "id=" + billId);
     }
 
     @Transactional
@@ -113,6 +122,11 @@ public class BillService {
                 billId,
                 req.period(),
                 payment.getAmount());
+        auditService.success(
+                AuditAction.BILL_PAYMENT_RECORDED,
+                userId,
+                currentUsername(),
+                "billId=" + billId + " period=" + req.period());
         return BillResponse.from(bill, payment, computeVariance(bill.getId()));
     }
 
@@ -196,6 +210,11 @@ public class BillService {
     private Bill requireOwned(UUID userId, UUID billId) {
         return billRepo.findByIdAndUserId(billId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
+    }
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
     }
 
     private String currentPeriod() {

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.audit.AuditService;
 import com.fintrack.bills.dto.BillResponse;
 import com.fintrack.bills.dto.BillVarianceDto;
 import com.fintrack.bills.dto.CreateBillRequest;
@@ -34,6 +35,7 @@ class BillServiceTest {
 
     @Mock BillRepository billRepo;
     @Mock BillPaymentRepository paymentRepo;
+    @Mock AuditService auditService;
 
     @InjectMocks BillService service;
 
