@@ -1,6 +1,8 @@
 package com.fintrack.portfolio.transaction;
 
 import com.fintrack.asset.AssetRepository;
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.InvestmentTransaction;
 import com.fintrack.common.entity.InvestmentTransaction.TxnType;
@@ -22,6 +24,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +38,7 @@ public class InvestmentTransactionService {
     private final PortfolioRepository portfolioRepository;
     private final HoldingRepository holdingRepository;
     private final AssetRepository assetRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> list(UUID userId, UUID portfolioId) {
@@ -87,7 +92,16 @@ public class InvestmentTransactionService {
                         .build();
         txn = transactionRepository.save(txn);
 
-        applyToHolding(portfolioId, request, fee);
+        try {
+            applyToHolding(portfolioId, request, fee);
+        } catch (BusinessRuleException ex) {
+            auditService.failure(
+                    AuditAction.INVESTMENT_TRANSACTION_CREATED,
+                    userId,
+                    currentUsername(),
+                    ex.getMessage());
+            throw ex;
+        }
 
         log.info(
                 "Transaction recorded: id={} portfolioId={} assetId={} type={} qty={}",
@@ -96,6 +110,11 @@ public class InvestmentTransactionService {
                 request.assetId(),
                 request.txnType(),
                 request.quantity());
+        auditService.success(
+                AuditAction.INVESTMENT_TRANSACTION_CREATED,
+                userId,
+                currentUsername(),
+                "id=" + txn.getId());
 
         return TransactionResponse.from(txn, asset);
     }
@@ -109,6 +128,11 @@ public class InvestmentTransactionService {
                         .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         transactionRepository.delete(txn);
         log.info("Transaction deleted: id={} portfolioId={}", txnId, portfolioId);
+        auditService.success(
+                AuditAction.INVESTMENT_TRANSACTION_DELETED,
+                userId,
+                currentUsername(),
+                "id=" + txnId);
     }
 
     private void applyToHolding(
@@ -179,5 +203,10 @@ public class InvestmentTransactionService {
         return portfolioRepository
                 .findByIdAndUserIdAndActiveTrue(portfolioId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found"));
+    }
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
     }
 }

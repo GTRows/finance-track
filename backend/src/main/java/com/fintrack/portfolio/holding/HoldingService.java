@@ -1,6 +1,8 @@
 package com.fintrack.portfolio.holding;
 
 import com.fintrack.asset.AssetRepository;
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.entity.PortfolioHolding;
@@ -17,6 +19,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,7 @@ public class HoldingService {
     private final HoldingRepository holdingRepository;
     private final PortfolioRepository portfolioRepository;
     private final AssetRepository assetRepository;
+    private final AuditService auditService;
 
     /** Lists holdings for a portfolio owned by the user, joined with asset metadata. */
     @Transactional(readOnly = true)
@@ -83,6 +88,8 @@ public class HoldingService {
                         .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
 
         log.info("Holding pin toggled: id={} pinned={}", holdingId, holding.isPinned());
+        auditService.success(
+                AuditAction.HOLDING_UPDATED, userId, currentUsername(), "id=" + holdingId);
         return HoldingResponse.from(holding, asset);
     }
 
@@ -100,8 +107,16 @@ public class HoldingService {
                 .findByPortfolioIdAndAssetId(portfolioId, request.assetId())
                 .ifPresent(
                         existing -> {
-                            throw new BusinessRuleException(
-                                    "This asset is already in the portfolio", "HOLDING_DUPLICATE");
+                            BusinessRuleException ex =
+                                    new BusinessRuleException(
+                                            "This asset is already in the portfolio",
+                                            "HOLDING_DUPLICATE");
+                            auditService.failure(
+                                    AuditAction.HOLDING_CREATED,
+                                    userId,
+                                    currentUsername(),
+                                    ex.getMessage());
+                            throw ex;
                         });
 
         PortfolioHolding holding =
@@ -119,6 +134,8 @@ public class HoldingService {
                 portfolioId,
                 request.assetId(),
                 request.quantity());
+        auditService.success(
+                AuditAction.HOLDING_CREATED, userId, currentUsername(), "id=" + holding.getId());
 
         return HoldingResponse.from(holding, asset);
     }
@@ -135,11 +152,18 @@ public class HoldingService {
 
         holdingRepository.delete(holding);
         log.info("Holding deleted: id={} portfolioId={}", holdingId, portfolioId);
+        auditService.success(
+                AuditAction.HOLDING_DELETED, userId, currentUsername(), "id=" + holdingId);
     }
 
     private Portfolio requireOwnedPortfolio(UUID userId, UUID portfolioId) {
         return portfolioRepository
                 .findByIdAndUserIdAndActiveTrue(portfolioId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found"));
+    }
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
     }
 }

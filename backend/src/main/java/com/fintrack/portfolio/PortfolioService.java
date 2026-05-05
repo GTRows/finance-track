@@ -1,5 +1,7 @@
 package com.fintrack.portfolio;
 
+import com.fintrack.audit.AuditAction;
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
@@ -10,6 +12,8 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +26,7 @@ public class PortfolioService {
     private static final int MAX_PORTFOLIOS_PER_USER = 20;
 
     private final PortfolioRepository portfolioRepository;
+    private final AuditService auditService;
 
     /** Lists all active portfolios for the given user. */
     @Transactional(readOnly = true)
@@ -54,9 +59,13 @@ public class PortfolioService {
     public PortfolioResponse create(UUID userId, CreatePortfolioRequest request) {
         long currentCount = portfolioRepository.countByUserIdAndActiveTrue(userId);
         if (currentCount >= MAX_PORTFOLIOS_PER_USER) {
-            throw new BusinessRuleException(
-                    "Portfolio limit reached (max " + MAX_PORTFOLIOS_PER_USER + ")",
-                    "PORTFOLIO_LIMIT");
+            String username = currentUsername();
+            BusinessRuleException ex =
+                    new BusinessRuleException(
+                            "Portfolio limit reached (max " + MAX_PORTFOLIOS_PER_USER + ")",
+                            "PORTFOLIO_LIMIT");
+            auditService.failure(AuditAction.PORTFOLIO_CREATED, userId, username, ex.getMessage());
+            throw ex;
         }
 
         Portfolio portfolio =
@@ -75,6 +84,11 @@ public class PortfolioService {
                 portfolio.getId(),
                 portfolio.getName(),
                 userId);
+        auditService.success(
+                AuditAction.PORTFOLIO_CREATED,
+                userId,
+                currentUsername(),
+                "id=" + portfolio.getId());
         return PortfolioResponse.from(portfolio);
     }
 
@@ -91,6 +105,8 @@ public class PortfolioService {
                 request.description() != null ? request.description().trim() : null);
 
         log.info("Portfolio updated: id={} userId={}", portfolioId, userId);
+        auditService.success(
+                AuditAction.PORTFOLIO_UPDATED, userId, currentUsername(), "id=" + portfolioId);
         return PortfolioResponse.from(portfolio);
     }
 
@@ -103,5 +119,12 @@ public class PortfolioService {
                         .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found"));
         portfolio.setActive(false);
         log.info("Portfolio deleted: id={} userId={}", portfolioId, userId);
+        auditService.success(
+                AuditAction.PORTFOLIO_DELETED, userId, currentUsername(), "id=" + portfolioId);
+    }
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
     }
 }

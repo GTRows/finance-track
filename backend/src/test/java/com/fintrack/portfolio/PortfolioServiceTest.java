@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.entity.Portfolio.PortfolioType;
 import com.fintrack.common.exception.BusinessRuleException;
@@ -28,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PortfolioServiceTest {
 
     @Mock PortfolioRepository portfolioRepository;
+    @Mock AuditService auditService;
 
     @InjectMocks PortfolioService service;
 

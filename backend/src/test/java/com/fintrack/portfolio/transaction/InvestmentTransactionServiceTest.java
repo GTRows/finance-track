@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fintrack.asset.AssetRepository;
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.InvestmentTransaction;
 import com.fintrack.common.entity.InvestmentTransaction.TxnType;
@@ -38,6 +39,7 @@ class InvestmentTransactionServiceTest {
     @Mock PortfolioRepository portfolioRepository;
     @Mock HoldingRepository holdingRepository;
     @Mock AssetRepository assetRepository;
+    @Mock AuditService auditService;
 
     @InjectMocks InvestmentTransactionService service;
 

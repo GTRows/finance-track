@@ -33,4 +33,16 @@ public final class AuditAction {
     public static final String REFRESH_FINGERPRINT_BOUND = "REFRESH_FINGERPRINT_BOUND";
     public static final String REFRESH_FINGERPRINT_MISMATCH = "REFRESH_FINGERPRINT_MISMATCH";
     public static final String AUDIT_RETENTION_PRUNED = "AUDIT_RETENTION_PRUNED";
+
+    public static final String PORTFOLIO_CREATED = "PORTFOLIO_CREATED";
+    public static final String PORTFOLIO_UPDATED = "PORTFOLIO_UPDATED";
+    public static final String PORTFOLIO_DELETED = "PORTFOLIO_DELETED";
+
+    public static final String HOLDING_CREATED = "HOLDING_CREATED";
+    public static final String HOLDING_UPDATED = "HOLDING_UPDATED";
+    public static final String HOLDING_DELETED = "HOLDING_DELETED";
+
+    public static final String INVESTMENT_TRANSACTION_CREATED = "INVESTMENT_TRANSACTION_CREATED";
+    public static final String INVESTMENT_TRANSACTION_UPDATED = "INVESTMENT_TRANSACTION_UPDATED";
+    public static final String INVESTMENT_TRANSACTION_DELETED = "INVESTMENT_TRANSACTION_DELETED";
 }
