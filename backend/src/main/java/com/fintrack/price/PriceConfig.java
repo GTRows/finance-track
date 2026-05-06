@@ -1,5 +1,7 @@
 package com.fintrack.price;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,5 +47,16 @@ public class PriceConfig {
                 .defaultHeader("Origin", props.tefas().baseUrl())
                 .defaultHeader("Referer", props.tefas().baseUrl() + "/FonAnaliz.aspx")
                 .build();
+    }
+
+    /**
+     * Virtual-thread-per-task executor used by the price domain to fan out external HTTP fetches
+     * without pinning a platform thread on {@code WebClient.block()}. Sized implicitly by the JVM —
+     * virtual threads are cheap to create. Throttling is handled at the call site via {@code
+     * Semaphore} so this executor stays unbounded.
+     */
+    @Bean("priceVirtualExecutor")
+    public ExecutorService priceVirtualExecutor() {
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 }

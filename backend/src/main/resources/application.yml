@@ -2,6 +2,10 @@ spring:
   application:
     name: fintrack
 
+  threads:
+    virtual:
+      enabled: true
+
   # Database
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/fintrack}
@@ -142,6 +146,7 @@ price-api:
   tefas:
     base-url: https://www.tefas.gov.tr
     enabled: true
+    parallelism: ${PRICE_API_TEFAS_PARALLELISM:4}
   sync-interval-seconds: ${PRICE_SYNC_INTERVAL_SECONDS:30}
 
 # Claude AI integration

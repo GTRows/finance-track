@@ -11,5 +11,12 @@ public record PriceApiProperties(
 
     public record ExchangeRate(String baseUrl, String apiKey, boolean enabled) {}
 
-    public record Tefas(String baseUrl, boolean enabled) {}
+    public record Tefas(String baseUrl, boolean enabled, Integer parallelism) {
+
+        public Tefas {
+            if (parallelism == null || parallelism < 1) {
+                parallelism = 4;
+            }
+        }
+    }
 }
