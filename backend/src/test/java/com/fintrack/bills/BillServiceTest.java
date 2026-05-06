@@ -15,6 +15,7 @@ import com.fintrack.bills.dto.SubscriptionAuditDto;
 import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
 import com.fintrack.common.entity.BillPayment.PaymentStatus;
+import com.fintrack.common.event.BillPaidEvent;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class BillServiceTest {
@@ -36,6 +38,7 @@ class BillServiceTest {
     @Mock BillRepository billRepo;
     @Mock BillPaymentRepository paymentRepo;
     @Mock AuditService auditService;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks BillService service;
 
@@ -113,6 +116,29 @@ class BillServiceTest {
         assertThat(saved.getAmount()).isEqualByComparingTo("350");
         assertThat(saved.getPeriod()).isEqualTo("2026-04");
         assertThat(saved.getPaidAt()).isNotNull();
+    }
+
+    @Test
+    void payPublishesBillPaidEventWithRequestedFields() {
+        Bill b = bill("Electric", "350", 15);
+        when(billRepo.findByIdAndUserId(b.getId(), userId)).thenReturn(Optional.of(b));
+        when(paymentRepo.findByBillIdAndPeriod(b.getId(), "2026-04")).thenReturn(Optional.empty());
+        when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
+                .thenReturn(List.of());
+
+        service.pay(userId, b.getId(), new PayBillRequest("2026-04", new BigDecimal("400"), null));
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(BillPaidEvent.class);
+        BillPaidEvent ev = (BillPaidEvent) captor.getValue();
+        assertThat(ev.userId()).isEqualTo(userId);
+        assertThat(ev.billId()).isEqualTo(b.getId());
+        assertThat(ev.billName()).isEqualTo("Electric");
+        assertThat(ev.period()).isEqualTo("2026-04");
+        assertThat(ev.amount()).isEqualByComparingTo("400");
+        assertThat(ev.currency()).isEqualTo("TRY");
+        assertThat(ev.paidAt()).isNotNull();
     }
 
     @Test

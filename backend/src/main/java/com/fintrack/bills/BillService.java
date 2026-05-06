@@ -5,6 +5,7 @@ import com.fintrack.audit.AuditService;
 import com.fintrack.bills.dto.*;
 import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
+import com.fintrack.common.event.BillPaidEvent;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class BillService {
     private final BillRepository billRepo;
     private final BillPaymentRepository paymentRepo;
     private final AuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<BillResponse> listForUser(UUID userId) {
@@ -127,6 +130,15 @@ public class BillService {
                 userId,
                 currentUsername(),
                 "billId=" + billId + " period=" + req.period());
+        eventPublisher.publishEvent(
+                new BillPaidEvent(
+                        userId,
+                        billId,
+                        bill.getName(),
+                        payment.getPeriod(),
+                        payment.getAmount(),
+                        bill.getCurrency(),
+                        payment.getPaidAt()));
         return BillResponse.from(bill, payment, computeVariance(bill.getId()));
     }
 
