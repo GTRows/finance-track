@@ -17,6 +17,7 @@ volumes:
   app-receipts:
   prometheus-data:
   grafana-data:
+  tempo-data:
 
 services:
 
@@ -153,6 +154,8 @@ services:
       - PUSH_VAPID_PUBLIC_KEY=${PUSH_VAPID_PUBLIC_KEY:-}
       - PUSH_VAPID_PRIVATE_KEY=${PUSH_VAPID_PRIVATE_KEY:-}
       - PUSH_SUBJECT=${PUSH_SUBJECT:-mailto:admin@fintrack.local}
+      - MANAGEMENT_OTLP_TRACING_ENDPOINT=${MANAGEMENT_OTLP_TRACING_ENDPOINT:-http://tempo:4318/v1/traces}
+      - MANAGEMENT_TRACING_SAMPLING_PROBABILITY=${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:-0.1}
     volumes:
       - app-logs:/var/log/fintrack
       - app-receipts:/var/lib/fintrack/receipts
@@ -282,6 +285,30 @@ services:
       - fintrack-net
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # Tempo -- self-hosted distributed tracing backend
+  # Receives OTLP traces from the backend on 4318 (HTTP) and 4317
+  # (gRPC). Single-binary mode with local storage; no host port
+  # published -- Grafana proxies the UI via its datasource. Backend
+  # is NOT a hard depends_on so the API still boots when Tempo is
+  # offline (the OTLP exporter retries silently).
+  # ----------------------------------------------------------
+  tempo:
+    image: grafana/tempo:2.6.0
+    container_name: fintrack-tempo
+    restart: always
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./monitoring/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo-data:/var/tempo
+    networks:
+      - fintrack-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3200/ready"]
       interval: 30s
       timeout: 10s
       retries: 3

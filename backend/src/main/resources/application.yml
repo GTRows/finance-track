@@ -126,6 +126,16 @@ management:
     metrics:
       export:
         enabled: true
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+    propagation:
+      type: w3c
+  otlp:
+    tracing:
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://tempo:4318/v1/traces}
+      timeout: 10s
+      compression: gzip
 
 # JWT
 jwt:
@@ -189,3 +199,8 @@ spring:
   config:
     activate:
       on-profile: production
+
+management:
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:0.1}
