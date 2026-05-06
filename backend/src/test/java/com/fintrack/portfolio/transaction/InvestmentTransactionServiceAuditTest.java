@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class InvestmentTransactionServiceAuditTest {
@@ -36,6 +37,7 @@ class InvestmentTransactionServiceAuditTest {
     @Mock HoldingRepository holdingRepository;
     @Mock AssetRepository assetRepository;
     @Mock AuditService auditService;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks InvestmentTransactionService service;
 
@@ -67,8 +69,6 @@ class InvestmentTransactionServiceAuditTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
-                .thenReturn(Optional.empty());
         when(transactionRepository.save(any()))
                 .thenAnswer(
                         inv -> {
@@ -94,13 +94,6 @@ class InvestmentTransactionServiceAuditTest {
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.empty());
-        when(transactionRepository.save(any()))
-                .thenAnswer(
-                        inv -> {
-                            InvestmentTransaction t = inv.getArgument(0);
-                            t.setId(UUID.randomUUID());
-                            return t;
-                        });
 
         assertThatThrownBy(() -> service.record(userId, portfolioId, req(TxnType.SELL, "1", "100")))
                 .isInstanceOf(BusinessRuleException.class);
@@ -127,13 +120,6 @@ class InvestmentTransactionServiceAuditTest {
                                         .quantity(new BigDecimal("1"))
                                         .avgCostTry(new BigDecimal("100"))
                                         .build()));
-        when(transactionRepository.save(any()))
-                .thenAnswer(
-                        inv -> {
-                            InvestmentTransaction t = inv.getArgument(0);
-                            t.setId(UUID.randomUUID());
-                            return t;
-                        });
 
         assertThatThrownBy(() -> service.record(userId, portfolioId, req(TxnType.SELL, "5", "100")))
                 .isInstanceOf(BusinessRuleException.class);

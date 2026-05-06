@@ -14,6 +14,8 @@ import com.fintrack.common.entity.InvestmentTransaction;
 import com.fintrack.common.entity.InvestmentTransaction.TxnType;
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.entity.PortfolioHolding;
+import com.fintrack.common.event.InvestmentTransactionDeletedEvent;
+import com.fintrack.common.event.InvestmentTransactionRecordedEvent;
 import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
@@ -31,6 +33,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class InvestmentTransactionServiceTest {
@@ -40,6 +43,7 @@ class InvestmentTransactionServiceTest {
     @Mock HoldingRepository holdingRepository;
     @Mock AssetRepository assetRepository;
     @Mock AuditService auditService;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks InvestmentTransactionService service;
 
@@ -67,52 +71,38 @@ class InvestmentTransactionServiceTest {
     }
 
     @Test
-    void recordBuyCreatesNewHoldingWithAvgCostIncludingFee() {
+    void recordBuyComputesAmountAndPublishesRecordedEvent() {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
-                .thenReturn(Optional.empty());
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            InvestmentTransaction t = inv.getArgument(0);
+                            t.setId(UUID.randomUUID());
+                            return t;
+                        });
 
         TransactionResponse res =
                 service.record(userId, portfolioId, req(TxnType.BUY, "2", "100", "10"));
 
         assertThat(res.amountTry()).isEqualByComparingTo("210");
-        ArgumentCaptor<PortfolioHolding> captor = ArgumentCaptor.forClass(PortfolioHolding.class);
-        verify(holdingRepository).save(captor.capture());
-        PortfolioHolding saved = captor.getValue();
-        assertThat(saved.getQuantity()).isEqualByComparingTo("2");
-        assertThat(saved.getAvgCostTry()).isEqualByComparingTo("105.0000");
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(InvestmentTransactionRecordedEvent.class);
+        InvestmentTransactionRecordedEvent ev =
+                (InvestmentTransactionRecordedEvent) captor.getValue();
+        assertThat(ev.userId()).isEqualTo(userId);
+        assertThat(ev.portfolioId()).isEqualTo(portfolioId);
+        assertThat(ev.assetId()).isEqualTo(assetId);
+        assertThat(ev.txnType()).isEqualTo(TxnType.BUY);
+        assertThat(ev.quantity()).isEqualByComparingTo("2");
+        assertThat(ev.priceTry()).isEqualByComparingTo("100");
+        assertThat(ev.feeTry()).isEqualByComparingTo("10");
     }
 
     @Test
-    void recordBuyMergesIntoExistingHoldingUsingWeightedAverageCost() {
-        when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
-                .thenReturn(Optional.of(ownedPortfolio()));
-        when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        PortfolioHolding existing =
-                PortfolioHolding.builder()
-                        .portfolioId(portfolioId)
-                        .assetId(assetId)
-                        .quantity(new BigDecimal("1"))
-                        .avgCostTry(new BigDecimal("100"))
-                        .build();
-        when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
-                .thenReturn(Optional.of(existing));
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        service.record(userId, portfolioId, req(TxnType.BUY, "1", "200", "0"));
-
-        ArgumentCaptor<PortfolioHolding> captor = ArgumentCaptor.forClass(PortfolioHolding.class);
-        verify(holdingRepository).save(captor.capture());
-        PortfolioHolding saved = captor.getValue();
-        assertThat(saved.getQuantity()).isEqualByComparingTo("2");
-        assertThat(saved.getAvgCostTry()).isEqualByComparingTo("150.0000");
-    }
-
-    @Test
-    void recordSellReducesQuantityAndKeepsAvgCost() {
+    void recordSellComputesAmountSubtractingFeeAndPublishesEvent() {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
@@ -125,42 +115,25 @@ class InvestmentTransactionServiceTest {
                         .build();
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.of(existing));
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            InvestmentTransaction t = inv.getArgument(0);
+                            t.setId(UUID.randomUUID());
+                            return t;
+                        });
 
         TransactionResponse res =
                 service.record(userId, portfolioId, req(TxnType.SELL, "2", "150", "5"));
 
         assertThat(res.amountTry()).isEqualByComparingTo("295");
-        ArgumentCaptor<PortfolioHolding> captor = ArgumentCaptor.forClass(PortfolioHolding.class);
-        verify(holdingRepository).save(captor.capture());
-        assertThat(captor.getValue().getQuantity()).isEqualByComparingTo("3");
-        assertThat(captor.getValue().getAvgCostTry()).isEqualByComparingTo("100");
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(InvestmentTransactionRecordedEvent.class);
     }
 
     @Test
-    void recordSellDeletesHoldingWhenQuantityReachesZero() {
-        when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
-                .thenReturn(Optional.of(ownedPortfolio()));
-        when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        PortfolioHolding existing =
-                PortfolioHolding.builder()
-                        .portfolioId(portfolioId)
-                        .assetId(assetId)
-                        .quantity(new BigDecimal("2"))
-                        .avgCostTry(new BigDecimal("100"))
-                        .build();
-        when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
-                .thenReturn(Optional.of(existing));
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        service.record(userId, portfolioId, req(TxnType.SELL, "2", "120", null));
-
-        verify(holdingRepository).delete(existing);
-        verify(holdingRepository, never()).save(any());
-    }
-
-    @Test
-    void recordSellBeyondHoldingThrowsBusinessRule() {
+    void recordSellBeyondHoldingThrowsBusinessRuleAndDoesNotPublish() {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
@@ -173,7 +146,6 @@ class InvestmentTransactionServiceTest {
                         .build();
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.of(existing));
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         assertThatThrownBy(
                         () ->
@@ -181,16 +153,18 @@ class InvestmentTransactionServiceTest {
                                         userId, portfolioId, req(TxnType.SELL, "5", "120", null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("exceeds");
+
+        verify(transactionRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
-    void recordSellWithoutHoldingThrowsBusinessRule() {
+    void recordSellWithoutHoldingThrowsBusinessRuleAndDoesNotPublish() {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
         when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
                 .thenReturn(Optional.empty());
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         assertThatThrownBy(
                         () ->
@@ -198,6 +172,9 @@ class InvestmentTransactionServiceTest {
                                         userId, portfolioId, req(TxnType.SELL, "1", "120", null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("not in the portfolio");
+
+        verify(transactionRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -205,7 +182,13 @@ class InvestmentTransactionServiceTest {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            InvestmentTransaction t = inv.getArgument(0);
+                            t.setId(UUID.randomUUID());
+                            return t;
+                        });
 
         service.record(userId, portfolioId, req(TxnType.DEPOSIT, "1", "1000", null));
         service.record(userId, portfolioId, req(TxnType.WITHDRAW, "1", "500", null));
@@ -215,20 +198,26 @@ class InvestmentTransactionServiceTest {
     }
 
     @Test
-    void besContributionBehavesLikeBuy() {
+    void besContributionPublishesEvent() {
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
                 .thenReturn(Optional.of(ownedPortfolio()));
         when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
-        when(holdingRepository.findByPortfolioIdAndAssetId(portfolioId, assetId))
-                .thenReturn(Optional.empty());
-        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(transactionRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            InvestmentTransaction t = inv.getArgument(0);
+                            t.setId(UUID.randomUUID());
+                            return t;
+                        });
 
         service.record(userId, portfolioId, req(TxnType.BES_CONTRIBUTION, "10", "5", "0"));
 
-        ArgumentCaptor<PortfolioHolding> captor = ArgumentCaptor.forClass(PortfolioHolding.class);
-        verify(holdingRepository).save(captor.capture());
-        assertThat(captor.getValue().getQuantity()).isEqualByComparingTo("10");
-        assertThat(captor.getValue().getAvgCostTry()).isEqualByComparingTo("5.0000");
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(InvestmentTransactionRecordedEvent.class);
+        InvestmentTransactionRecordedEvent ev =
+                (InvestmentTransactionRecordedEvent) captor.getValue();
+        assertThat(ev.txnType()).isEqualTo(TxnType.BES_CONTRIBUTION);
     }
 
     @Test
@@ -241,6 +230,7 @@ class InvestmentTransactionServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(transactionRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -253,10 +243,12 @@ class InvestmentTransactionServiceTest {
 
         assertThatThrownBy(() -> service.delete(userId, portfolioId, txnId))
                 .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
-    void deleteSucceedsWhenOwnedAndFound() {
+    void deleteSucceedsWhenOwnedAndPublishesDeletedEvent() {
         UUID txnId = UUID.randomUUID();
         InvestmentTransaction txn =
                 InvestmentTransaction.builder()
@@ -267,6 +259,7 @@ class InvestmentTransactionServiceTest {
                         .quantity(new BigDecimal("1"))
                         .priceTry(new BigDecimal("1"))
                         .amountTry(new BigDecimal("1"))
+                        .feeTry(BigDecimal.ZERO)
                         .txnDate(LocalDate.now())
                         .build();
         when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
@@ -277,6 +270,14 @@ class InvestmentTransactionServiceTest {
         service.delete(userId, portfolioId, txnId);
 
         verify(transactionRepository).delete(txn);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(InvestmentTransactionDeletedEvent.class);
+        InvestmentTransactionDeletedEvent ev =
+                (InvestmentTransactionDeletedEvent) captor.getValue();
+        assertThat(ev.transactionId()).isEqualTo(txnId);
+        assertThat(ev.portfolioId()).isEqualTo(portfolioId);
+        assertThat(ev.assetId()).isEqualTo(assetId);
     }
 
     @Test

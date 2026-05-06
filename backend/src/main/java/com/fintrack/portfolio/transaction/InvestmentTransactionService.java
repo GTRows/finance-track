@@ -8,6 +8,8 @@ import com.fintrack.common.entity.InvestmentTransaction;
 import com.fintrack.common.entity.InvestmentTransaction.TxnType;
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.entity.PortfolioHolding;
+import com.fintrack.common.event.InvestmentTransactionDeletedEvent;
+import com.fintrack.common.event.InvestmentTransactionRecordedEvent;
 import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.portfolio.PortfolioRepository;
@@ -15,7 +17,6 @@ import com.fintrack.portfolio.holding.HoldingRepository;
 import com.fintrack.portfolio.transaction.dto.RecordTransactionRequest;
 import com.fintrack.portfolio.transaction.dto.TransactionResponse;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class InvestmentTransactionService {
     private final HoldingRepository holdingRepository;
     private final AssetRepository assetRepository;
     private final AuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> list(UUID userId, UUID portfolioId) {
@@ -78,6 +81,17 @@ public class InvestmentTransactionService {
             amount = amount.subtract(fee);
         }
 
+        try {
+            validateSellPossible(portfolioId, request);
+        } catch (BusinessRuleException ex) {
+            auditService.failure(
+                    AuditAction.INVESTMENT_TRANSACTION_CREATED,
+                    userId,
+                    currentUsername(),
+                    ex.getMessage());
+            throw ex;
+        }
+
         InvestmentTransaction txn =
                 InvestmentTransaction.builder()
                         .portfolioId(portfolioId)
@@ -92,17 +106,6 @@ public class InvestmentTransactionService {
                         .build();
         txn = transactionRepository.save(txn);
 
-        try {
-            applyToHolding(portfolioId, request, fee);
-        } catch (BusinessRuleException ex) {
-            auditService.failure(
-                    AuditAction.INVESTMENT_TRANSACTION_CREATED,
-                    userId,
-                    currentUsername(),
-                    ex.getMessage());
-            throw ex;
-        }
-
         log.info(
                 "Transaction recorded: id={} portfolioId={} assetId={} type={} qty={}",
                 txn.getId(),
@@ -116,6 +119,17 @@ public class InvestmentTransactionService {
                 currentUsername(),
                 "id=" + txn.getId());
 
+        eventPublisher.publishEvent(
+                new InvestmentTransactionRecordedEvent(
+                        userId,
+                        portfolioId,
+                        request.assetId(),
+                        txn.getId(),
+                        request.txnType(),
+                        request.quantity(),
+                        request.priceTry(),
+                        fee));
+
         return TransactionResponse.from(txn, asset);
     }
 
@@ -126,6 +140,13 @@ public class InvestmentTransactionService {
                 transactionRepository
                         .findByIdAndPortfolioId(txnId, portfolioId)
                         .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+        UUID assetId = txn.getAssetId();
+        TxnType txnType = txn.getTxnType();
+        BigDecimal quantity = txn.getQuantity();
+        BigDecimal priceTry = txn.getPriceTry();
+        BigDecimal feeTry = txn.getFeeTry();
+
         transactionRepository.delete(txn);
         log.info("Transaction deleted: id={} portfolioId={}", txnId, portfolioId);
         auditService.success(
@@ -133,54 +154,26 @@ public class InvestmentTransactionService {
                 userId,
                 currentUsername(),
                 "id=" + txnId);
+
+        eventPublisher.publishEvent(
+                new InvestmentTransactionDeletedEvent(
+                        userId, portfolioId, assetId, txnId, txnType, quantity, priceTry, feeTry));
     }
 
-    private void applyToHolding(
-            UUID portfolioId, RecordTransactionRequest request, BigDecimal fee) {
-        TxnType type = request.txnType();
-        if (type != TxnType.BUY && type != TxnType.SELL && type != TxnType.BES_CONTRIBUTION) {
+    /**
+     * Pre-write guard for SELL transactions. The SELL flow used to roll back the writer's
+     * transaction when the holding update failed; that contract is preserved by validating the
+     * holding state before the event is published. BUY / BES_CONTRIBUTION need no pre-validation
+     * because the listener can always create or extend the holding.
+     */
+    private void validateSellPossible(UUID portfolioId, RecordTransactionRequest request) {
+        if (request.txnType() != TxnType.SELL) {
             return;
         }
-
         PortfolioHolding holding =
                 holdingRepository
                         .findByPortfolioIdAndAssetId(portfolioId, request.assetId())
                         .orElse(null);
-
-        if (type == TxnType.BUY || type == TxnType.BES_CONTRIBUTION) {
-            BigDecimal addedQty = request.quantity();
-            BigDecimal addedCost = request.priceTry().multiply(addedQty).add(fee);
-
-            if (holding == null) {
-                BigDecimal avgCost =
-                        addedQty.signum() > 0
-                                ? addedCost.divide(addedQty, 4, RoundingMode.HALF_UP)
-                                : BigDecimal.ZERO;
-                holding =
-                        PortfolioHolding.builder()
-                                .portfolioId(portfolioId)
-                                .assetId(request.assetId())
-                                .quantity(addedQty)
-                                .avgCostTry(avgCost)
-                                .build();
-            } else {
-                BigDecimal oldQty =
-                        holding.getQuantity() != null ? holding.getQuantity() : BigDecimal.ZERO;
-                BigDecimal oldAvg =
-                        holding.getAvgCostTry() != null ? holding.getAvgCostTry() : BigDecimal.ZERO;
-                BigDecimal oldCost = oldQty.multiply(oldAvg);
-                BigDecimal newQty = oldQty.add(addedQty);
-                BigDecimal newAvg =
-                        newQty.signum() > 0
-                                ? oldCost.add(addedCost).divide(newQty, 4, RoundingMode.HALF_UP)
-                                : BigDecimal.ZERO;
-                holding.setQuantity(newQty);
-                holding.setAvgCostTry(newAvg);
-            }
-            holdingRepository.save(holding);
-            return;
-        }
-
         if (holding == null) {
             throw new BusinessRuleException(
                     "Cannot sell an asset that is not in the portfolio", "HOLDING_NOT_FOUND");
@@ -190,12 +183,6 @@ public class InvestmentTransactionService {
         if (newQty.signum() < 0) {
             throw new BusinessRuleException(
                     "Sell quantity exceeds current holding", "HOLDING_INSUFFICIENT");
-        }
-        if (newQty.signum() == 0) {
-            holdingRepository.delete(holding);
-        } else {
-            holding.setQuantity(newQty);
-            holdingRepository.save(holding);
         }
     }
 
