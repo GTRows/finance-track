@@ -1,7 +1,7 @@
 {
   "files": {
     ".claude/TIPS.md": "5f9d9187b6af38601fb20163ccfea202aa8a88352de6fb92e8994d0ff15378e8",
-    ".claude/VERSION": "966d87547cf763b2acac8723db5c1615c6a41fcc63adfce50a13f106b6311188",
+    ".claude/VERSION": "902311c7bb38fa1658ff403def6158ee7378fe9d6e2e284fa1c38735c31bd30b",
     ".claude/commands/gtr/doctor.md": "9fcc50d00c0fb3f5f96e108daee1d35e74115f098b4ed63e74f141873c8623d3",
     ".claude/commands/gtr/help.md": "e54a14c4c829a341c04be4709a0fcc555f4c78ea0f3fbf4aea37a864fc9c42f6",
     ".claude/commands/gtr/menu.md": "30b29360a8ff692aea7194468ef3aca7e4b7fafab4c6db9bf0294163ab67ecef",
@@ -9,7 +9,7 @@
     ".claude/commands/gtr/new-migration.md": "69ba7dac673a8f124a23459d6ef0e6abcbc7ccdaabb5e4e32a567013f6efc06a",
     ".claude/commands/gtr/new-rule.md": "99615dcfce728da0c50b7d6a9327663ea09d3e44a5c14bb7cc3e2560e56d9b5e",
     ".claude/commands/gtr/new-skill.md": "3acead712a3b4bc3e68139b7262199704df58ef7320c9c8b9096a2cdd8951d90",
-    ".claude/commands/gtr/next.md": "554439e03ff66bf75529e458d8ad2102ea6bf3c0bcfc645d74cc8cbb8d8d1e5c",
+    ".claude/commands/gtr/next.md": "175ce3ef16fac4d8350268b58d6d35d6ca19b2cac022c94f31c725c04fdaf401",
     ".claude/commands/gtr/onboard.md": "21760713988e832c187bc1b82c9d5a9e587495ac46f70bfa8adb154ad93dcf41",
     ".claude/commands/gtr/orchestrate.md": "999ca7b22e71edee3683c980f6dc5bed8abdea2d03e3a519b5c32492aba6673a",
     ".claude/commands/gtr/release.md": "1402ea69e7c2a0e1c138a9eff7eb6f36f45a71bdf36537b8742cf74a4344ef1c",
@@ -59,5 +59,5 @@
     "IMPLEMENT.md": "3bc658ae7dee8b928280d14fa2e1c1afc4bbe22dfab053412b0e4546e65ed3f1",
     "RELEASE.md": "ec9d1dece9e08205406b7edda5be04f5b048ed53286c8cafdc251ede3620c4c9"
   },
-  "version": "0.7.0"
+  "version": "0.7.1"
 }
