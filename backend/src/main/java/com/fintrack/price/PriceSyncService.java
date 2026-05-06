@@ -8,6 +8,7 @@ import com.fintrack.price.client.ExchangeRateClient;
 import com.fintrack.price.client.PreciousMetalsClient;
 import com.fintrack.price.client.TefasClient;
 import com.fintrack.price.client.YahooFinanceClient;
+import io.micrometer.observation.annotation.Observed;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -63,7 +64,7 @@ public class PriceSyncService {
             TefasClient tefasClient,
             PreciousMetalsClient preciousMetalsClient,
             YahooFinanceClient yahooFinanceClient,
-            @Qualifier("priceVirtualExecutor") ExecutorService priceVirtualExecutor,
+            @Qualifier("tracingPriceVirtualExecutor") ExecutorService priceVirtualExecutor,
             PriceApiProperties priceApiProperties) {
         this.assetRepository = assetRepository;
         this.priceHistoryRepository = priceHistoryRepository;
@@ -112,6 +113,7 @@ public class PriceSyncService {
      * per day and runs on its own schedule. The four upstream HTTP fan-outs run in parallel on
      * {@code priceVirtualExecutor}; persistence happens once at the end.
      */
+    @Observed(name = "price.refresh.live", contextualName = "price.refresh.live")
     public SyncResult refreshLive() {
         CompletableFuture<List<PriceUpdate>> cryptoF =
                 CompletableFuture.supplyAsync(this::fetchCrypto, priceVirtualExecutor);
@@ -155,6 +157,7 @@ public class PriceSyncService {
      * concurrency. GOLD assets carrying a {@code metalsSymbol} are skipped here and handled by
      * {@link #refreshMetals()} instead.
      */
+    @Observed(name = "price.refresh.funds", contextualName = "price.refresh.funds")
     public int refreshFunds() {
         List<PriceUpdate> updates = fetchFunds();
         int total = countFundTargets();
