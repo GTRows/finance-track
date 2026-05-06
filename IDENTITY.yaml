@@ -1,0 +1,8 @@
+name: fintrack
+version: 1.0.0
+description: Self-hosted personal finance and investment tracking system.
+release:
+  prerelease_tags:
+    - alpha
+    - beta
+    - rc
