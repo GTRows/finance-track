@@ -1,0 +1,54 @@
+package com.fintrack.common.config;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * In-process Caffeine cache provider for Spring Cache. Three named caches with bespoke specs feed
+ * the hot reads on the asset master, per-user settings, and per-user category lookup. Eviction is
+ * driven explicitly by writer methods via {@code @CacheEvict} / {@code @CachePut}; in-process scope
+ * means the writer's call stack handles invalidation deterministically without going through the
+ * {@code ApplicationEventPublisher} boundary established in 25-01.
+ */
+@Configuration
+public class CacheConfig {
+
+    public static final String ASSETS_CACHE = "assets";
+    public static final String USER_SETTINGS_CACHE = "userSettings";
+    public static final String CATEGORY_LOOKUP_CACHE = "categoryLookup";
+
+    @Bean
+    public CacheManager cacheManager() {
+        SimpleCacheManager manager = new SimpleCacheManager();
+        manager.setCaches(
+                List.of(
+                        new CaffeineCache(
+                                ASSETS_CACHE,
+                                Caffeine.newBuilder()
+                                        .expireAfterWrite(1, TimeUnit.HOURS)
+                                        .maximumSize(200)
+                                        .recordStats()
+                                        .build()),
+                        new CaffeineCache(
+                                USER_SETTINGS_CACHE,
+                                Caffeine.newBuilder()
+                                        .expireAfterAccess(30, TimeUnit.MINUTES)
+                                        .maximumSize(16)
+                                        .recordStats()
+                                        .build()),
+                        new CaffeineCache(
+                                CATEGORY_LOOKUP_CACHE,
+                                Caffeine.newBuilder()
+                                        .expireAfterAccess(30, TimeUnit.MINUTES)
+                                        .maximumSize(16)
+                                        .recordStats()
+                                        .build())));
+        return manager;
+    }
+}

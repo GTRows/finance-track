@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fintrack.asset.dto.AssetResponse;
 import com.fintrack.auth.AbstractWebMvcTestSupport;
 import com.fintrack.auth.AutheliaForwardAuthFilter;
 import com.fintrack.auth.FinTrackUserDetailsService;
@@ -36,6 +37,7 @@ class AssetControllerWebMvcTest extends AbstractWebMvcTestSupport {
 
     @Autowired MockMvc mockMvc;
 
+    @MockBean AssetService assetService;
     @MockBean AssetRepository assetRepository;
     @MockBean PriceHistoryRepository priceHistoryRepository;
     @MockBean TefasFundService tefasFundService;
@@ -63,7 +65,7 @@ class AssetControllerWebMvcTest extends AbstractWebMvcTestSupport {
     void listReturnsAssets() throws Exception {
         stubAuthenticatedUser();
         UUID id = UUID.randomUUID();
-        when(assetRepository.findAllByOrderBySymbolAsc()).thenReturn(List.of(sample(id)));
+        when(assetService.listAll(null)).thenReturn(List.of(AssetResponse.from(sample(id))));
 
         mockMvc.perform(get("/api/v1/assets"))
                 .andExpect(status().isOk())
@@ -72,11 +74,11 @@ class AssetControllerWebMvcTest extends AbstractWebMvcTestSupport {
     }
 
     @Test
-    void listFilteredByTypeUsesRepoFilter() throws Exception {
+    void listFilteredByTypeUsesServiceFilter() throws Exception {
         stubAuthenticatedUser();
         UUID id = UUID.randomUUID();
-        when(assetRepository.findByAssetTypeOrderBySymbolAsc(Asset.AssetType.CRYPTO))
-                .thenReturn(List.of(sample(id)));
+        when(assetService.listAll(Asset.AssetType.CRYPTO))
+                .thenReturn(List.of(AssetResponse.from(sample(id))));
 
         mockMvc.perform(get("/api/v1/assets").param("type", "CRYPTO"))
                 .andExpect(status().isOk())
@@ -87,7 +89,7 @@ class AssetControllerWebMvcTest extends AbstractWebMvcTestSupport {
     void getReturnsAsset() throws Exception {
         stubAuthenticatedUser();
         UUID id = UUID.randomUUID();
-        when(assetRepository.findById(eq(id))).thenReturn(Optional.of(sample(id)));
+        when(assetService.findById(eq(id))).thenReturn(Optional.of(AssetResponse.from(sample(id))));
 
         mockMvc.perform(get("/api/v1/assets/" + id))
                 .andExpect(status().isOk())
@@ -98,7 +100,7 @@ class AssetControllerWebMvcTest extends AbstractWebMvcTestSupport {
     void getReturns404WhenMissing() throws Exception {
         stubAuthenticatedUser();
         UUID id = UUID.randomUUID();
-        when(assetRepository.findById(eq(id))).thenReturn(Optional.empty());
+        when(assetService.findById(eq(id))).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/assets/" + id)).andExpect(status().isNotFound());
     }

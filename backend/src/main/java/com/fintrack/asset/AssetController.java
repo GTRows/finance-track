@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AssetController {
 
+    private final AssetService assetService;
     private final AssetRepository assetRepository;
     private final PriceHistoryRepository priceHistoryRepository;
     private final TefasFundService tefasFundService;
@@ -38,19 +39,14 @@ public class AssetController {
     @GetMapping
     public ResponseEntity<List<AssetResponse>> list(
             @RequestParam(value = "type", required = false) Asset.AssetType type) {
-        List<Asset> assets =
-                (type == null)
-                        ? assetRepository.findAllByOrderBySymbolAsc()
-                        : assetRepository.findByAssetTypeOrderBySymbolAsc(type);
-        return ResponseEntity.ok(assets.stream().map(AssetResponse::from).toList());
+        return ResponseEntity.ok(assetService.listAll(type));
     }
 
     /** Returns a single asset by id. */
     @GetMapping("/{assetId}")
     public ResponseEntity<AssetResponse> get(@PathVariable UUID assetId) {
-        return assetRepository
+        return assetService
                 .findById(assetId)
-                .map(AssetResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

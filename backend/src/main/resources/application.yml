@@ -92,9 +92,8 @@ fintrack:
 
   # Cache
   cache:
-    type: redis
-    redis:
-      time-to-live: 300000
+    type: caffeine
+    cache-names: assets,userSettings,categoryLookup
 
 # Server
 server:

@@ -1,5 +1,6 @@
 package com.fintrack.asset;
 
+import com.fintrack.common.config.CacheConfig;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.price.PriceSyncService;
 import com.fintrack.price.client.TefasClient;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,8 +61,11 @@ public class TefasFundService {
 
     /**
      * Imports a TEFAS fund into the asset catalog (if not already present) and triggers an
-     * immediate price fetch. Returns the resulting asset.
+     * immediate price fetch. Returns the resulting asset. Evicts the entire {@code assets} cache on
+     * success so subsequent {@link AssetService#listAll}/{@link AssetService#findById} reads pick
+     * up the new master entry.
      */
+    @CacheEvict(value = CacheConfig.ASSETS_CACHE, allEntries = true)
     @Transactional
     public Asset importFund(String code, TefasClient.FundType type) {
         String normalized = code == null ? "" : code.trim().toUpperCase(Locale.ROOT);
