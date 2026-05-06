@@ -5,11 +5,14 @@ import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.CategoriesResponse;
 import com.fintrack.budget.dto.CategoryResponse;
 import com.fintrack.budget.dto.CreateCategoryRequest;
+import com.fintrack.common.config.CacheConfig;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class CategoryService {
     private final ExpenseCategoryRepository expenseRepo;
     private final AuditService auditService;
 
+    @Cacheable(value = CacheConfig.CATEGORY_LOOKUP_CACHE, key = "#userId")
     @Transactional(readOnly = true)
     public CategoriesResponse listAll(UUID userId) {
         var income =
@@ -36,6 +40,7 @@ public class CategoryService {
         return new CategoriesResponse(income, expense);
     }
 
+    @CacheEvict(value = CacheConfig.CATEGORY_LOOKUP_CACHE, key = "#userId")
     @Transactional
     public CategoryResponse createIncome(UUID userId, CreateCategoryRequest req) {
         IncomeCategory cat =
@@ -54,6 +59,7 @@ public class CategoryService {
         return CategoryResponse.from(saved);
     }
 
+    @CacheEvict(value = CacheConfig.CATEGORY_LOOKUP_CACHE, key = "#userId")
     @Transactional
     public CategoryResponse createExpense(UUID userId, CreateCategoryRequest req) {
         ExpenseCategory cat =
@@ -74,6 +80,7 @@ public class CategoryService {
         return CategoryResponse.from(saved);
     }
 
+    @CacheEvict(value = CacheConfig.CATEGORY_LOOKUP_CACHE, key = "#userId")
     @Transactional
     public CategoryResponse updateIncome(UUID userId, UUID id, CreateCategoryRequest req) {
         IncomeCategory cat =
@@ -89,6 +96,7 @@ public class CategoryService {
         return CategoryResponse.from(cat);
     }
 
+    @CacheEvict(value = CacheConfig.CATEGORY_LOOKUP_CACHE, key = "#userId")
     @Transactional
     public CategoryResponse updateExpense(UUID userId, UUID id, CreateCategoryRequest req) {
         ExpenseCategory cat =
@@ -106,6 +114,7 @@ public class CategoryService {
         return CategoryResponse.from(cat);
     }
 
+    @CacheEvict(value = CacheConfig.CATEGORY_LOOKUP_CACHE, key = "#userId")
     @Transactional
     public void deleteIncome(UUID userId, UUID id) {
         IncomeCategory cat =
@@ -118,6 +127,7 @@ public class CategoryService {
                 AuditAction.CATEGORY_DELETED, userId, currentUsername(), "income id=" + id);
     }
 
+    @CacheEvict(value = CacheConfig.CATEGORY_LOOKUP_CACHE, key = "#userId")
     @Transactional
     public void deleteExpense(UUID userId, UUID id) {
         ExpenseCategory cat =
