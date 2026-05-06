@@ -79,6 +79,7 @@
 - Risk: A long initial refresh can collide with the 30 s live tick
 - Mitigation: `try/catch` around scheduler invocations swallows errors; prices stale rather than crashing
 - Recommendation: Add `@SchedulerLock` (ShedLock) or guard with an in-process lock; surface skipped runs as metrics
+- Diagnosability: 26-01 added OpenTelemetry trace IDs to MDC and emits `price.refresh.live` spans to Tempo; overlapping ticks now show up as two distinct trace trees in Grafana Explore for visual confirmation. Still requires `@SchedulerLock` to actually fix the race.
 
 **WebSocket reconnect after token rotation:**
 - Files: `frontend/src/lib/stompClient.ts`, `frontend/src/hooks/useLivePrices.ts`
