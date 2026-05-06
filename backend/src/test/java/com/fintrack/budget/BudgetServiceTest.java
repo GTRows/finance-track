@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,12 +34,12 @@ class BudgetServiceTest {
     @Mock IncomeCategoryRepository incomeRepo;
     @Mock ExpenseCategoryRepository expenseRepo;
     @Mock MonthlySummaryRepository summaryRepo;
-    @Mock BudgetRuleService budgetRuleService;
     @Mock TransactionCategoryRuleService categoryRuleService;
     @Mock TagService tagService;
     @Mock UserSettingsRepository userSettingsRepo;
     @Mock FxConversionService fxConversionService;
     @Mock AuditService auditService;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks BudgetService service;
 

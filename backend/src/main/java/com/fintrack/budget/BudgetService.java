@@ -8,6 +8,7 @@ import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.MonthlySummary;
 import com.fintrack.common.entity.UserSettings;
+import com.fintrack.common.event.BudgetTransactionPersistedEvent;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.price.FxConversionService;
 import com.fintrack.settings.UserSettingsRepository;
@@ -21,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -41,12 +43,12 @@ public class BudgetService {
     private final IncomeCategoryRepository incomeRepo;
     private final ExpenseCategoryRepository expenseRepo;
     private final MonthlySummaryRepository summaryRepo;
-    private final BudgetRuleService budgetRuleService;
     private final TransactionCategoryRuleService categoryRuleService;
     private final TagService tagService;
     private final UserSettingsRepository userSettingsRepo;
     private final FxConversionService fxConversionService;
     private final AuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // -- Transactions --
 
@@ -123,11 +125,14 @@ public class BudgetService {
         List<UUID> ownedTagIds = tagService.resolveOwnedIds(userId, req.tagIds());
         tagService.setTransactionTags(txn.getId(), ownedTagIds);
 
-        try {
-            budgetRuleService.evaluateForTransaction(userId, txn);
-        } catch (Exception e) {
-            log.warn("Budget rule evaluation failed: {}", e.getMessage());
-        }
+        eventPublisher.publishEvent(
+                new BudgetTransactionPersistedEvent(
+                        userId,
+                        txn.getId(),
+                        txn.getTxnType(),
+                        txn.getCategoryId(),
+                        txn.getAmount(),
+                        txn.getTxnDate()));
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup =
@@ -154,17 +159,20 @@ public class BudgetService {
         List<UUID> ownedTagIds = tagService.resolveOwnedIds(userId, req.tagIds());
         tagService.setTransactionTags(txn.getId(), ownedTagIds);
 
-        try {
-            budgetRuleService.evaluateForTransaction(userId, txn);
-        } catch (Exception e) {
-            log.warn("Budget rule evaluation failed: {}", e.getMessage());
-        }
-
         auditService.success(
                 AuditAction.BUDGET_TRANSACTION_UPDATED,
                 userId,
                 currentUsername(),
                 "id=" + txn.getId());
+
+        eventPublisher.publishEvent(
+                new BudgetTransactionPersistedEvent(
+                        userId,
+                        txn.getId(),
+                        txn.getTxnType(),
+                        txn.getCategoryId(),
+                        txn.getAmount(),
+                        txn.getTxnDate()));
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup =
