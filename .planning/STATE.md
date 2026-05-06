@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Owner can stop using the spreadsheet and trust this app for live portfolio P&L, monthly cash flow, and bill tracking — fully self-hosted.
-**Current focus:** Phase 24 complete. Next: Phase 25 — Architecture Cleanup.
+**Current focus:** Phase 25 complete. Next: Phase 26 — Observability.
 
 ## Current Position
 
-Phase: 2 of 8 (Phase 24 — Security Hardening)
-Plan: 8 of 8 in current phase
+Phase: 3 of 8 (Phase 25 — Architecture Cleanup)
+Plan: 3 of 3 in current phase
 Status: Phase complete
-Last activity: 2026-05-05 — Completed 24-08-PLAN.md
+Last activity: 2026-05-07 — Completed 25-03-PLAN.md
 
 Progress: █████░░░░░ 42%
 
@@ -52,6 +52,7 @@ Recent decisions affecting current work:
 - 2026-05-05 (plan 24-05): D7 closed. `AuditPiiRedactor` scrubs email / JWT / IPv4 / IPv6 / TOTP recovery-code patterns. `AuditRetentionWorker` `@Scheduled` daily, native chunked DELETE, 100-iteration safety cap. New `GET /api/v1/admin/audit/retention`. V40 fixed CHAR→VARCHAR on `refresh_tokens.fingerprint`.
 - 2026-05-05 (plan 24-07): D9 closed. `org.owasp:dependency-check-maven 11.1.1` behind opt-in `security` Maven profile, CVSS 9.0 fail threshold, informational CI job. `ProductionProfileGuard` aggregates every prod misconfiguration into a single boot-time `IllegalStateException`: CORS, Redis password, JWT secret, receipt secret, WebAuthn RP id/origin. `CorsProperties` bound from `CORS_ALLOWED_ORIGINS`; wildcard fallback gated to non-production.
 - 2026-05-05 (plan 24-08): Audit-domain coverage closed. Seven services (PortfolioService, HoldingService, InvestmentTransactionService, BudgetService, CategoryService, BudgetRuleService, BillService) emit `auditService.success(...)` after every mutating method's DB write and `auditService.failure(...)` before each `BusinessRuleException` throw site. Username sourced via `SecurityContextHolder.getContext().getAuthentication().getName()` from a small per-service static helper — `RequestContext` stays jakarta-servlet-only. AuditAction grew by 13 constants (PORTFOLIO_*, HOLDING_*, INVESTMENT_TRANSACTION_*, BUDGET_TRANSACTION_*, CATEGORY_*, BUDGET_RULE_*, BILL_*, BILL_PAYMENT_RECORDED). Seven new `*ServiceAuditTest` fixtures (≈30 tests) pin the contract via Mockito.verify with eq + contains matchers; existing service tests gain a single `@Mock AuditService` field. BudgetService bulkDelete branch coverage extended (empty / no-match / at-least-one) for ISS-102. Two deviations: BillPaymentService doesn't exist as a separate file (pay flow is on BillService — folded in), and the plan's `category` sub-package for CategoryServiceAuditTest doesn't exist (placed at `com.fintrack.budget`). ISS-111 logged for TagService + AllocationService follow-up. mvnw verify green (1012 tests). Mutation pass green: project kill rate 64% (1166/1833) — above the 60% gate and the 23-02 63% baseline; per-class: PortfolioService 85%, HoldingService 85%, InvestmentTransactionService 78%, BudgetService 31% (+9pp from 22% ISS-102 baseline), CategoryService 81%, BudgetRuleService 91%, BillService 70%. Phase 24 complete.
+- 2026-05-07 (plan 25-03): Closed CONCERNS.md `WebClient.block()` + `Thread.sleep` in price clients entry. spring.threads.virtual.enabled=true wires Tomcat, the default TaskScheduler (every @Scheduled now runs on a virtual carrier), and @Async to virtual threads. New named priceVirtualExecutor @Bean (Executors.newVirtualThreadPerTaskExecutor()) drives a fetch-fan-out + persist-once shape on PriceSyncService: refreshLive() runs the four providers in parallel; refreshFunds() runs per-fund TEFAS reads with a Semaphore(price-api.tefas.parallelism, default 4) gate. Thread.sleep removed from the price-sync path; @Transactional collapsed onto a single short persistUpdates(...) call (the five public per-source methods are no longer @Transactional). WebClient.block() calls in clients stay — block on a virtual thread does not pin a platform thread. PriceConfigVirtualExecutorTest pins the bean wiring; PriceSyncServiceFundRefreshTest pins the no-sleep, parallelism-capped contract. Two auto-fixed deviations: (a) PriceSyncServiceTest had to switch from @InjectMocks to @BeforeEach manual construction because the new @Qualifier-bound constructor needs explicit wiring; (b) PriceUpdate carries the Asset reference rather than the assetId so persistUpdates can mutate + save() the detached entity directly (test compatibility win). mvnw verify green (1063 tests). Phase 25 complete (3/3 plans).
 
 ### Deferred Issues
 
@@ -63,7 +64,7 @@ See `tasks/ROADMAP.md` "Won't do" list and Track G items not yet phased (G7-G10,
 ### Blockers/Concerns
 
 From `.planning/codebase/CONCERNS.md`:
-- `WebClient.block()` + `Thread.sleep` in price clients → Phase 25
+- `WebClient.block()` + `Thread.sleep` in price clients → Phase 25 [resolved by 25-03]
 - Permissive CORS in production profile → Phase 24 [resolved by 24-07]
 - Optional Redis password → Phase 24 [resolved by 24-07]
 - AuditService coverage for domain mutations → Phase 24 [resolved by 24-08]
@@ -71,6 +72,6 @@ From `.planning/codebase/CONCERNS.md`:
 
 ## Session Continuity
 
-Last session: 2026-05-05
-Stopped at: Phase 24 complete (8 of 8 plans). Last plan 24-08 closed AuditService coverage for portfolio / budget / bill mutations; CONCERNS.md "Domain mutations not audited" line resolved.
-Resume file: next phase is 25 — Architecture Cleanup. Run `/gsd:plan-phase 25` (`tasks/ROADMAP.md` Track C1 + C2 + reactive price-client refactor flagged in CONCERNS.md).
+Last session: 2026-05-07
+Stopped at: Phase 25 complete (3 of 3 plans). Last plan 25-03 de-blocked the reactive price clients: spring.threads.virtual.enabled=true + priceVirtualExecutor bean + Semaphore-gated TEFAS fan-out + two-phase fetch-then-persist transactional shape. CONCERNS.md `WebClient.block() + Thread.sleep` line resolved. Verify green (1063 tests).
+Resume file: next phase is 26 — Observability. Run `/gsd:plan-phase 26` (Caffeine stats via Micrometer from 25-02; new virtual-thread spans on priceVirtualExecutor as natural OpenTelemetry attachment points).
