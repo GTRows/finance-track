@@ -22,10 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,7 +43,35 @@ class PriceSyncServiceTest {
     @Mock PreciousMetalsClient preciousMetalsClient;
     @Mock YahooFinanceClient yahooFinanceClient;
 
-    @InjectMocks PriceSyncService service;
+    PriceSyncService service;
+    ExecutorService executor;
+
+    @BeforeEach
+    void setUp() {
+        executor = Executors.newVirtualThreadPerTaskExecutor();
+        PriceApiProperties props =
+                new PriceApiProperties(
+                        new PriceApiProperties.CoinGecko("https://example.invalid", null, true),
+                        new PriceApiProperties.ExchangeRate("https://example.invalid", null, true),
+                        new PriceApiProperties.Tefas("https://example.invalid", true, 4),
+                        30);
+        service =
+                new PriceSyncService(
+                        assetRepository,
+                        priceHistoryRepository,
+                        coinGeckoClient,
+                        exchangeRateClient,
+                        tefasClient,
+                        preciousMetalsClient,
+                        yahooFinanceClient,
+                        executor,
+                        props);
+    }
+
+    @AfterEach
+    void tearDown() {
+        executor.shutdownNow();
+    }
 
     private Asset asset(AssetType type, String symbol, Map<String, Object> metadata) {
         return Asset.builder()
