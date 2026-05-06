@@ -1,11 +1,14 @@
 package com.fintrack.settings;
 
+import com.fintrack.common.config.CacheConfig;
 import com.fintrack.common.entity.UserSettings;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.settings.dto.SettingsResponse;
 import com.fintrack.settings.dto.UpdateSettingsRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +18,7 @@ public class SettingsService {
 
     private final UserSettingsRepository repository;
 
+    @Cacheable(value = CacheConfig.USER_SETTINGS_CACHE, key = "#userId")
     @Transactional(readOnly = true)
     public SettingsResponse get(UUID userId) {
         UserSettings settings =
@@ -24,6 +28,7 @@ public class SettingsService {
         return toResponse(settings);
     }
 
+    @CachePut(value = CacheConfig.USER_SETTINGS_CACHE, key = "#userId")
     @Transactional
     public SettingsResponse update(UUID userId, UpdateSettingsRequest request) {
         UserSettings settings =
@@ -47,6 +52,7 @@ public class SettingsService {
         return toResponse(repository.save(settings));
     }
 
+    @CachePut(value = CacheConfig.USER_SETTINGS_CACHE, key = "#userId")
     @Transactional
     public SettingsResponse markOnboardingComplete(UUID userId) {
         UserSettings settings =
