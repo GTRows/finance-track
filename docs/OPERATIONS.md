@@ -533,6 +533,60 @@ Conventions:
   is added, confirm the next CI run is clean before relying on the
   gate.
 
+## Updating TR tax parameters (yearly)
+
+The TR tax helper at `/reports/tax/tr` reads the annual capital-gains
+exempt threshold and dividend stoppage rates from
+`backend/src/main/resources/tax/tax-parameters-tr.yml`. Tax constants live
+in YAML (not Java constants, not a Flyway migration, not the database) so
+the owner can update them with a single hand-edit each January and rebuild.
+
+Yearly maintenance workflow:
+
+1. Each January (or whenever GİB publishes the new budget law / Resmi
+   Gazete amendment), open
+   `backend/src/main/resources/tax/tax-parameters-tr.yml`.
+2. Append a new top-level `years.<YYYY>:` block, copying the previous
+   year's structure verbatim. Do NOT edit a closed-year block — those rows
+   are the audit trail for past filings and must remain stable.
+3. Verify the new threshold and stoppage rates against
+   `https://www.gib.gov.tr/` AND a secondary source (the related
+   `https://www.resmigazete.gov.tr/` General Communiqué is the canonical
+   cross-reference). Record both URLs and the access date in the file's
+   header `Source:` comment.
+4. Rebuild and redeploy the backend
+   (`docker compose up -d --build backend`). There is no DB migration —
+   `TrTaxParametersLoader` reads the YAML at startup and silently
+   degrades to an empty map on missing or malformed input, so a typo in
+   the file will surface as a `parameters-missing` warning on the report
+   without crashing the application.
+5. Re-open `/reports/tax/tr` for the new year and confirm the threshold
+   stat card and per-asset stoppage table populate as expected.
+
+Each year block declares which `Asset.AssetType` enum names the threshold
+applies to via `appliesTo:` — for the 2024 + 2025 baseline, the listed-
+equity exemption applies to `[STOCK]` only. Crypto, gold, funds and other
+asset classes appear in the response (so the owner sees the figures) but
+do not count against the threshold. Adjust the `appliesTo` list if a
+future budget law extends the exemption to additional asset classes.
+
+### Adding a new locale (e.g. US, DE)
+
+Future locales follow the established pattern:
+
+- Add a sibling resource `tax-parameters-{locale}.yml` (for example
+  `tax-parameters-us.yml`) under
+  `backend/src/main/resources/tax/`.
+- Add a sibling service `XxTaxService` (for example `UsTaxService`) and
+  controller `XxTaxController` under
+  `com.fintrack.report.tax.{locale}` mirroring the
+  `com.fintrack.report.tax.tr` package shape.
+- Generic `TaxParameters` interfaces are NOT abstracted ahead of time —
+  add the abstraction when the second locale lands, not before.
+
+This is currently out of scope for FinTrack v1.x — the owner is single-
+tenant TR-domiciled.
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`
