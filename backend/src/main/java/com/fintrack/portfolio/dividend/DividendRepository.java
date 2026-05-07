@@ -28,4 +28,24 @@ public interface DividendRepository extends JpaRepository<Dividend, UUID> {
             "SELECT COALESCE(SUM(d.netAmountTry), 0) FROM Dividend d WHERE d.portfolioId IN"
                     + " :portfolioIds AND d.paymentDate BETWEEN :from AND :to")
     BigDecimal sumNetByPortfoliosAndRange(List<UUID> portfolioIds, LocalDate from, LocalDate to);
+
+    @Query(
+            "SELECT COALESCE(SUM(d.grossAmount), 0), "
+                    + "COALESCE(SUM(d.withholdingTax), 0), "
+                    + "COALESCE(SUM(d.netAmountTry), 0) FROM Dividend d "
+                    + "WHERE d.portfolioId IN :portfolioIds "
+                    + "AND d.paymentDate BETWEEN :from AND :to")
+    Object[] sumStoppageTotalsByPortfoliosAndRange(
+            List<UUID> portfolioIds, LocalDate from, LocalDate to);
+
+    @Query(
+            "SELECT d.assetId, "
+                    + "COALESCE(SUM(d.grossAmount), 0), "
+                    + "COALESCE(SUM(d.withholdingTax), 0), "
+                    + "COALESCE(SUM(d.netAmountTry), 0) FROM Dividend d "
+                    + "WHERE d.portfolioId IN :portfolioIds "
+                    + "AND d.paymentDate BETWEEN :from AND :to "
+                    + "GROUP BY d.assetId")
+    List<Object[]> sumStoppageByAssetAndPortfoliosAndRange(
+            List<UUID> portfolioIds, LocalDate from, LocalDate to);
 }

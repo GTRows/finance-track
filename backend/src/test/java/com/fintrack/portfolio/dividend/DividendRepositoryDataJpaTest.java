@@ -13,7 +13,9 @@ import com.fintrack.portfolio.PortfolioRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,5 +154,65 @@ class DividendRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
                                 LocalDate.of(2027, 1, 1),
                                 LocalDate.of(2027, 12, 31)))
                 .isEqualByComparingTo("0");
+    }
+
+    @Test
+    void sumStoppageTotalsReturnsThreeBigDecimals() {
+        UUID userId = seedUser("ela");
+        UUID portfolio = seedPortfolio(userId, "Main");
+        UUID asset = seedAsset("ASELS");
+        repo.save(stoppage(portfolio, asset, LocalDate.of(2026, 3, 1), "1000", "150", "850"));
+        repo.save(stoppage(portfolio, asset, LocalDate.of(2026, 6, 1), "2000", "300", "1700"));
+
+        Object[] totals =
+                repo.sumStoppageTotalsByPortfoliosAndRange(
+                        List.of(portfolio), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
+
+        assertThat(totals).hasSize(3);
+        assertThat((BigDecimal) totals[0]).isEqualByComparingTo("3000");
+        assertThat((BigDecimal) totals[1]).isEqualByComparingTo("450");
+        assertThat((BigDecimal) totals[2]).isEqualByComparingTo("2550");
+    }
+
+    @Test
+    void sumStoppageByAssetGroupsByAssetId() {
+        UUID userId = seedUser("ozan");
+        UUID portfolio = seedPortfolio(userId, "Main");
+        UUID a = seedAsset("THYAO");
+        UUID b = seedAsset("AKBNK");
+        repo.save(stoppage(portfolio, a, LocalDate.of(2026, 4, 1), "1000", "150", "850"));
+        repo.save(stoppage(portfolio, a, LocalDate.of(2026, 7, 1), "500", "75", "425"));
+        repo.save(stoppage(portfolio, b, LocalDate.of(2026, 5, 1), "2000", "300", "1700"));
+
+        List<Object[]> rows =
+                repo.sumStoppageByAssetAndPortfoliosAndRange(
+                        List.of(portfolio), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
+
+        assertThat(rows).hasSize(2);
+        Map<UUID, Object[]> byAsset =
+                rows.stream().collect(Collectors.toMap(r -> (UUID) r[0], r -> r));
+        assertThat((BigDecimal) byAsset.get(a)[1]).isEqualByComparingTo("1500");
+        assertThat((BigDecimal) byAsset.get(a)[2]).isEqualByComparingTo("225");
+        assertThat((BigDecimal) byAsset.get(b)[1]).isEqualByComparingTo("2000");
+        assertThat((BigDecimal) byAsset.get(b)[2]).isEqualByComparingTo("300");
+    }
+
+    private Dividend stoppage(
+            UUID portfolioId,
+            UUID assetId,
+            LocalDate date,
+            String gross,
+            String withholding,
+            String netTry) {
+        return Dividend.builder()
+                .portfolioId(portfolioId)
+                .assetId(assetId)
+                .grossAmount(new BigDecimal(gross))
+                .withholdingTax(new BigDecimal(withholding))
+                .netAmount(new BigDecimal(netTry))
+                .netAmountTry(new BigDecimal(netTry))
+                .currency("TRY")
+                .paymentDate(date)
+                .build();
     }
 }
