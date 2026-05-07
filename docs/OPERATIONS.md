@@ -213,6 +213,123 @@ Always:
   (default `/var/log/fintrack`); admins can tail them via the live SSE
   stream at `GET /api/v1/admin/logs/live`.
 
+## GlitchTip / Sentry release tagging
+
+Phase 26-02 stands up a self-hosted GlitchTip stack alongside the existing
+FinTrack containers and wires the Spring Boot backend's Sentry SDK to it for
+exception aggregation. Every captured event carries a `release` tag computed
+from `IDENTITY.yaml`, the active Spring profile as `environment`, plus
+`trace.id` / `span.id` / `request.id` tags so events cross-link to the Tempo
+trace tree from 26-01.
+
+The GlitchTip stack ships as a separate compose overlay at
+`monitoring/glitchtip/docker-compose.glitchtip.yml`. The repository's main
+`docker-compose.yml` is intentionally NOT modified by this phase (Claude
+tooling is denied write access via the project's release-files guard). The
+operator brings the stack up with the explicit overlay invocation shown
+below.
+
+### Required env vars
+
+The following keys must be added to your existing `.env` file before bringing
+the GlitchTip stack up. The repository's `.env.example` is intentionally NOT
+updated by this phase (Claude tooling is denied write access to `.env.*`); use
+this table as the canonical reference. Compose passes the project's `.env`
+to every service automatically — Spring Boot reads `SENTRY_DSN` and
+`FINTRACK_RELEASE_VERSION` directly from the backend container's environment
+without any main-compose `environment:` block injection.
+
+| Variable                        | Default (compose fallback)                       | Required in prod | Read by                                           |
+| ------------------------------- | ------------------------------------------------ | ---------------- | ------------------------------------------------- |
+| `SENTRY_DSN`                    | empty (SDK no-ops)                               | YES              | backend (`application.yml` `sentry.dsn`)          |
+| `FINTRACK_RELEASE_VERSION`      | empty (falls back to `IDENTITY.yaml` version)    | no               | backend (`application.yml` `sentry.release`)      |
+| `GLITCHTIP_POSTGRES_PASSWORD`   | `glitchtip-change-me` (placeholder; rotate)      | YES (rotate)     | overlay: `glitchtip-web`, `glitchtip-worker`      |
+| `GLITCHTIP_SECRET_KEY`          | `change-me-32-bytes-of-random-data-please`       | YES (rotate)     | overlay: `glitchtip-web`, `glitchtip-worker`      |
+| `GLITCHTIP_DOMAIN`              | `http://localhost:8000`                          | YES (set)        | overlay: `glitchtip-web`                          |
+| `GLITCHTIP_EMAIL_URL`           | `consolemail://`                                 | no               | overlay: `glitchtip-web`, `glitchtip-worker`      |
+| `GLITCHTIP_FROM_EMAIL`          | `noreply@fintrack.local`                         | no               | overlay: `glitchtip-web`, `glitchtip-worker`      |
+| `GLITCHTIP_CELERY_AUTOSCALE`    | `1,3`                                            | no               | overlay: `glitchtip-web`, `glitchtip-worker`      |
+
+Notes:
+- `SENTRY_DSN` is a hard requirement under the production profile;
+  `ProductionProfileGuard` aborts boot with a one-shot `IllegalStateException`
+  listing all violations if it is blank in prod.
+- `FINTRACK_RELEASE_VERSION` exists so a CI pipeline can stamp the release
+  with the exact build's git short-sha (e.g. `1.1.0+abc1234`); leave blank
+  for a clean tag derived from `IDENTITY.yaml`.
+- `GLITCHTIP_SECRET_KEY` should be 32 bytes of random data; generate with
+  `openssl rand -base64 32`.
+- `GLITCHTIP_POSTGRES_PASSWORD` is the password for the dedicated `glitchtip`
+  Postgres role created by `monitoring/glitchtip/init-db.sql`.
+
+### Bringing the GlitchTip stack up
+
+The GlitchTip services live in a compose overlay so the main `docker-compose.yml`
+stays untouched. Always invoke compose with both files:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f monitoring/glitchtip/docker-compose.glitchtip.yml \
+  up -d
+```
+
+The overlay declares `fintrack-net` as `external: true`, so the main compose
+must already be up (or come up in the same invocation as above) for the
+network to exist. The overlay also merges a Postgres init-script mount onto
+the existing `postgres` service — this is a no-op on existing data volumes
+(the operator runs the SQL by hand per the next subsection).
+
+### First-boot setup on an EXISTING deployment
+
+Postgres only runs `docker-entrypoint-initdb.d/*.sql` against a fresh data
+volume; existing FinTrack deployments must create the GlitchTip role and
+database manually:
+
+```bash
+# 1. Add the env vars from the table above to your .env file.
+# 2. Create the GlitchTip role + database in the existing Postgres container.
+docker compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres \
+  < monitoring/glitchtip/init-db.sql
+
+# 3. Rotate the placeholder password to your real value.
+docker compose exec -T postgres psql -U "$POSTGRES_USER" -d postgres \
+  -c "ALTER ROLE glitchtip WITH PASSWORD '<your GLITCHTIP_POSTGRES_PASSWORD>';"
+
+# 4. Bring the GlitchTip stack up via the overlay.
+docker compose \
+  -f docker-compose.yml \
+  -f monitoring/glitchtip/docker-compose.glitchtip.yml \
+  up -d glitchtip-web glitchtip-worker
+
+# 5. Wait for the Django app to become ready, then create an admin user.
+docker compose \
+  -f docker-compose.yml \
+  -f monitoring/glitchtip/docker-compose.glitchtip.yml \
+  exec glitchtip-web ./manage.py createsuperuser
+
+# 6. In the GlitchTip web UI (route via Traefik or a temporary port-forward),
+#    create a new project, copy the DSN, paste it as SENTRY_DSN in .env,
+#    then restart the backend.
+docker compose up -d --force-recreate backend
+```
+
+Fresh deployments (empty Postgres data volume) skip steps 2 and 3 — the
+init script runs automatically on first container start when the overlay
+is active.
+
+### Verifying the wire-up
+
+Provoke any handled error (e.g. an unauthenticated request against a
+protected endpoint) and confirm in the GlitchTip web UI:
+- one event arrives within ~10 seconds,
+- `release` tag matches `fintrack@<IDENTITY.yaml version>` (or your
+  `FINTRACK_RELEASE_VERSION` override),
+- `environment` tag matches the active Spring profile,
+- `trace.id` tag matches the Tempo trace ID for the same request,
+- `request.id` tag matches the `X-Request-Id` response header,
+- the rendered message is PII-scrubbed (no email, no IP, no JWT).
+
 ## CI Security Gates
 
 CI runs an opt-in OWASP Dependency Check job (`dependency-check` in

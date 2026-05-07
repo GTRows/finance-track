@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
  *   <li>{@code JWT_SECRET} is non-blank and not the in-tree dev default.
  *   <li>{@code RECEIPT_SIGNING_SECRET} is non-blank and not the in-tree dev default.
  *   <li>{@code WEBAUTHN_RPID} and {@code WEBAUTHN_ORIGIN} are set to non-default values.
+ *   <li>{@code SENTRY_DSN} is non-blank.
  * </ul>
  *
  * <p>Runs before the embedded servlet container starts (via {@link PostConstruct}) so a
@@ -106,6 +107,13 @@ public class ProductionProfileGuard {
             violations.add(
                     "WEBAUTHN_ORIGIN: still set to the dev default; passkeys will not bind to the"
                             + " production origin.");
+        }
+
+        String sentryDsn = environment.getProperty("sentry.dsn");
+        if (isBlank(sentryDsn)) {
+            violations.add(
+                    "SENTRY_DSN: must be set to the GlitchTip (or Sentry) project DSN; an"
+                            + " unreported production error is invisible.");
         }
 
         if (!violations.isEmpty()) {

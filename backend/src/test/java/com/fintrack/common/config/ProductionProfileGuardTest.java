@@ -24,6 +24,7 @@ class ProductionProfileGuardTest {
     private static final String VALID_REDIS_TOKEN = "redis-prod-token-value";
     private static final String VALID_WEBAUTHN_RPID = "fintrack.example.com";
     private static final String VALID_WEBAUTHN_ORIGIN = "https://fintrack.example.com";
+    private static final String VALID_SENTRY_DSN = "https://abc@glitchtip.local/1";
     private static final List<String> VALID_ORIGINS =
             List.of("https://fintrack.example.com", "https://api.fintrack.example.com");
 
@@ -82,6 +83,27 @@ class ProductionProfileGuardTest {
     }
 
     @Test
+    void enforce_failsWhenSentryDsnBlank() {
+        MockEnvironment env = validEnvironment();
+        env.setProperty("sentry.dsn", "");
+        ProductionProfileGuard guard = new ProductionProfileGuard(env, validCorsProperties());
+
+        assertThatThrownBy(guard::enforce)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("SENTRY_DSN");
+    }
+
+    @Test
+    void enforce_passesWithAllProductionEnvSet() {
+        ProductionProfileGuard guard =
+                new ProductionProfileGuard(validEnvironment(), validCorsProperties());
+
+        // No exception means the configuration was accepted with every required
+        // env (including the new SENTRY_DSN check) populated.
+        guard.enforce();
+    }
+
+    @Test
     void multipleViolations_areAggregatedOnSeparateLines() {
         MockEnvironment env = validEnvironment();
         env.setProperty("jwt.secret", ProductionProfileGuard.DEFAULT_JWT_SECRET);
@@ -115,6 +137,7 @@ class ProductionProfileGuardTest {
         env.setProperty("fintrack.receipt.signing-secret", VALID_RECEIPT_SECRET);
         env.setProperty("fintrack.webauthn.rpId", VALID_WEBAUTHN_RPID);
         env.setProperty("fintrack.webauthn.origin", VALID_WEBAUTHN_ORIGIN);
+        env.setProperty("sentry.dsn", VALID_SENTRY_DSN);
         return env;
     }
 
