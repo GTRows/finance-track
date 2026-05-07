@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Phase 26-02: self-hosted GlitchTip stack shipped as a separate compose overlay at `monitoring/glitchtip/docker-compose.glitchtip.yml` (web + Celery worker, reusing existing Postgres + Redis via `external: true` network), Sentry SDK wired into Spring Boot via `sentry-spring-boot-starter-jakarta`, release-tagged with `IDENTITY.yaml` version, PII scrubbed via `AuditPiiRedactor` in a `BeforeSendCallback`, trace IDs cross-linked to Tempo (26-01). Operator-facing env vars + the `docker compose -f docker-compose.yml -f monitoring/glitchtip/docker-compose.glitchtip.yml up -d` invocation documented in `docs/OPERATIONS.md` under "GlitchTip / Sentry release tagging" (.env.example and docker-compose.yml not updated -- Claude tooling is denied write access to both via the project deny rule + pre_guard_release_files.py hook).
+
 ### Changed
 ### Deprecated
 ### Removed
