@@ -63,4 +63,8 @@ public final class AuditAction {
     public static final String BILL_DELETED = "BILL_DELETED";
 
     public static final String BILL_PAYMENT_RECORDED = "BILL_PAYMENT_RECORDED";
+
+    public static final String ACCOUNT_CREATED = "ACCOUNT_CREATED";
+    public static final String ACCOUNT_UPDATED = "ACCOUNT_UPDATED";
+    public static final String ACCOUNT_DELETED = "ACCOUNT_DELETED";
 }
