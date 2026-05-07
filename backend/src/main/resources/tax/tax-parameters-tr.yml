@@ -1,0 +1,26 @@
+# FinTrack Pro - TR tax parameters keyed by tax year.
+# Source: https://www.gib.gov.tr/ (accessed 2026-05-07),
+#         https://www.resmigazete.gov.tr/ (accessed 2026-05-07).
+# Verify each January before the new year is filed against. Owner edits the file by hand.
+# Each entry is one tax year. Append a new top-level key for the next year; do not edit a closed year.
+#
+# Schema:
+#   capitalGainsThresholdTry   - Annual exempt threshold in TRY for listed-equity short-term gains.
+#   appliesTo                  - Asset.AssetType enum names the threshold applies to.
+#   dividendStoppageRate       - Statutory withholding rate on grossDividend (informational).
+#   besDividendStoppageRate    - BES preferential withholding rate (informational).
+#   notes                      - Free-form context for the year (cross-reference, edge cases).
+source: "https://www.gib.gov.tr/ (accessed 2026-05-07)"
+years:
+  "2024":
+    capitalGainsThresholdTry: 158000
+    appliesTo: [STOCK]
+    dividendStoppageRate: 0.10
+    besDividendStoppageRate: 0.075
+    notes: "Listed equities held < 1 year fall under the threshold; cross-check the 324 Series GVK General Communique on resmigazete.gov.tr."
+  "2025":
+    capitalGainsThresholdTry: 200000
+    appliesTo: [STOCK]
+    dividendStoppageRate: 0.15
+    besDividendStoppageRate: 0.10
+    notes: "Threshold inflation-adjusted via end-2024 budget law announcements (327/328 Series GVK General Communiques)."
