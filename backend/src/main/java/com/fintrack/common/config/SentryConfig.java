@@ -14,7 +14,7 @@ import org.springframework.lang.Nullable;
  * transport from 24-05) and (b) tagged with {@code trace.id} / {@code span.id} from the active
  * Micrometer span (cross-link to Tempo from 26-01) plus {@code request.id} from the MDC populated
  * by {@code RequestLoggingFilter}. The Sentry Spring Boot starter auto-discovers the bean — no
- * explicit {@code Sentry.init(...)} call is required.
+ * explicit SDK boot call is required.
  */
 @Configuration
 public class SentryConfig {
