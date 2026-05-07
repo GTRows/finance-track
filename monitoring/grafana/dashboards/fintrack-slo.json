@@ -1,0 +1,219 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Latency p95 by route group",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, group) (rate(http_server_requests_seconds_bucket{application=\"fintrack\",group=~\"read|mutating|auth\"}[5m])))",
+          "legendFormat": "{{group}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "title": "Error rate (5xx, prices group excluded)",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 3,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.01 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "hidden" },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{application=\"fintrack\",status=~\"5..\",group!=\"prices\"}[5m])) / sum(rate(http_server_requests_seconds_count{application=\"fintrack\",group!=\"prices\"}[5m]))",
+          "legendFormat": "5xx rate",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "title": "Price-sync freshness per source (seconds since last success)",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 21600 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "expr": "time() - fintrack_price_sync_last_success_timestamp_seconds",
+          "legendFormat": "{{source}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "title": "Active SLO alerts",
+      "type": "table",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "displayMode": "auto" },
+          "noValue": "No active SLO alerts"
+        }
+      },
+      "options": {
+        "showHeader": true,
+        "footer": { "show": false }
+      },
+      "targets": [
+        {
+          "expr": "ALERTS{alertstate=\"firing\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 16 },
+      "id": 5,
+      "title": "30-day error budget burn (latency)",
+      "type": "gauge",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 2,
+          "min": 0,
+          "max": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 1.5 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "(1 - sum(rate(http_server_requests_seconds_bucket{application=\"fintrack\",group=~\"read|mutating|auth\",le=\"0.5\"}[30d])) / sum(rate(http_server_requests_seconds_count{application=\"fintrack\",group=~\"read|mutating|auth\"}[30d]))) / 0.01",
+          "legendFormat": "burn",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 16 },
+      "id": 6,
+      "title": "Most recent live-source freshness (info, no alert)",
+      "type": "stat",
+      "description": "Wall-clock seconds since the most recent successful refresh across all four live providers (crypto / currency / metal / stock). Funds (TEFAS) intentionally excluded from this gauge -- daily-tick model has its own freshness story.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "blue" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "time() - max(fintrack_price_sync_last_success_timestamp_seconds)",
+          "legendFormat": "since last live refresh",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["fintrack", "slo"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "FinTrack SLO",
+  "uid": "fintrack-slo",
+  "version": 1,
+  "weekStart": ""
+}

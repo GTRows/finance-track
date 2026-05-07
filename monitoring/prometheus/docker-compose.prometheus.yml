@@ -1,0 +1,48 @@
+# Compose overlay shipped by Phase 26-03. Adds the Alertmanager service and
+# extends the existing prometheus service's volume list with the alerts.yml
+# rule mount. Bring up the full SLO stack with:
+#
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f monitoring/prometheus/docker-compose.prometheus.yml \
+#     up -d
+#
+# The main docker-compose.yml is intentionally NOT modified by this phase --
+# Claude tooling is denied write access via the project's
+# pre_guard_release_files.py PreToolUse hook. See docs/OPERATIONS.md
+# "SLI/SLO dashboard and burn-rate alerts" for the canonical operator runbook.
+
+services:
+  prometheus:
+    # Compose merges service-level dictionary keys but REPLACES list-typed
+    # keys like `volumes:`, so the original main-compose mounts must be
+    # repeated here in addition to the new alerts.yml mount. The image,
+    # command, ports, and other dictionary fields inherit from the main
+    # compose unchanged.
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: fintrack-alertmanager
+    restart: always
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    networks:
+      - fintrack-net
+    # No host port published. Grafana queries Prometheus's ALERTS series
+    # directly for the dashboard's active-alerts panel; Alertmanager is
+    # reachable inside fintrack-net for routing only.
+
+volumes:
+  alertmanager-data:
+
+networks:
+  fintrack-net:
+    external: true

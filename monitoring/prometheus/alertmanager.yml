@@ -1,0 +1,29 @@
+# Default Alertmanager configuration shipped by Phase 26-03. The `default`
+# receiver is intentionally empty -- alerts fire and aggregate on the
+# Alertmanager UI but no outbound routing is configured. Operator-side wiring
+# (SMTP / webhook / Slack / Discord) is documented in docs/OPERATIONS.md
+# under "SLI/SLO dashboard and burn-rate alerts" -> "Wiring outbound
+# notifications", reusing the existing FinTrack SMTP_* env vars from the
+# mail block.
+#
+# The Grafana SLO dashboard's "Active alerts" panel queries Prometheus's
+# ALERTS{alertstate="firing"} series directly, so the dashboard works without
+# any routing config. Alertmanager is the silencing / grouping hub for when
+# the operator extends the receivers.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'sli', 'group']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default'
+
+receivers:
+  - name: 'default'
+    # Operator extends this block with email_configs / webhook_configs /
+    # discord_configs. See docs/OPERATIONS.md "SLI/SLO dashboard and
+    # burn-rate alerts" for a sample SMTP block using the existing FinTrack
+    # SMTP_* env vars.

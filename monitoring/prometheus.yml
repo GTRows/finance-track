@@ -4,6 +4,21 @@ global:
   external_labels:
     monitor: fintrack
 
+# Prometheus loads SLO recording + alerting rules from this file. The path is
+# the in-container path; the file is mounted via the compose overlay at
+# monitoring/prometheus/docker-compose.prometheus.yml (the main docker-compose.yml
+# is locked by the project's pre_guard_release_files.py PreToolUse hook).
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+# Alertmanager is brought up by the same overlay; the static target lives on
+# the existing fintrack-net network.
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
 scrape_configs:
   - job_name: fintrack-backend
     metrics_path: /api/actuator/prometheus
@@ -12,6 +27,29 @@ scrape_configs:
           - backend:8080
         labels:
           service: backend
+    # Compute a coarse `group` label on http_server_requests_seconds_* series at
+    # scrape time so the SLO rule expressions and dashboard panels can group by
+    # route family (read / mutating / auth / prices). The two SPECIFIC rules
+    # (auth, prices) run AFTER the GENERIC ones (read, mutating) so they win the
+    # final overwrite for URIs that match both -- Prometheus relabel rules apply
+    # in order, last-write-wins on the SAME target_label.
+    metric_relabel_configs:
+      - source_labels: [__name__, method, uri]
+        regex: 'http_server_requests_seconds.*;GET;/api/v1/.*'
+        target_label: group
+        replacement: 'read'
+      - source_labels: [__name__, method, uri]
+        regex: 'http_server_requests_seconds.*;(POST|PUT|PATCH|DELETE);/api/v1/.*'
+        target_label: group
+        replacement: 'mutating'
+      - source_labels: [__name__, uri]
+        regex: 'http_server_requests_seconds.*;/api/v1/auth/.*'
+        target_label: group
+        replacement: 'auth'
+      - source_labels: [__name__, uri]
+        regex: 'http_server_requests_seconds.*;/api/v1/prices/.*'
+        target_label: group
+        replacement: 'prices'
 
   - job_name: prometheus
     static_configs:

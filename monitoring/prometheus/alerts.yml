@@ -1,0 +1,125 @@
+# FinTrack SLO recording + alerting rules. Loaded by Prometheus via the
+# rule_files: entry in monitoring/prometheus.yml. The compose overlay at
+# monitoring/prometheus/docker-compose.prometheus.yml mounts this file into
+# the prometheus container at /etc/prometheus/alerts.yml.
+#
+# Burn-rate envelope follows the Google SRE workbook chapter "Implementing
+# SLOs": a fast (page) tier at 1h x 14.4 burn rate and a slow (ticket) tier
+# at 6h x 6 burn rate, computed from a recording-rule pair per ratio-based
+# SLI so the alert evaluator and the dashboard panel read the same series.
+#
+# SLO targets:
+#   - HTTP latency p95: 99% of requests under 500ms => error_budget = 1%
+#     (per route group: read / mutating / auth; prices group exempted).
+#   - HTTP error rate:  < 1% of requests return 5xx (5xx only; prices group
+#     excluded -- provider-side failures are not server-side; 4xx excluded
+#     -- client-side).
+#   - Price-sync freshness: per-source single-threshold-with-duration at 6h.
+#     Burn-rate math does not apply to a freshness SLI -- the SLO is binary
+#     (data is fresh / not fresh). Funds intentionally NOT alerted (TEFAS
+#     daily-tick model).
+
+groups:
+  - name: fintrack-slo-recording
+    interval: 30s
+    rules:
+      # Latency SLI: fraction of requests UNDER 500ms over 1h, per route group.
+      # The complement (1 - this) is the bad fraction; the alert compares it
+      # against 14.4 * error_budget (= 14.4 * 0.01 = 0.144).
+      - record: slo:http_latency_p95_under_500ms:fast_window
+        expr: |
+          (
+            sum by (group) (rate(http_server_requests_seconds_bucket{application="fintrack",group=~"read|mutating|auth",le="0.5"}[1h]))
+            /
+            sum by (group) (rate(http_server_requests_seconds_count{application="fintrack",group=~"read|mutating|auth"}[1h]))
+          )
+
+      - record: slo:http_latency_p95_under_500ms:slow_window
+        expr: |
+          (
+            sum by (group) (rate(http_server_requests_seconds_bucket{application="fintrack",group=~"read|mutating|auth",le="0.5"}[6h]))
+            /
+            sum by (group) (rate(http_server_requests_seconds_count{application="fintrack",group=~"read|mutating|auth"}[6h]))
+          )
+
+      # Error-rate SLI: fraction of requests returning 5xx, prices group excluded.
+      - record: slo:http_error_rate:fast_window
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="fintrack",status=~"5..",group!="prices"}[1h]))
+          /
+          sum(rate(http_server_requests_seconds_count{application="fintrack",group!="prices"}[1h]))
+
+      - record: slo:http_error_rate:slow_window
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="fintrack",status=~"5..",group!="prices"}[6h]))
+          /
+          sum(rate(http_server_requests_seconds_count{application="fintrack",group!="prices"}[6h]))
+
+  - name: fintrack-slo-alerts
+    interval: 30s
+    rules:
+      # Latency: page on FAST burn (1h x 14.4) -- 2% budget consumed in 1h.
+      - alert: FinTrackLatencyP95SloFastBurn
+        expr: |
+          (1 - slo:http_latency_p95_under_500ms:fast_window) > (14.4 * 0.01)
+        for: 5m
+        labels:
+          severity: page
+          sli: latency_p95
+        annotations:
+          summary: "Latency p95 SLO fast-burn on {{ $labels.group }}"
+          description: "More than 14.4x error budget being burned over the last 1h on the {{ $labels.group }} route group. SLO target is 99% of requests under 500ms."
+          runbook: "docs/OPERATIONS.md#slislo-dashboard-and-burn-rate-alerts"
+
+      # Latency: ticket on SLOW burn (6h x 6) -- 10% budget consumed in 6h.
+      - alert: FinTrackLatencyP95SloSlowBurn
+        expr: |
+          (1 - slo:http_latency_p95_under_500ms:slow_window) > (6 * 0.01)
+        for: 30m
+        labels:
+          severity: ticket
+          sli: latency_p95
+        annotations:
+          summary: "Latency p95 SLO slow-burn on {{ $labels.group }}"
+          description: "More than 6x error budget being burned over the last 6h on the {{ $labels.group }} route group."
+          runbook: "docs/OPERATIONS.md#slislo-dashboard-and-burn-rate-alerts"
+
+      # Error rate: page on FAST burn (1h x 14.4).
+      - alert: FinTrackErrorRateSloFastBurn
+        expr: |
+          slo:http_error_rate:fast_window > (14.4 * 0.01)
+        for: 5m
+        labels:
+          severity: page
+          sli: error_rate
+        annotations:
+          summary: "Error rate SLO fast-burn"
+          description: "5xx error rate burning > 14.4x the budget over 1h."
+          runbook: "docs/OPERATIONS.md#slislo-dashboard-and-burn-rate-alerts"
+
+      - alert: FinTrackErrorRateSloSlowBurn
+        expr: |
+          slo:http_error_rate:slow_window > (6 * 0.01)
+        for: 30m
+        labels:
+          severity: ticket
+          sli: error_rate
+        annotations:
+          summary: "Error rate SLO slow-burn"
+          description: "5xx error rate burning > 6x the budget over 6h."
+          runbook: "docs/OPERATIONS.md#slislo-dashboard-and-burn-rate-alerts"
+
+      # Price-sync freshness: single-threshold-with-duration per source.
+      # NaN gauges (cold boot, no successful sync yet) do NOT trigger because
+      # (time() - NaN) is NaN and NaN > X is false in PromQL.
+      - alert: FinTrackPriceSyncFreshnessStale
+        expr: |
+          (time() - fintrack_price_sync_last_success_timestamp_seconds) > (6 * 3600)
+        for: 5m
+        labels:
+          severity: ticket
+          sli: price_sync_freshness
+        annotations:
+          summary: "Price source {{ $labels.source }} stale > 6h"
+          description: "No successful price refresh from {{ $labels.source }} in the last 6 hours. Check Tempo for the most recent price.refresh.live span and GlitchTip for any provider-specific exceptions."
+          runbook: "docs/OPERATIONS.md#slislo-dashboard-and-burn-rate-alerts"
