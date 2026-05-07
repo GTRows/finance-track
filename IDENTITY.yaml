@@ -1,5 +1,5 @@
 name: fintrack
-version: 1.1.0
+version: 1.2.0
 description: Self-hosted personal finance and investment tracking system.
 release:
   prerelease_tags:
