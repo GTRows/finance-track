@@ -330,6 +330,143 @@ protected endpoint) and confirm in the GlitchTip web UI:
 - `request.id` tag matches the `X-Request-Id` response header,
 - the rendered message is PII-scrubbed (no email, no IP, no JWT).
 
+## SLI/SLO dashboard and burn-rate alerts
+
+Phase 26-03 stands up the operator-facing SLO surface for FinTrack. Three
+SLIs are graphed on a Grafana dashboard ("FinTrack SLO") and alerted on
+via Prometheus rule files plus a self-hosted Alertmanager. The surface
+observes server-side health: HTTP latency p95 (per route group), HTTP
+error rate (5xx), and per-source price-sync freshness. It does NOT
+observe fund freshness (TEFAS daily-tick model is information-only) or
+client-side errors (out of scope at homelab footprint).
+
+### SLOs
+
+| SLI | SLO target | Window | Notes |
+|---|---|---|---|
+| HTTP latency p95 | 99% of requests under 500ms | 30 days | Per route group: `read`, `mutating`, `auth`. `prices` group exempted (refresh endpoints are structurally slow). |
+| HTTP error rate | < 1% of requests return 5xx | 30 days | `prices` group excluded -- provider-side failures are not server-side. 4xx excluded -- client-side. |
+| Price-sync freshness | All four live providers refresh within 6h | rolling | Per source: `crypto`, `currency`, `metal`, `stock`. Funds intentionally out of scope (TEFAS daily-tick model). |
+
+### Bringing the SLO stack up
+
+The Alertmanager service and the Prometheus rule mount ship as a compose
+overlay so the main `docker-compose.yml` stays untouched (Claude tooling
+is denied write access via the project's `pre_guard_release_files.py`
+PreToolUse hook). Bring the full SLO stack up with the explicit overlay
+invocation:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f monitoring/prometheus/docker-compose.prometheus.yml \
+  up -d
+```
+
+This adds `fintrack-alertmanager` (image `prom/alertmanager:v0.27.0`) on
+the existing `fintrack-net` network and re-mounts the existing
+`fintrack-prometheus` container with the rule file. Prometheus reads
+`/etc/prometheus/alerts.yml` on startup; the active rules show up in the
+Prometheus UI under Status -> Rules. The Grafana dashboard auto-loads
+from the existing dashboards provisioner (no Grafana restart needed -- the
+provisioning loop runs every 30 s).
+
+### Tuning SLO targets
+
+The 500 ms / 1% / 6 h numbers are baked into recording-rule expressions
+and alert thresholds at `monitoring/prometheus/alerts.yml`. To change a
+target, edit the relevant rule and reload Prometheus:
+
+```bash
+docker compose kill -s HUP fintrack-prometheus
+```
+
+Keep recording rules and alerts in sync -- the alert expression refers to
+the recording rule by name, and the dashboard reads the recording series
+on the same windowing.
+
+### Wiring outbound notifications
+
+The default `monitoring/prometheus/alertmanager.yml` ships with an empty
+`default` receiver: alerts fire and aggregate on the Alertmanager UI but
+no outbound routing is configured. To enable email notifications, edit
+the receiver block to use the existing FinTrack SMTP env vars (already
+documented in the mail / push section of this runbook). Sample SMTP
+block:
+
+```yaml
+receivers:
+  - name: 'default'
+    email_configs:
+      - to: 'ops@example.invalid'
+        from: 'alerts@fintrack.local'
+        smarthost: '${SMTP_HOST}:${SMTP_PORT}'
+        auth_username: '${SMTP_USERNAME}'
+        auth_password: '${SMTP_PASSWORD}'
+        send_resolved: true
+```
+
+Webhook and Discord blocks follow the standard Alertmanager schema.
+After editing, reload Alertmanager with `docker compose kill -s HUP
+fintrack-alertmanager`.
+
+### Burn-rate math reference
+
+The two ratio-based SLIs (latency p95, error rate) use the Google SRE
+workbook two-burn-rate envelope (chapter "Implementing SLOs"):
+
+- **Fast (page)**: 1 h window x 14.4 burn rate. Fires when more than
+  14.4x the error budget is being consumed over the last 1 h. With a 1%
+  error budget, this corresponds to 2% burn over 1 h.
+- **Slow (ticket)**: 6 h window x 6 burn rate. Fires when more than 6x
+  the error budget is being consumed over the last 6 h, corresponding
+  to 10% burn over 6 h.
+
+Recording rules pre-compute the per-window fraction so the alert evaluator
+and the dashboard read the same series. See
+`monitoring/prometheus/alerts.yml` for the live definitions.
+
+The freshness SLI uses a single-threshold-with-duration (6 h) per source.
+Burn-rate math does not apply to a freshness SLI because the SLO is
+binary (data is fresh / not fresh) rather than a fraction of bad
+requests.
+
+### Verifying after first boot
+
+1. `docker compose -f docker-compose.yml -f monitoring/prometheus/docker-compose.prometheus.yml ps`
+   shows `fintrack-prometheus` and `fintrack-alertmanager` as `Up (healthy)`.
+2. `docker exec fintrack-prometheus wget -qO- localhost:9090/-/ready`
+   returns HTTP 200 (or `curl` against the published port if the operator
+   has published 9090).
+3. Grafana -> "FinTrack SLO" dashboard loads with all six panels rendering.
+   The dashboard uid is `fintrack-slo`.
+4. After ~5 minutes of synthetic traffic, the error-rate panel reads a
+   non-NaN value and the latency p95 panel shows one line per route group
+   that has received traffic.
+5. `ALERTS{alertstate="firing"}` queried from the Prometheus UI returns
+   no rows when the SLOs are met.
+
+### Operator footnote on locked release files
+
+Three release-style files in this repository are deny-listed for Claude
+tooling:
+
+- `.env.example` -- denied by `Write(**/.env.*)` and `Edit(**/.env.*)`
+  rules in `.claude/settings.json`.
+- `docker-compose.yml` -- denied by the `pre_guard_release_files.py`
+  PreToolUse hook.
+- `CHANGELOG.md` -- denied by the same `pre_guard_release_files.py`
+  hook.
+
+Operator-facing config that would ordinarily live in `.env.example` or
+`docker-compose.yml` is therefore routed through this `OPERATIONS.md`
+document and through `monitoring/<feature>/docker-compose.<feature>.yml`
+overlays (precedent: 26-02 GlitchTip; 26-03 Alertmanager / Prometheus
+rules). `CHANGELOG.md` entries are written by an operator-side one-shot
+splice. If any of these guards is relaxed in the future, the content
+moves trivially in either direction; OPERATIONS.md stays the single
+source of truth in either path.
+
 ## CI Security Gates
 
 CI runs an opt-in OWASP Dependency Check job (`dependency-check` in
