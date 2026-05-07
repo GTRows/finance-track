@@ -730,7 +730,13 @@
     "projectionEndingBalance": "Projected balance",
     "projectionNet": "Net",
     "projectionScheduledIncome": "Scheduled income",
-    "projectionScheduledExpense": "Scheduled expense"
+    "projectionScheduledExpense": "Scheduled expense",
+    "tiles": {
+      "taxTr": {
+        "title": "TR Tax Helper",
+        "description": "Annual dividend stoppage and capital-gains threshold status — single-page summary before filing."
+      }
+    }
   },
   "benchmarks": {
     "title": "Portfolio vs. benchmarks",
@@ -787,6 +793,53 @@
       "price": "Price",
       "gain": "Gain"
     }
+  },
+  "taxTr": {
+    "title": "TR Tax Helper",
+    "description": "Annual dividend stoppage rollup and capital-gains threshold status. One-page summary before filing.",
+    "backToAnalytics": "Back to analytics",
+    "statusLabel": "Status",
+    "status": {
+      "under": "Below threshold",
+      "approaching": "Approaching threshold",
+      "over": "Threshold exceeded",
+      "unknown": "Unknown"
+    },
+    "statusHint": {
+      "under": "You are below 80% of the threshold",
+      "approaching": "You are between 80% and 100% of the threshold",
+      "over": "Threshold exceeded — filing likely required",
+      "unknown": "No parameters configured for this year"
+    },
+    "realizedYtd": "Realized YTD",
+    "realizedYtdHint": "Realized capital gain in TRY",
+    "threshold": "Threshold",
+    "thresholdHint": "Annual exempt limit (TRY)",
+    "headroom": "Headroom",
+    "headroomHint": "Threshold minus realized gain",
+    "stoppage": {
+      "sectionTitle": "Dividend stoppage",
+      "sectionDescription": "Per-asset gross, withholding and net breakdown for the year's dividend payments.",
+      "columns": {
+        "asset": "Asset",
+        "gross": "Gross",
+        "withholding": "Withholding",
+        "net": "Net (TRY)"
+      },
+      "total": "Total",
+      "emptyRow": "No dividends recorded for this year.",
+      "unknownAsset": "Unknown"
+    },
+    "warnings": {
+      "approaching-threshold": "You are approaching the threshold this year. The next BIST sale could push you into a declarable position.",
+      "threshold-exceeded": "Threshold exceeded — capital-gains filing may be required this year. Confirm with your accountant.",
+      "parameters-missing": "No entry in tax-parameters-tr.yml for this year. Verify GIB values and append a year block."
+    },
+    "parametersMissing": "No parameters configured for this year. Append a year block to backend/src/main/resources/tax/tax-parameters-tr.yml.",
+    "source": "Source",
+    "notes": "Notes",
+    "emptyTitle": "No data yet",
+    "emptyDesc": "No dividend or sell records found for the selected year."
   },
   "dividends": {
     "title": "Dividends",

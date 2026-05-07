@@ -731,7 +731,13 @@
     "projectionEndingBalance": "Projeksiyon bakiye",
     "projectionNet": "Net",
     "projectionScheduledIncome": "Planlı gelir",
-    "projectionScheduledExpense": "Planlı gider"
+    "projectionScheduledExpense": "Planlı gider",
+    "tiles": {
+      "taxTr": {
+        "title": "TR Vergi Yardımcısı",
+        "description": "Yıllık temettü stopajı ve sermaye kazancı eşik durumu — beyan öncesi tek sayfa özeti."
+      }
+    }
   },
   "benchmarks": {
     "title": "Portföy ve karşılaştırma endeksleri",
@@ -788,6 +794,53 @@
       "price": "Fiyat",
       "gain": "Kazanç"
     }
+  },
+  "taxTr": {
+    "title": "TR Vergi Yardımcısı",
+    "description": "Yıllık temettü stopajı toplamı ve sermaye kazancı eşik durumu. Beyan öncesi tek sayfa özet.",
+    "backToAnalytics": "Analize dön",
+    "statusLabel": "Durum",
+    "status": {
+      "under": "Eşiğin altında",
+      "approaching": "Eşiğe yaklaşıyor",
+      "over": "Eşik aşıldı",
+      "unknown": "Belirsiz"
+    },
+    "statusHint": {
+      "under": "Eşiğin %80'inin altındasın",
+      "approaching": "Eşiğin %80–%100 aralığındasın",
+      "over": "Eşik aşıldı — beyan gerekli",
+      "unknown": "Bu yıl için parametre yok"
+    },
+    "realizedYtd": "Yılbaşından beri",
+    "realizedYtdHint": "TRY cinsinden gerçekleşen kazanç",
+    "threshold": "Eşik",
+    "thresholdHint": "Yıllık vergi muafiyet sınırı (TRY)",
+    "headroom": "Kalan pay",
+    "headroomHint": "Eşik − gerçekleşen kazanç",
+    "stoppage": {
+      "sectionTitle": "Temettü stopajı",
+      "sectionDescription": "Yıl içindeki tüm temettü ödemelerinin brüt, stopaj ve net dökümü.",
+      "columns": {
+        "asset": "Varlık",
+        "gross": "Brüt",
+        "withholding": "Stopaj",
+        "net": "Net (TRY)"
+      },
+      "total": "Toplam",
+      "emptyRow": "Bu yıl için kayıtlı temettü yok.",
+      "unknownAsset": "Bilinmiyor"
+    },
+    "warnings": {
+      "approaching-threshold": "Bu yıl eşiğe yaklaşıyorsun. Bir sonraki BIST satışı seni beyan zorunlu hale getirebilir.",
+      "threshold-exceeded": "Eşik aşıldı — bu yıl için sermaye kazancı beyanı gerekli olabilir. Mali müşavirinle teyit et.",
+      "parameters-missing": "Bu yıl için tax-parameters-tr.yml dosyasında girdi yok. GİB üzerinden değerleri doğrulayıp dosyaya bir blok ekle."
+    },
+    "parametersMissing": "Bu yıl için parametre tanımlı değil. backend/src/main/resources/tax/tax-parameters-tr.yml dosyasına bir blok ekleyin.",
+    "source": "Kaynak",
+    "notes": "Notlar",
+    "emptyTitle": "Henüz veri yok",
+    "emptyDesc": "Seçilen yıl için temettü veya satış kaydı bulunamadı."
   },
   "dividends": {
     "title": "Temettüler",

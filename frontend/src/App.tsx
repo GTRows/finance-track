@@ -44,6 +44,9 @@ const SettingsPage = lazy(() =>
 const CapitalGainsPage = lazy(() =>
   import('@/pages/CapitalGainsPage').then((m) => ({ default: m.CapitalGainsPage })),
 );
+const TrTaxPage = lazy(() =>
+  import('@/pages/TrTaxPage').then((m) => ({ default: m.TrTaxPage })),
+);
 
 export function App() {
   return (
@@ -66,6 +69,7 @@ export function App() {
           <Route path="/bills" element={<BillsPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/reports/capital-gains" element={<CapitalGainsPage />} />
+          <Route path="/reports/tax/tr" element={<TrTaxPage />} />
           <Route path="/prices" element={<PricesPage />} />
           <Route path="/prices/:id" element={<AssetDetailPage />} />
           <Route path="/alerts" element={<AlertsPage />} />
