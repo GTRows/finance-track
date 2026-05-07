@@ -151,6 +151,13 @@
       <version>2.10.0</version>
     </dependency>
 
+    <!-- Observability: error aggregation via Sentry SDK (GlitchTip-compatible) -->
+    <dependency>
+      <groupId>io.sentry</groupId>
+      <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
+      <version>7.18.0</version>
+    </dependency>
+
     <!-- OpenAPI 3 / Swagger UI -->
     <dependency>
       <groupId>org.springdoc</groupId>

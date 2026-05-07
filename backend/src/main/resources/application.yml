@@ -166,6 +166,24 @@ claude:
   enabled: ${CLAUDE_ENABLED:false}
   base-url: https://api.anthropic.com/v1
 
+# Sentry / GlitchTip exception aggregation. Wire-protocol compatible with
+# self-hosted GlitchTip (see docs/OPERATIONS.md "GlitchTip / Sentry release
+# tagging"). Empty DSN keeps the SDK in no-op mode for dev runs;
+# ProductionProfileGuard enforces non-blank DSN under the production profile.
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SPRING_PROFILES_ACTIVE:development}
+  release: ${FINTRACK_RELEASE_VERSION:#{@releaseVersionSupplier.get()}}
+  traces-sample-rate: 0.0
+  send-default-pii: false
+  attach-stacktrace: true
+  max-request-body-size: none
+  in-app-includes:
+    - com.fintrack
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+
 # Logging
 logging:
   file:
@@ -204,3 +222,7 @@ management:
   tracing:
     sampling:
       probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:0.1}
+
+sentry:
+  logging:
+    minimum-event-level: warn
