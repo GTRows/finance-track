@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Briefcase,
   Wallet,
+  Landmark,
   Receipt,
   TrendingUp,
   BarChart3,
@@ -66,6 +67,7 @@ export function AppShell() {
   const navItems = [
     { path: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
     { path: '/portfolio', label: t('nav.portfolio'), icon: Briefcase },
+    { path: '/accounts', label: t('nav.accounts'), icon: Landmark },
     { path: '/budget', label: t('nav.budget'), icon: Wallet },
     { path: '/bills', label: t('nav.bills'), icon: Receipt },
     { path: '/analytics', label: t('nav.analytics'), icon: BarChart3 },

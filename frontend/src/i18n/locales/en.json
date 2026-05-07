@@ -29,6 +29,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "portfolio": "Portfolio",
+    "accounts": "Accounts",
     "budget": "Budget",
     "bills": "Bills",
     "analytics": "Analytics",
@@ -152,6 +153,67 @@
     "descriptionLabel": "Description (optional)",
     "descriptionPlaceholder": "What is this portfolio for?",
     "noHoldingsShort": "No holdings"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "description": "Track every place value sits — banks, brokers, crypto wallets, cash",
+    "addAccount": "Add Account",
+    "yourAccounts": "Your Accounts",
+    "liveAccounts": "Live accounts",
+    "liveAccountsHint": "Currently in use",
+    "archivedAccounts": "Archived",
+    "archivedHint": "Closed in the past",
+    "balances": "Balances",
+    "balancesHint": "Per-currency totals (TRY-equivalent rollup arrives in 27-03)",
+    "balancesEmpty": "--",
+    "empty": {
+      "title": "No accounts yet",
+      "description": "Add your banks, brokers, and wallets to see where your cash lives at a glance."
+    },
+    "types": {
+      "BANK_CHECKING": "Checking",
+      "BANK_SAVINGS": "Savings",
+      "BROKERAGE_CASH": "Brokerage cash",
+      "CRYPTO_WALLET": "Crypto wallet",
+      "CASH": "Cash",
+      "OTHER": "Other"
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "e.g. Main checking",
+      "type": "Type",
+      "currency": "Currency",
+      "institution": "Institution",
+      "institutionPlaceholder": "e.g. Akbank",
+      "accountNumberSuffix": "Last digits",
+      "notes": "Notes",
+      "notesPlaceholder": "Anything worth remembering about this account",
+      "openingBalance": "Opening balance",
+      "currentBalance": "Current balance"
+    },
+    "dialog": {
+      "createTitle": "Create Account",
+      "createDescription": "Declare a bank, broker, wallet, or cash balance.",
+      "createSubmit": "Create",
+      "editTitle": "Edit Account",
+      "editDescription": "Update the name, institution info, and current balance. Type is locked after creation."
+    },
+    "actions": {
+      "edit": "Edit",
+      "archive": "Archive",
+      "archiveConfirmTitle": "Archive this account?",
+      "archiveConfirmDescription": "The account stays in the history but disappears from the live list. You can restore it later (coming soon).",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "nameRequired": "Name is required",
+      "invalidCurrency": "Currency must be a 3-letter ISO code (e.g. TRY)",
+      "invalidSuffix": "Account number suffix must contain digits only",
+      "duplicateName": "An account with that name already exists",
+      "limitReached": "Account limit reached (max 50)",
+      "failedToLoad": "Failed to load accounts",
+      "failedToSave": "Failed to save account"
+    }
   },
   "portfolioTypes": {
     "INDIVIDUAL": "Individual",

@@ -29,6 +29,7 @@
   "nav": {
     "dashboard": "Özet",
     "portfolio": "Portföy",
+    "accounts": "Hesaplar",
     "budget": "Bütçe",
     "bills": "Faturalar",
     "analytics": "Analiz",
@@ -152,6 +153,67 @@
     "descriptionLabel": "Açıklama (opsiyonel)",
     "descriptionPlaceholder": "Bu portföy ne için?",
     "noHoldingsShort": "Varlık yok"
+  },
+  "accounts": {
+    "title": "Hesaplar",
+    "description": "Banka, aracı kurum, kripto cüzdan ve nakit bakiyelerini tek noktadan yönet",
+    "addAccount": "Hesap Ekle",
+    "yourAccounts": "Hesaplarınız",
+    "liveAccounts": "Aktif hesap",
+    "liveAccountsHint": "Şu an kullanılan hesaplar",
+    "archivedAccounts": "Arşivlenen",
+    "archivedHint": "Geçmişte kapanan hesaplar",
+    "balances": "Bakiyeler",
+    "balancesHint": "Para birimine göre toplam (TRY karşılığı 27-03'te gelecek)",
+    "balancesEmpty": "--",
+    "empty": {
+      "title": "Henüz hesap yok",
+      "description": "Banka hesaplarını, brokerlerini ve cüzdanlarını ekleyerek nakitin nerede olduğunu tek bakışta gör."
+    },
+    "types": {
+      "BANK_CHECKING": "Vadesiz hesap",
+      "BANK_SAVINGS": "Vadeli hesap",
+      "BROKERAGE_CASH": "Broker bakiyesi",
+      "CRYPTO_WALLET": "Kripto cüzdan",
+      "CASH": "Nakit",
+      "OTHER": "Diğer"
+    },
+    "form": {
+      "name": "İsim",
+      "namePlaceholder": "Ör. Ana hesap",
+      "type": "Tür",
+      "currency": "Para birimi",
+      "institution": "Kurum",
+      "institutionPlaceholder": "Ör. Akbank",
+      "accountNumberSuffix": "Hesap no son hane",
+      "notes": "Notlar",
+      "notesPlaceholder": "Bu hesapla ilgili kısa notlar",
+      "openingBalance": "Açılış bakiyesi",
+      "currentBalance": "Güncel bakiye"
+    },
+    "dialog": {
+      "createTitle": "Hesap Oluştur",
+      "createDescription": "Banka, broker, cüzdan veya nakit bakiyesi tanımla.",
+      "createSubmit": "Oluştur",
+      "editTitle": "Hesabı Düzenle",
+      "editDescription": "İsim, kurum bilgisi ve güncel bakiyeyi güncelleyebilirsin. Hesap türü oluşturulduktan sonra değiştirilemez."
+    },
+    "actions": {
+      "edit": "Düzenle",
+      "archive": "Arşivle",
+      "archiveConfirmTitle": "Hesabı arşivlemek istediğine emin misin?",
+      "archiveConfirmDescription": "Hesap geçmişte kalır, listelerde görünmez. İstersen daha sonra yeniden açabilirsin (yakında).",
+      "cancel": "Vazgeç"
+    },
+    "errors": {
+      "nameRequired": "İsim gerekli",
+      "invalidCurrency": "Para birimi 3 harfli ISO kodu olmalı (ör. TRY)",
+      "invalidSuffix": "Hesap no son hane sadece rakam olmalı",
+      "duplicateName": "Bu isimde bir hesap zaten var",
+      "limitReached": "Hesap limiti doldu (en fazla 50)",
+      "failedToLoad": "Hesaplar yüklenemedi",
+      "failedToSave": "Hesap kaydedilemedi"
+    }
   },
   "portfolioTypes": {
     "INDIVIDUAL": "Bireysel",
