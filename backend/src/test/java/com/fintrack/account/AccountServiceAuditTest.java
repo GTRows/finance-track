@@ -141,12 +141,7 @@ class AccountServiceAuditTest {
                                         userId,
                                         id,
                                         new UpdateAccountRequest(
-                                                "Taken",
-                                                "TRY",
-                                                null,
-                                                null,
-                                                null,
-                                                BigDecimal.ZERO)))
+                                                "Taken", "TRY", null, null, null, BigDecimal.ZERO)))
                 .isInstanceOf(BusinessRuleException.class);
 
         verify(auditService)

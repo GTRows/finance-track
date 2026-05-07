@@ -90,16 +90,14 @@ class AccountRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
         UUID userId = seedUser("ozge");
         repo.save(account(userId, "TRY-1", Account.AccountType.BANK_CHECKING, "TRY", "100", false));
         repo.save(account(userId, "TRY-2", Account.AccountType.BANK_SAVINGS, "TRY", "200", false));
-        repo.save(
-                account(userId, "USD-1", Account.AccountType.BROKERAGE_CASH, "USD", "50", false));
+        repo.save(account(userId, "USD-1", Account.AccountType.BROKERAGE_CASH, "USD", "50", false));
         repo.save(account(userId, "USD-old", Account.AccountType.CASH, "USD", "999", true));
 
         List<Object[]> rows = repo.sumBalancesByCurrencyForUser(userId);
 
         assertThat(rows).hasSize(2);
         Map<String, BigDecimal> byCurrency =
-                rows.stream()
-                        .collect(Collectors.toMap(r -> (String) r[0], r -> (BigDecimal) r[1]));
+                rows.stream().collect(Collectors.toMap(r -> (String) r[0], r -> (BigDecimal) r[1]));
         assertThat(byCurrency.get("TRY")).isEqualByComparingTo("300");
         assertThat(byCurrency.get("USD")).isEqualByComparingTo("50");
         assertThat(rows.get(0)[0]).isEqualTo("TRY");

@@ -68,7 +68,8 @@ class AccountControllerWebMvcTest extends AbstractWebMvcTestSupport {
         stubAuthenticatedUser();
         UUID a = UUID.randomUUID();
         when(accountService.listForUser(userId))
-                .thenReturn(List.of(sample(a, "Main", "TRY"), sample(UUID.randomUUID(), "USD", "USD")));
+                .thenReturn(
+                        List.of(sample(a, "Main", "TRY"), sample(UUID.randomUUID(), "USD", "USD")));
 
         mockMvc.perform(get("/api/v1/accounts"))
                 .andExpect(status().isOk())

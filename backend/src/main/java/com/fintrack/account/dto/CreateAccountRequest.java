@@ -21,8 +21,7 @@ public record CreateAccountRequest(
                         regexp = "^[A-Z]{3}$",
                         message = "Currency must be a 3-letter ISO code (e.g. TRY)")
                 String currency,
-        @Size(max = 100, message = "Institution must be at most 100 characters")
-                String institution,
+        @Size(max = 100, message = "Institution must be at most 100 characters") String institution,
         @Size(max = 16, message = "Account number suffix must be at most 16 digits")
                 @Pattern(
                         regexp = "^[0-9]{0,16}$",

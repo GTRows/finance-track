@@ -175,12 +175,7 @@ class AccountServiceTest {
                                         userId,
                                         id,
                                         new UpdateAccountRequest(
-                                                "New",
-                                                "TRY",
-                                                null,
-                                                null,
-                                                null,
-                                                BigDecimal.ZERO)))
+                                                "New", "TRY", null, null, null, BigDecimal.ZERO)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -228,12 +223,7 @@ class AccountServiceTest {
                                         userId,
                                         id,
                                         new UpdateAccountRequest(
-                                                "Taken",
-                                                "TRY",
-                                                null,
-                                                null,
-                                                null,
-                                                BigDecimal.ZERO)))
+                                                "Taken", "TRY", null, null, null, BigDecimal.ZERO)))
                 .isInstanceOf(BusinessRuleException.class)
                 .extracting("code")
                 .isEqualTo("ACCOUNT_NAME_DUPLICATE");
@@ -250,8 +240,7 @@ class AccountServiceTest {
         service.update(
                 userId,
                 id,
-                new UpdateAccountRequest(
-                        "main", "TRY", null, null, null, new BigDecimal("10")));
+                new UpdateAccountRequest("main", "TRY", null, null, null, new BigDecimal("10")));
 
         verify(accountRepository, never())
                 .existsByUserIdAndNameIgnoreCaseAndArchivedFalse(any(), any());

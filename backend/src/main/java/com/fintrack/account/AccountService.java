@@ -139,8 +139,7 @@ public class AccountService {
 
         account.setName(newName);
         account.setCurrency(request.currency().trim().toUpperCase(Locale.ROOT));
-        account.setInstitution(
-                request.institution() != null ? request.institution().trim() : null);
+        account.setInstitution(request.institution() != null ? request.institution().trim() : null);
         account.setAccountNumberSuffix(
                 request.accountNumberSuffix() != null
                         ? request.accountNumberSuffix().trim()
