@@ -57,7 +57,7 @@ public class PriceSyncMetrics {
     }
 
     @PostConstruct
-    void registerGauges() {
+    public void registerGauges() {
         for (Source source : Source.values()) {
             AtomicReference<Instant> ref = lastSuccess.get(source);
             Gauge.builder(GAUGE_NAME, ref, this::epochSecondsOrNaN)

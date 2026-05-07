@@ -141,7 +141,8 @@ class TracingIntegrationTest {
                     preciousMetalsClient,
                     yahooFinanceClient,
                     priceVirtualExecutor,
-                    props);
+                    props,
+                    null);
         }
     }
 }

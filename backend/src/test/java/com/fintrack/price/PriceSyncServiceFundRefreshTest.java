@@ -81,7 +81,8 @@ class PriceSyncServiceFundRefreshTest {
                 preciousMetalsClient,
                 yahooFinanceClient,
                 executor,
-                props);
+                props,
+                null);
     }
 
     private Asset asset(AssetType type, String symbol, Map<String, Object> metadata) {

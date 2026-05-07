@@ -65,7 +65,8 @@ class PriceSyncServiceTest {
                         preciousMetalsClient,
                         yahooFinanceClient,
                         executor,
-                        props);
+                        props,
+                        null);
     }
 
     @AfterEach

@@ -3,6 +3,7 @@ package com.fintrack.price;
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.PriceHistory;
+import com.fintrack.metrics.PriceSyncMetrics;
 import com.fintrack.price.client.CoinGeckoClient;
 import com.fintrack.price.client.ExchangeRateClient;
 import com.fintrack.price.client.PreciousMetalsClient;
@@ -26,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +57,7 @@ public class PriceSyncService {
     private final YahooFinanceClient yahooFinanceClient;
     private final ExecutorService priceVirtualExecutor;
     private final PriceApiProperties priceApiProperties;
+    private final @Nullable PriceSyncMetrics priceSyncMetrics;
 
     public PriceSyncService(
             AssetRepository assetRepository,
@@ -65,7 +68,8 @@ public class PriceSyncService {
             PreciousMetalsClient preciousMetalsClient,
             YahooFinanceClient yahooFinanceClient,
             @Qualifier("tracingPriceVirtualExecutor") ExecutorService priceVirtualExecutor,
-            PriceApiProperties priceApiProperties) {
+            PriceApiProperties priceApiProperties,
+            @Nullable PriceSyncMetrics priceSyncMetrics) {
         this.assetRepository = assetRepository;
         this.priceHistoryRepository = priceHistoryRepository;
         this.coinGeckoClient = coinGeckoClient;
@@ -75,6 +79,18 @@ public class PriceSyncService {
         this.yahooFinanceClient = yahooFinanceClient;
         this.priceVirtualExecutor = priceVirtualExecutor;
         this.priceApiProperties = priceApiProperties;
+        this.priceSyncMetrics = priceSyncMetrics;
+    }
+
+    /**
+     * Records a successful refresh on the freshness gauge for {@code source} when at least one
+     * update flowed through and the metrics bean is wired. Test fixtures that pass {@code null} for
+     * {@link PriceSyncMetrics} short-circuit here.
+     */
+    private void recordSuccessIfPresent(PriceSyncMetrics.Source source, int updatedCount) {
+        if (priceSyncMetrics == null) return;
+        if (updatedCount <= 0) return;
+        priceSyncMetrics.recordSuccess(source, Instant.now());
     }
 
     /** Summary row returned to controllers after a refresh. */
@@ -129,6 +145,13 @@ public class PriceSyncService {
         List<PriceUpdate> metals = metalsF.join();
         List<PriceUpdate> stocks = stocksF.join();
 
+        // Record per-source freshness BEFORE persistence -- the fetch was successful regardless
+        // of any downstream persistence failure.
+        recordSuccessIfPresent(PriceSyncMetrics.Source.CRYPTO, crypto.size());
+        recordSuccessIfPresent(PriceSyncMetrics.Source.CURRENCY, currency.size());
+        recordSuccessIfPresent(PriceSyncMetrics.Source.METAL, metals.size());
+        recordSuccessIfPresent(PriceSyncMetrics.Source.STOCK, stocks.size());
+
         List<PriceUpdate> all = new ArrayList<>();
         all.addAll(crypto);
         all.addAll(currency);
@@ -142,12 +165,16 @@ public class PriceSyncService {
 
     /** Updates all CRYPTO assets that carry a {@code coingeckoId} in metadata. */
     public int refreshCrypto() {
-        return persistUpdates(fetchCrypto());
+        int written = persistUpdates(fetchCrypto());
+        recordSuccessIfPresent(PriceSyncMetrics.Source.CRYPTO, written);
+        return written;
     }
 
     /** Updates all CURRENCY assets using exchangerate-api.com. */
     public int refreshCurrencies() {
-        return persistUpdates(fetchCurrencies());
+        int written = persistUpdates(fetchCurrencies());
+        recordSuccessIfPresent(PriceSyncMetrics.Source.CURRENCY, written);
+        return written;
     }
 
     /**
@@ -174,7 +201,9 @@ public class PriceSyncService {
      * scales to a gram price when the asset has {@code metalsUnit=gram} in its metadata.
      */
     public int refreshMetals() {
-        return persistUpdates(fetchMetals());
+        int written = persistUpdates(fetchMetals());
+        recordSuccessIfPresent(PriceSyncMetrics.Source.METAL, written);
+        return written;
     }
 
     /**
@@ -184,7 +213,9 @@ public class PriceSyncService {
      * priceUsd}.
      */
     public int refreshStocks() {
-        return persistUpdates(fetchStocks());
+        int written = persistUpdates(fetchStocks());
+        recordSuccessIfPresent(PriceSyncMetrics.Source.STOCK, written);
+        return written;
     }
 
     // ---------------------------------------------------------------------------------------------
