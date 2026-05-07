@@ -587,6 +587,51 @@ Future locales follow the established pattern:
 This is currently out of scope for FinTrack v1.x — the owner is single-
 tenant TR-domiciled.
 
+## Managing accounts
+
+The `Accounts` page (`/accounts`) is where you declare every place value
+sits — bank checking and savings, brokerage cash, crypto wallets,
+physical cash. In Phase 27 sub-plan 02 these accounts are a
+**standalone declaration**: they are not yet linked to investment or
+budget transactions, and no balance is auto-derived from history.
+27-03 wires `account_id` onto `transactions` and
+`investment_transactions`; until then the operator owns the running
+balance directly.
+
+Owner workflow:
+
+- **Add an account**: open `/accounts` → `Add account`. Pick a type
+  (checking / savings / brokerage cash / crypto wallet / cash / other),
+  set a 3-letter ISO-4217 currency (defaults to TRY; USD / EUR / GBP /
+  CHF / etc. accepted), and enter an opening balance (optional —
+  defaults to zero). Institution and last-digits suffix are optional;
+  only the trailing 4–8 digits are stored, never the full PAN.
+- **Edit an account**: kebab menu on the row → `Edit`. Name, currency,
+  institution, suffix, notes, and current balance are all editable.
+  Type is immutable post-create — if you mistyped, archive and recreate.
+  Currency edits do **not** rebase historical FX; treat the new
+  currency + balance as a fresh seed.
+- **Archive an account**: kebab menu → `Archive`. Soft-archive only —
+  the row is hidden from lists and totals but kept for audit history.
+  An archived `Main` does not block creating a new live `main` (the
+  duplicate-name guard is restricted to live rows).
+
+Decimal precision: balances are stored as `NUMERIC(20, 8)` so an 8-
+decimal asset like Bitcoin (satoshi-precision) round-trips losslessly
+on the wire. For assets that go finer than 8 decimals (ETH wei,
+exotic stablecoins), denominate in **whole-coin units** rather than
+attempting to track sub-satoshi amounts here.
+
+Limits: 50 live accounts per owner. Archive an old account if you hit
+the cap; restoring archived rows is on the deferred-enhancements list.
+
+Future maintenance: 27-03 starts wiring transactions to `account_id`
+and adds an emergency-fund coverage tile that reads from `accounts`
+filtered to `type = BANK_SAVINGS`. A TRY-equivalent rollup that
+converts non-TRY balances to a single TRY total via daily ECB rates
+arrives once the FX-rate snapshot service is in place — flagged in
+27-02-SUMMARY's "Deferred Enhancements".
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`
