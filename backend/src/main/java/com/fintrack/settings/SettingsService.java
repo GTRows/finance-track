@@ -1,10 +1,13 @@
 package com.fintrack.settings;
 
 import com.fintrack.common.config.CacheConfig;
+import com.fintrack.common.entity.Account;
 import com.fintrack.common.entity.UserSettings;
+import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.settings.dto.SettingsResponse;
 import com.fintrack.settings.dto.UpdateSettingsRequest;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CachePut;
@@ -64,6 +67,25 @@ public class SettingsService {
             settings = repository.save(settings);
         }
         return toResponse(settings);
+    }
+
+    /**
+     * Persists the emergency-fund account-type inclusion list. {@link
+     * Account.AccountType#BANK_SAVINGS} must be in the list; otherwise a {@link
+     * BusinessRuleException} with code {@code EMERGENCY_FUND_BANK_SAVINGS_REQUIRED} is thrown.
+     */
+    @Transactional
+    public void updateEmergencyFundTypes(UUID userId, List<Account.AccountType> types) {
+        if (types == null || !types.contains(Account.AccountType.BANK_SAVINGS)) {
+            throw new BusinessRuleException(
+                    "BANK_SAVINGS must be included", "EMERGENCY_FUND_BANK_SAVINGS_REQUIRED");
+        }
+        UserSettings settings =
+                repository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Settings not found"));
+        settings.setEmergencyFundIncludeTypes(types.stream().map(Enum::name).toList());
+        repository.save(settings);
     }
 
     private SettingsResponse toResponse(UserSettings s) {

@@ -1,6 +1,7 @@
 package com.fintrack.account;
 
 import com.fintrack.common.entity.Account;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,4 +38,17 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
                     + "GROUP BY a.currency "
                     + "ORDER BY a.currency ASC")
     List<Object[]> sumBalancesByCurrencyForUser(UUID userId);
+
+    /**
+     * Sums live-account balances for a user, scoped to the supplied account types. Returns one row
+     * per distinct currency: {@code (currency, totalBalance)}. Used by EmergencyFundService for the
+     * dashboard tile rollup. Empty {@code types} yields zero rows.
+     */
+    @Query(
+            "SELECT a.currency, COALESCE(SUM(a.currentBalance), 0) FROM Account a "
+                    + "WHERE a.userId = :userId AND a.archived = false "
+                    + "AND a.accountType IN :types "
+                    + "GROUP BY a.currency "
+                    + "ORDER BY a.currency ASC")
+    List<Object[]> sumBalancesByTypeForUser(UUID userId, Collection<Account.AccountType> types);
 }
