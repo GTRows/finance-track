@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -97,4 +98,11 @@ public interface TransactionRepository extends JpaRepository<BudgetTransaction, 
             @Param("statuses") Collection<BudgetTransaction.OcrStatus> statuses,
             @Param("olderThan") Instant olderThan,
             Pageable pageable);
+
+    @Query(
+            "select t.importFingerprint from BudgetTransaction t "
+                    + "where t.accountId = :accountId and t.importFingerprint is not null")
+    Set<String> findFingerprintsByAccountId(@Param("accountId") UUID accountId);
+
+    boolean existsByAccountIdAndImportFingerprint(UUID accountId, String importFingerprint);
 }
