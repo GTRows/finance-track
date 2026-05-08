@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.audit.AuditAction;
 import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.CreateTransactionRequest;
@@ -43,6 +44,7 @@ class BudgetServiceAuditTest {
     @Mock FxConversionService fxConversionService;
     @Mock AuditService auditService;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock AccountRepository accountRepository;
 
     @InjectMocks BudgetService service;
 
@@ -57,7 +59,8 @@ class BudgetServiceAuditTest {
                 "lunch",
                 LocalDate.of(2026, 4, 10),
                 false,
-                List.of());
+                List.of(),
+                null);
     }
 
     private UpdateTransactionRequest updateReq() {
@@ -69,7 +72,8 @@ class BudgetServiceAuditTest {
                 "dinner",
                 LocalDate.of(2026, 4, 11),
                 false,
-                List.of());
+                List.of(),
+                null);
     }
 
     private BudgetTransaction txn(UUID id) {

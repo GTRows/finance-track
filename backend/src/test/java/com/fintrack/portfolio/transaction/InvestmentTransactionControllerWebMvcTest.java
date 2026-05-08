@@ -59,7 +59,9 @@ class InvestmentTransactionControllerWebMvcTest extends AbstractWebMvcTestSuppor
                 new BigDecimal("5.00"),
                 null,
                 LocalDate.of(2026, 4, 1),
-                Instant.parse("2026-04-01T10:00:00Z"));
+                Instant.parse("2026-04-01T10:00:00Z"),
+                null,
+                null);
     }
 
     @Test

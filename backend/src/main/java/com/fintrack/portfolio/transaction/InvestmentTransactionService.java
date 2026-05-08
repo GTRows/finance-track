@@ -1,8 +1,10 @@
 package com.fintrack.portfolio.transaction;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.audit.AuditAction;
 import com.fintrack.audit.AuditService;
+import com.fintrack.common.entity.Account;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.InvestmentTransaction;
 import com.fintrack.common.entity.InvestmentTransaction.TxnType;
@@ -18,6 +20,7 @@ import com.fintrack.portfolio.transaction.dto.RecordTransactionRequest;
 import com.fintrack.portfolio.transaction.dto.TransactionResponse;
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +45,7 @@ public class InvestmentTransactionService {
     private final AssetRepository assetRepository;
     private final AuditService auditService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AccountRepository accountRepository;
 
     @Transactional(readOnly = true)
     public List<TransactionResponse> list(UUID userId, UUID portfolioId) {
@@ -58,8 +62,28 @@ public class InvestmentTransactionService {
         Map<UUID, Asset> assetsById = new HashMap<>();
         assetRepository.findAllById(assetIds).forEach(a -> assetsById.put(a.getId(), a));
 
+        Set<UUID> accountIds = new HashSet<>();
+        for (InvestmentTransaction t : txns) {
+            if (t.getAccountId() != null) {
+                accountIds.add(t.getAccountId());
+            }
+        }
+        Map<UUID, String> accountNameById = new HashMap<>();
+        if (!accountIds.isEmpty()) {
+            for (Account a : accountRepository.findAllById(accountIds)) {
+                accountNameById.put(a.getId(), a.getName());
+            }
+        }
+
         return txns.stream()
-                .map(t -> TransactionResponse.from(t, assetsById.get(t.getAssetId())))
+                .map(
+                        t ->
+                                TransactionResponse.from(
+                                        t,
+                                        assetsById.get(t.getAssetId()),
+                                        t.getAccountId() != null
+                                                ? accountNameById.get(t.getAccountId())
+                                                : null))
                 .toList();
     }
 
@@ -72,6 +96,10 @@ public class InvestmentTransactionService {
                 assetRepository
                         .findById(request.assetId())
                         .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
+
+        UUID accountId =
+                resolveAccountOwnership(
+                        userId, request.accountId(), AuditAction.INVESTMENT_TRANSACTION_CREATED);
 
         BigDecimal fee = request.feeTry() != null ? request.feeTry() : BigDecimal.ZERO;
         BigDecimal amount = request.priceTry().multiply(request.quantity());
@@ -103,6 +131,7 @@ public class InvestmentTransactionService {
                         .feeTry(fee)
                         .notes(request.notes())
                         .txnDate(request.txnDate())
+                        .accountId(accountId)
                         .build();
         txn = transactionRepository.save(txn);
 
@@ -117,7 +146,7 @@ public class InvestmentTransactionService {
                 AuditAction.INVESTMENT_TRANSACTION_CREATED,
                 userId,
                 currentUsername(),
-                "id=" + txn.getId());
+                "id=" + txn.getId() + " accountId=" + accountId);
 
         eventPublisher.publishEvent(
                 new InvestmentTransactionRecordedEvent(
@@ -132,7 +161,11 @@ public class InvestmentTransactionService {
                         txn.getAccountId(),
                         null));
 
-        return TransactionResponse.from(txn, asset);
+        String accountName =
+                accountId != null
+                        ? accountRepository.findById(accountId).map(Account::getName).orElse(null)
+                        : null;
+        return TransactionResponse.from(txn, asset, accountName);
     }
 
     @Transactional
@@ -195,6 +228,16 @@ public class InvestmentTransactionService {
             throw new BusinessRuleException(
                     "Sell quantity exceeds current holding", "HOLDING_INSUFFICIENT");
         }
+    }
+
+    private UUID resolveAccountOwnership(UUID userId, UUID accountId, String failureAction) {
+        if (accountId == null) return null;
+        if (accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId).isEmpty()) {
+            auditService.failure(
+                    failureAction, userId, currentUsername(), "accountId=" + accountId);
+            throw new BusinessRuleException("Account not found", "ACCOUNT_NOT_OWNED");
+        }
+        return accountId;
     }
 
     private Portfolio requireOwnedPortfolio(UUID userId, UUID portfolioId) {

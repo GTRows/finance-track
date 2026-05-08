@@ -36,4 +36,5 @@ public record RecordTransactionRequest(
                         message = "Fee must have at most 16 integer and 4 fractional digits")
                 BigDecimal feeTry,
         @NotNull(message = "Transaction date is required") LocalDate txnDate,
-        @Size(max = 500, message = "Notes must be at most 500 characters") String notes) {}
+        @Size(max = 500, message = "Notes must be at most 500 characters") String notes,
+        UUID accountId) {}

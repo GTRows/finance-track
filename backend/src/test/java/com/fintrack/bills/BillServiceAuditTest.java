@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.audit.AuditAction;
 import com.fintrack.audit.AuditService;
 import com.fintrack.bills.dto.CreateBillRequest;
@@ -30,6 +31,7 @@ class BillServiceAuditTest {
     @Mock BillPaymentRepository paymentRepo;
     @Mock AuditService auditService;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock AccountRepository accountRepository;
 
     @InjectMocks BillService service;
 
@@ -117,7 +119,7 @@ class BillServiceAuditTest {
                         existing.getId(), PaymentStatus.PAID))
                 .thenReturn(List.of());
 
-        service.pay(userId, existing.getId(), new PayBillRequest("2026-04", null, null));
+        service.pay(userId, existing.getId(), new PayBillRequest("2026-04", null, null, null));
 
         verify(auditService)
                 .success(

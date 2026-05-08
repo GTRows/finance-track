@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.audit.AuditAction;
 import com.fintrack.audit.AuditService;
@@ -38,6 +39,7 @@ class InvestmentTransactionServiceAuditTest {
     @Mock AssetRepository assetRepository;
     @Mock AuditService auditService;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock AccountRepository accountRepository;
 
     @InjectMocks InvestmentTransactionService service;
 
@@ -61,7 +63,8 @@ class InvestmentTransactionServiceAuditTest {
                 new BigDecimal(price),
                 BigDecimal.ZERO,
                 LocalDate.of(2026, 4, 1),
-                "note");
+                "note",
+                null);
     }
 
     @Test

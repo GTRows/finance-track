@@ -23,9 +23,12 @@ public record TransactionResponse(
         BigDecimal feeTry,
         String notes,
         LocalDate txnDate,
-        Instant createdAt) {
+        Instant createdAt,
+        UUID accountId,
+        String accountName) {
 
-    public static TransactionResponse from(InvestmentTransaction t, Asset asset) {
+    public static TransactionResponse from(
+            InvestmentTransaction t, Asset asset, String accountName) {
         return new TransactionResponse(
                 t.getId(),
                 t.getPortfolioId(),
@@ -39,6 +42,12 @@ public record TransactionResponse(
                 t.getFeeTry(),
                 t.getNotes(),
                 t.getTxnDate(),
-                t.getCreatedAt());
+                t.getCreatedAt(),
+                t.getAccountId(),
+                accountName);
+    }
+
+    public static TransactionResponse from(InvestmentTransaction t, Asset asset) {
+        return from(t, asset, null);
     }
 }

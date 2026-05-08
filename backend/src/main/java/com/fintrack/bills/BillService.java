@@ -1,11 +1,14 @@
 package com.fintrack.bills;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.audit.AuditAction;
 import com.fintrack.audit.AuditService;
 import com.fintrack.bills.dto.*;
+import com.fintrack.common.entity.Account;
 import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
 import com.fintrack.common.event.BillPaidEvent;
+import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -13,7 +16,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,18 +39,40 @@ public class BillService {
     private final BillPaymentRepository paymentRepo;
     private final AuditService auditService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AccountRepository accountRepository;
 
     @Transactional(readOnly = true)
     public List<BillResponse> listForUser(UUID userId) {
         String currentPeriod = currentPeriod();
-        return billRepo.findByUserIdOrderByDueDayAsc(userId).stream()
+        List<Bill> bills = billRepo.findByUserIdOrderByDueDayAsc(userId);
+        Map<UUID, BillPayment> paymentByBillId = new HashMap<>();
+        Set<UUID> accountIds = new HashSet<>();
+        for (Bill bill : bills) {
+            BillPayment payment =
+                    paymentRepo.findByBillIdAndPeriod(bill.getId(), currentPeriod).orElse(null);
+            if (payment != null) {
+                paymentByBillId.put(bill.getId(), payment);
+                if (payment.getAccountId() != null) {
+                    accountIds.add(payment.getAccountId());
+                }
+            }
+        }
+        Map<UUID, String> accountNameById = new HashMap<>();
+        if (!accountIds.isEmpty()) {
+            for (Account a : accountRepository.findAllById(accountIds)) {
+                accountNameById.put(a.getId(), a.getName());
+            }
+        }
+        return bills.stream()
                 .map(
                         bill -> {
-                            BillPayment payment =
-                                    paymentRepo
-                                            .findByBillIdAndPeriod(bill.getId(), currentPeriod)
-                                            .orElse(null);
-                            return BillResponse.from(bill, payment, computeVariance(bill.getId()));
+                            BillPayment payment = paymentByBillId.get(bill.getId());
+                            String accountName =
+                                    payment != null && payment.getAccountId() != null
+                                            ? accountNameById.get(payment.getAccountId())
+                                            : null;
+                            return BillResponse.from(
+                                    bill, payment, computeVariance(bill.getId()), accountName);
                         })
                 .toList();
     }
@@ -100,6 +129,8 @@ public class BillService {
     @Transactional
     public BillResponse pay(UUID userId, UUID billId, PayBillRequest req) {
         Bill bill = requireOwned(userId, billId);
+        UUID accountId =
+                resolveAccountOwnership(userId, req.accountId(), AuditAction.BILL_PAYMENT_RECORDED);
 
         BillPayment payment =
                 paymentRepo
@@ -117,9 +148,11 @@ public class BillService {
         BigDecimal previousAmount =
                 payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO;
         UUID previousAccountId = payment.getAccountId();
+
         payment.setStatus(BillPayment.PaymentStatus.PAID);
         payment.setPaidAt(Instant.now());
         payment.setAmount(req.amount() != null ? req.amount() : bill.getAmount());
+        payment.setAccountId(accountId);
         if (req.notes() != null) {
             payment.setNotes(req.notes());
         }
@@ -133,7 +166,7 @@ public class BillService {
                 AuditAction.BILL_PAYMENT_RECORDED,
                 userId,
                 currentUsername(),
-                "billId=" + billId + " period=" + req.period());
+                "billId=" + billId + " period=" + req.period() + " accountId=" + accountId);
         eventPublisher.publishEvent(
                 new BillPaidEvent(
                         userId,
@@ -147,7 +180,11 @@ public class BillService {
                         previousStatus,
                         previousAmount,
                         previousAccountId));
-        return BillResponse.from(bill, payment, computeVariance(bill.getId()));
+        String accountName =
+                accountId != null
+                        ? accountRepository.findById(accountId).map(Account::getName).orElse(null)
+                        : null;
+        return BillResponse.from(bill, payment, computeVariance(bill.getId()), accountName);
     }
 
     @Transactional(readOnly = true)
@@ -225,6 +262,16 @@ public class BillService {
                 lastUsed,
                 daysSince,
                 reason);
+    }
+
+    private UUID resolveAccountOwnership(UUID userId, UUID accountId, String failureAction) {
+        if (accountId == null) return null;
+        if (accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId).isEmpty()) {
+            auditService.failure(
+                    failureAction, userId, currentUsername(), "accountId=" + accountId);
+            throw new BusinessRuleException("Account not found", "ACCOUNT_NOT_OWNED");
+        }
+        return accountId;
     }
 
     private Bill requireOwned(UUID userId, UUID billId) {

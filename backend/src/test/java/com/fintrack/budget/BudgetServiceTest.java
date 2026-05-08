@@ -1,26 +1,40 @@
 package com.fintrack.budget;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.BudgetSummaryResponse;
+import com.fintrack.budget.dto.CreateTransactionRequest;
+import com.fintrack.budget.dto.UpdateTransactionRequest;
 import com.fintrack.budget.rule.TransactionCategoryRuleService;
+import com.fintrack.common.entity.Account;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.BudgetTransaction.TxnType;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.IncomeCategory;
+import com.fintrack.common.event.BudgetTransactionDeletedEvent;
+import com.fintrack.common.event.BudgetTransactionPersistedEvent;
+import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.price.FxConversionService;
 import com.fintrack.settings.UserSettingsRepository;
 import com.fintrack.tag.TagService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,6 +54,7 @@ class BudgetServiceTest {
     @Mock FxConversionService fxConversionService;
     @Mock AuditService auditService;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock AccountRepository accountRepository;
 
     @InjectMocks BudgetService service;
 
@@ -255,5 +270,193 @@ class BudgetServiceTest {
                         .orElseThrow();
         assertThat(foodRow.rolloverAmount()).isEqualByComparingTo("0");
         assertThat(foodRow.effectiveBudget()).isEqualByComparingTo("500");
+    }
+
+    @Test
+    void create_resolvesOwnership404WhenAccountNotOwned() {
+        UUID accountId = UUID.randomUUID();
+        when(accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId))
+                .thenReturn(Optional.empty());
+        CreateTransactionRequest req =
+                new CreateTransactionRequest(
+                        TxnType.EXPENSE,
+                        new BigDecimal("100"),
+                        "TRY",
+                        null,
+                        "lunch",
+                        LocalDate.of(2026, 4, 10),
+                        false,
+                        List.of(),
+                        accountId);
+
+        assertThatThrownBy(() -> service.create(userId, req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Account not found");
+        verify(txnRepo, never()).save(any());
+    }
+
+    @Test
+    void create_publishesEventWithAccountId() {
+        UUID accountId = UUID.randomUUID();
+        Account ownedAccount =
+                Account.builder()
+                        .id(accountId)
+                        .userId(userId)
+                        .name("Garanti")
+                        .accountType(Account.AccountType.BANK_CHECKING)
+                        .currency("TRY")
+                        .build();
+        when(accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId))
+                .thenReturn(Optional.of(ownedAccount));
+        when(txnRepo.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            BudgetTransaction t = inv.getArgument(0);
+                            t.setId(UUID.randomUUID());
+                            return t;
+                        });
+        CreateTransactionRequest req =
+                new CreateTransactionRequest(
+                        TxnType.EXPENSE,
+                        new BigDecimal("100"),
+                        "TRY",
+                        null,
+                        "lunch",
+                        LocalDate.of(2026, 4, 10),
+                        false,
+                        List.of(),
+                        accountId);
+
+        service.create(userId, req);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher, atLeastOnce()).publishEvent(captor.capture());
+        BudgetTransactionPersistedEvent ev =
+                captor.getAllValues().stream()
+                        .filter(BudgetTransactionPersistedEvent.class::isInstance)
+                        .map(BudgetTransactionPersistedEvent.class::cast)
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(ev.accountId()).isEqualTo(accountId);
+        assertThat(ev.previousAccountId()).isNull();
+    }
+
+    @Test
+    void update_publishesPreviousAccountIdOnAccountChange() {
+        UUID txnId = UUID.randomUUID();
+        UUID prevAccountId = UUID.randomUUID();
+        UUID newAccountId = UUID.randomUUID();
+        BudgetTransaction existing =
+                BudgetTransaction.builder()
+                        .id(txnId)
+                        .userId(userId)
+                        .txnType(TxnType.EXPENSE)
+                        .amount(new BigDecimal("100"))
+                        .currency("TRY")
+                        .txnDate(LocalDate.of(2026, 4, 10))
+                        .accountId(prevAccountId)
+                        .build();
+        when(txnRepo.findByIdAndUserId(txnId, userId)).thenReturn(Optional.of(existing));
+        Account ownedAccount =
+                Account.builder()
+                        .id(newAccountId)
+                        .userId(userId)
+                        .name("Akbank")
+                        .accountType(Account.AccountType.BANK_CHECKING)
+                        .currency("TRY")
+                        .build();
+        when(accountRepository.findByIdAndUserIdAndArchivedFalse(newAccountId, userId))
+                .thenReturn(Optional.of(ownedAccount));
+
+        UpdateTransactionRequest req =
+                new UpdateTransactionRequest(
+                        TxnType.EXPENSE,
+                        new BigDecimal("100"),
+                        "TRY",
+                        null,
+                        "lunch",
+                        LocalDate.of(2026, 4, 10),
+                        false,
+                        List.of(),
+                        newAccountId);
+
+        service.update(userId, txnId, req);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher, atLeastOnce()).publishEvent(captor.capture());
+        BudgetTransactionPersistedEvent ev =
+                captor.getAllValues().stream()
+                        .filter(BudgetTransactionPersistedEvent.class::isInstance)
+                        .map(BudgetTransactionPersistedEvent.class::cast)
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(ev.accountId()).isEqualTo(newAccountId);
+        assertThat(ev.previousAccountId()).isEqualTo(prevAccountId);
+    }
+
+    @Test
+    void delete_publishesAccountIdInDeletedEvent() {
+        UUID txnId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+        BudgetTransaction existing =
+                BudgetTransaction.builder()
+                        .id(txnId)
+                        .userId(userId)
+                        .txnType(TxnType.EXPENSE)
+                        .amount(new BigDecimal("75"))
+                        .currency("TRY")
+                        .txnDate(LocalDate.of(2026, 4, 10))
+                        .accountId(accountId)
+                        .build();
+        when(txnRepo.findByIdAndUserId(txnId, userId)).thenReturn(Optional.of(existing));
+
+        service.delete(userId, txnId);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(BudgetTransactionDeletedEvent.class);
+        BudgetTransactionDeletedEvent ev = (BudgetTransactionDeletedEvent) captor.getValue();
+        assertThat(ev.accountId()).isEqualTo(accountId);
+        assertThat(ev.amount()).isEqualByComparingTo("75");
+    }
+
+    @Test
+    void bulkDelete_publishesOneEventPerNonNullAccountIdRow() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+        BudgetTransaction t1 =
+                BudgetTransaction.builder()
+                        .id(id1)
+                        .userId(userId)
+                        .txnType(TxnType.EXPENSE)
+                        .amount(new BigDecimal("10"))
+                        .accountId(accountId)
+                        .build();
+        BudgetTransaction t2 =
+                BudgetTransaction.builder()
+                        .id(id2)
+                        .userId(userId)
+                        .txnType(TxnType.EXPENSE)
+                        .amount(new BigDecimal("20"))
+                        .accountId(null)
+                        .build();
+        BudgetTransaction t3 =
+                BudgetTransaction.builder()
+                        .id(id3)
+                        .userId(userId)
+                        .txnType(TxnType.INCOME)
+                        .amount(new BigDecimal("30"))
+                        .accountId(accountId)
+                        .build();
+        when(txnRepo.findByIdInAndUserId(List.of(id1, id2, id3), userId))
+                .thenReturn(List.of(t1, t2, t3));
+
+        int deleted = service.bulkDelete(userId, List.of(id1, id2, id3));
+
+        assertThat(deleted).isEqualTo(3);
+        // 2 non-null accountId rows -> 2 events.
+        verify(eventPublisher, times(2)).publishEvent(any(BudgetTransactionDeletedEvent.class));
     }
 }

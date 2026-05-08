@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.Asset;
@@ -44,6 +45,7 @@ class InvestmentTransactionServiceTest {
     @Mock AssetRepository assetRepository;
     @Mock AuditService auditService;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock AccountRepository accountRepository;
 
     @InjectMocks InvestmentTransactionService service;
 
@@ -67,7 +69,8 @@ class InvestmentTransactionServiceTest {
                 new BigDecimal(price),
                 fee == null ? null : new BigDecimal(fee),
                 LocalDate.of(2026, 4, 1),
-                "note");
+                "note",
+                null);
     }
 
     @Test
@@ -288,5 +291,104 @@ class InvestmentTransactionServiceTest {
                 .thenReturn(List.of());
 
         assertThat(service.list(userId, portfolioId)).isEmpty();
+    }
+
+    @Test
+    void record_resolvesOwnership404WhenAccountNotOwned() {
+        UUID accountId = UUID.randomUUID();
+        when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
+                .thenReturn(Optional.of(ownedPortfolio()));
+        when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
+        when(accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId))
+                .thenReturn(Optional.empty());
+        RecordTransactionRequest request =
+                new RecordTransactionRequest(
+                        assetId,
+                        TxnType.BUY,
+                        new BigDecimal("1"),
+                        new BigDecimal("100"),
+                        BigDecimal.ZERO,
+                        LocalDate.of(2026, 4, 1),
+                        "note",
+                        accountId);
+
+        assertThatThrownBy(() -> service.record(userId, portfolioId, request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Account not found");
+        verify(transactionRepository, never()).save(any());
+    }
+
+    @Test
+    void record_publishesEventWithAccountId() {
+        UUID accountId = UUID.randomUUID();
+        com.fintrack.common.entity.Account ownedAccount =
+                com.fintrack.common.entity.Account.builder()
+                        .id(accountId)
+                        .userId(userId)
+                        .name("Brokerage Cash")
+                        .accountType(com.fintrack.common.entity.Account.AccountType.BROKERAGE_CASH)
+                        .currency("TRY")
+                        .build();
+        when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
+                .thenReturn(Optional.of(ownedPortfolio()));
+        when(assetRepository.findById(assetId)).thenReturn(Optional.of(asset()));
+        when(accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId))
+                .thenReturn(Optional.of(ownedAccount));
+        when(transactionRepository.save(any()))
+                .thenAnswer(
+                        inv -> {
+                            InvestmentTransaction t = inv.getArgument(0);
+                            t.setId(UUID.randomUUID());
+                            return t;
+                        });
+        RecordTransactionRequest request =
+                new RecordTransactionRequest(
+                        assetId,
+                        TxnType.BUY,
+                        new BigDecimal("1"),
+                        new BigDecimal("100"),
+                        BigDecimal.ZERO,
+                        LocalDate.of(2026, 4, 1),
+                        "note",
+                        accountId);
+
+        service.record(userId, portfolioId, request);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        InvestmentTransactionRecordedEvent ev =
+                (InvestmentTransactionRecordedEvent) captor.getValue();
+        assertThat(ev.accountId()).isEqualTo(accountId);
+        assertThat(ev.previousAccountId()).isNull();
+    }
+
+    @Test
+    void delete_publishesEventWithAccountId() {
+        UUID txnId = UUID.randomUUID();
+        UUID accountId = UUID.randomUUID();
+        InvestmentTransaction existing =
+                InvestmentTransaction.builder()
+                        .id(txnId)
+                        .portfolioId(portfolioId)
+                        .assetId(assetId)
+                        .txnType(TxnType.BUY)
+                        .quantity(new BigDecimal("1"))
+                        .priceTry(new BigDecimal("100"))
+                        .amountTry(new BigDecimal("100"))
+                        .feeTry(BigDecimal.ZERO)
+                        .accountId(accountId)
+                        .build();
+        when(portfolioRepository.findByIdAndUserIdAndActiveTrue(portfolioId, userId))
+                .thenReturn(Optional.of(ownedPortfolio()));
+        when(transactionRepository.findByIdAndPortfolioId(txnId, portfolioId))
+                .thenReturn(Optional.of(existing));
+
+        service.delete(userId, portfolioId, txnId);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        InvestmentTransactionDeletedEvent ev =
+                (InvestmentTransactionDeletedEvent) captor.getValue();
+        assertThat(ev.accountId()).isEqualTo(accountId);
     }
 }

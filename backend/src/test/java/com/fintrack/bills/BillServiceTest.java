@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.audit.AuditService;
 import com.fintrack.bills.dto.BillResponse;
 import com.fintrack.bills.dto.BillVarianceDto;
@@ -39,6 +40,7 @@ class BillServiceTest {
     @Mock BillPaymentRepository paymentRepo;
     @Mock AuditService auditService;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock AccountRepository accountRepository;
 
     @InjectMocks BillService service;
 
@@ -107,7 +109,7 @@ class BillServiceTest {
         when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
                 .thenReturn(List.of());
 
-        service.pay(userId, b.getId(), new PayBillRequest("2026-04", null, null));
+        service.pay(userId, b.getId(), new PayBillRequest("2026-04", null, null, null));
 
         ArgumentCaptor<BillPayment> captor = ArgumentCaptor.forClass(BillPayment.class);
         verify(paymentRepo).save(captor.capture());
@@ -126,7 +128,10 @@ class BillServiceTest {
         when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
                 .thenReturn(List.of());
 
-        service.pay(userId, b.getId(), new PayBillRequest("2026-04", new BigDecimal("400"), null));
+        service.pay(
+                userId,
+                b.getId(),
+                new PayBillRequest("2026-04", new BigDecimal("400"), null, null));
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(eventPublisher).publishEvent(captor.capture());
@@ -161,7 +166,7 @@ class BillServiceTest {
         service.pay(
                 userId,
                 b.getId(),
-                new PayBillRequest("2026-04", new BigDecimal("375.50"), "paid online"));
+                new PayBillRequest("2026-04", new BigDecimal("375.50"), "paid online", null));
 
         assertThat(existing.getStatus()).isEqualTo(PaymentStatus.PAID);
         assertThat(existing.getAmount()).isEqualByComparingTo("375.50");
@@ -174,7 +179,12 @@ class BillServiceTest {
         UUID id = UUID.randomUUID();
         when(billRepo.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.pay(userId, id, new PayBillRequest("2026-04", null, null)))
+        assertThatThrownBy(
+                        () ->
+                                service.pay(
+                                        userId,
+                                        id,
+                                        new PayBillRequest("2026-04", null, null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -339,5 +349,84 @@ class BillServiceTest {
 
         assertThat(audit.candidates()).isEmpty();
         assertThat(audit.totalMonthlySpend()).isEqualByComparingTo("100");
+    }
+
+    @Test
+    void pay_resolvesOwnership404WhenAccountNotOwned() {
+        Bill b = bill("Electric", "350", 15);
+        UUID accountId = UUID.randomUUID();
+        when(billRepo.findByIdAndUserId(b.getId(), userId)).thenReturn(Optional.of(b));
+        when(accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                        () ->
+                                service.pay(
+                                        userId,
+                                        b.getId(),
+                                        new PayBillRequest(
+                                                "2026-04", new BigDecimal("400"), null, accountId)))
+                .isInstanceOf(com.fintrack.common.exception.BusinessRuleException.class)
+                .hasMessageContaining("Account not found");
+    }
+
+    @Test
+    void pay_publishesPreviousStatusInBillPaidEvent() {
+        Bill b = bill("Electric", "350", 15);
+        BillPayment existing =
+                BillPayment.builder()
+                        .id(UUID.randomUUID())
+                        .billId(b.getId())
+                        .period("2026-04")
+                        .amount(new BigDecimal("300"))
+                        .status(PaymentStatus.PENDING)
+                        .build();
+        when(billRepo.findByIdAndUserId(b.getId(), userId)).thenReturn(Optional.of(b));
+        when(paymentRepo.findByBillIdAndPeriod(b.getId(), "2026-04"))
+                .thenReturn(Optional.of(existing));
+        when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
+                .thenReturn(List.of());
+
+        service.pay(
+                userId,
+                b.getId(),
+                new PayBillRequest("2026-04", new BigDecimal("325"), null, null));
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        BillPaidEvent ev = (BillPaidEvent) captor.getValue();
+        assertThat(ev.previousStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(ev.previousAmount()).isEqualByComparingTo("300");
+    }
+
+    @Test
+    void pay_publishesAccountIdInBillPaidEvent() {
+        Bill b = bill("Electric", "350", 15);
+        UUID accountId = UUID.randomUUID();
+        com.fintrack.common.entity.Account ownedAccount =
+                com.fintrack.common.entity.Account.builder()
+                        .id(accountId)
+                        .userId(userId)
+                        .name("Garanti")
+                        .accountType(com.fintrack.common.entity.Account.AccountType.BANK_CHECKING)
+                        .currency("TRY")
+                        .build();
+        when(billRepo.findByIdAndUserId(b.getId(), userId)).thenReturn(Optional.of(b));
+        when(paymentRepo.findByBillIdAndPeriod(b.getId(), "2026-04")).thenReturn(Optional.empty());
+        when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
+                .thenReturn(List.of());
+        when(accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId))
+                .thenReturn(Optional.of(ownedAccount));
+        when(accountRepository.findById(accountId)).thenReturn(Optional.of(ownedAccount));
+
+        service.pay(
+                userId,
+                b.getId(),
+                new PayBillRequest("2026-04", new BigDecimal("400"), null, accountId));
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        BillPaidEvent ev = (BillPaidEvent) captor.getValue();
+        assertThat(ev.accountId()).isEqualTo(accountId);
     }
 }

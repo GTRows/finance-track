@@ -25,7 +25,9 @@ public record TransactionResponse(
         boolean hasReceipt,
         BudgetTransaction.OcrStatus ocrStatus,
         String ocrText,
-        Instant createdAt) {
+        Instant createdAt,
+        UUID accountId,
+        String accountName) {
 
     public record TagRef(UUID id, String name, String color) {
         public static TagRef from(TagService.TagSummary s) {
@@ -34,7 +36,11 @@ public record TransactionResponse(
     }
 
     public static TransactionResponse from(
-            BudgetTransaction t, String categoryName, String categoryColor, List<TagRef> tags) {
+            BudgetTransaction t,
+            String categoryName,
+            String categoryColor,
+            List<TagRef> tags,
+            String accountName) {
         return new TransactionResponse(
                 t.getId(),
                 t.getTxnType(),
@@ -52,6 +58,8 @@ public record TransactionResponse(
                 t.getReceiptPath() != null && !t.getReceiptPath().isBlank(),
                 t.getOcrStatus(),
                 t.getOcrText(),
-                t.getCreatedAt());
+                t.getCreatedAt(),
+                t.getAccountId(),
+                accountName);
     }
 }

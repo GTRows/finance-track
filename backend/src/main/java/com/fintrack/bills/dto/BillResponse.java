@@ -23,14 +23,21 @@ public record BillResponse(
         long daysUntilDue,
         LocalDate lastUsedOn,
         Long daysSinceLastUse,
-        BillVarianceDto variance) {
+        BillVarianceDto variance,
+        UUID accountId,
+        String accountName) {
 
     public static BillResponse from(Bill bill, BillPayment currentPayment) {
-        return from(bill, currentPayment, null);
+        return from(bill, currentPayment, null, null);
     }
 
     public static BillResponse from(
             Bill bill, BillPayment currentPayment, BillVarianceDto variance) {
+        return from(bill, currentPayment, variance, null);
+    }
+
+    public static BillResponse from(
+            Bill bill, BillPayment currentPayment, BillVarianceDto variance, String accountName) {
         LocalDate today = LocalDate.now();
 
         int dueDay = Math.min(bill.getDueDay(), today.lengthOfMonth());
@@ -62,6 +69,8 @@ public record BillResponse(
                 daysUntil,
                 lastUsed,
                 daysSinceLastUse,
-                variance);
+                variance,
+                currentPayment != null ? currentPayment.getAccountId() : null,
+                accountName);
     }
 }

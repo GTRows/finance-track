@@ -1,14 +1,18 @@
 package com.fintrack.budget;
 
+import com.fintrack.account.AccountRepository;
 import com.fintrack.audit.AuditAction;
 import com.fintrack.audit.AuditService;
 import com.fintrack.budget.dto.*;
 import com.fintrack.budget.rule.TransactionCategoryRuleService;
+import com.fintrack.common.entity.Account;
 import com.fintrack.common.entity.BudgetTransaction;
 import com.fintrack.common.entity.ExpenseCategory;
 import com.fintrack.common.entity.MonthlySummary;
 import com.fintrack.common.entity.UserSettings;
+import com.fintrack.common.event.BudgetTransactionDeletedEvent;
 import com.fintrack.common.event.BudgetTransactionPersistedEvent;
+import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.price.FxConversionService;
 import com.fintrack.settings.UserSettingsRepository;
@@ -49,6 +53,7 @@ public class BudgetService {
     private final FxConversionService fxConversionService;
     private final AuditService auditService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AccountRepository accountRepository;
 
     // -- Transactions --
 
@@ -81,10 +86,11 @@ public class BudgetService {
         }
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
+        Map<UUID, String> accountLookup = buildAccountLookup(userId);
         List<UUID> txnIds = page.getContent().stream().map(BudgetTransaction::getId).toList();
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup = buildTagLookup(userId, txnIds);
 
-        return page.map(t -> toResponse(t, catLookup, tagLookup));
+        return page.map(t -> toResponse(t, catLookup, tagLookup, accountLookup));
     }
 
     @Transactional
@@ -96,6 +102,9 @@ public class BudgetService {
                             .matchFor(userId, req.txnType(), req.description())
                             .orElse(null);
         }
+        UUID accountId =
+                resolveAccountOwnership(
+                        userId, req.accountId(), AuditAction.BUDGET_TRANSACTION_CREATED);
         ConvertedAmount converted = convertForUser(userId, req.amount(), req.currency());
         BudgetTransaction txn =
                 BudgetTransaction.builder()
@@ -109,6 +118,7 @@ public class BudgetService {
                         .description(req.description())
                         .txnDate(req.txnDate())
                         .recurring(req.isRecurring())
+                        .accountId(accountId)
                         .build();
         txn = txnRepo.save(txn);
         log.info(
@@ -120,7 +130,7 @@ public class BudgetService {
                 AuditAction.BUDGET_TRANSACTION_CREATED,
                 userId,
                 currentUsername(),
-                "id=" + txn.getId());
+                "id=" + txn.getId() + " accountId=" + accountId);
 
         List<UUID> ownedTagIds = tagService.resolveOwnedIds(userId, req.tagIds());
         tagService.setTransactionTags(txn.getId(), ownedTagIds);
@@ -137,9 +147,10 @@ public class BudgetService {
                         null));
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
+        Map<UUID, String> accountLookup = buildAccountLookup(userId);
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup =
                 buildTagLookup(userId, List.of(txn.getId()));
-        return toResponse(txn, catLookup, tagLookup);
+        return toResponse(txn, catLookup, tagLookup, accountLookup);
     }
 
     @Transactional
@@ -147,6 +158,10 @@ public class BudgetService {
         BudgetTransaction txn =
                 txnRepo.findByIdAndUserId(txnId, userId)
                         .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        UUID previousAccountId = txn.getAccountId();
+        UUID accountId =
+                resolveAccountOwnership(
+                        userId, req.accountId(), AuditAction.BUDGET_TRANSACTION_UPDATED);
         ConvertedAmount converted = convertForUser(userId, req.amount(), req.currency());
         txn.setTxnType(req.txnType());
         txn.setAmount(converted.amount());
@@ -157,6 +172,7 @@ public class BudgetService {
         txn.setDescription(req.description());
         txn.setTxnDate(req.txnDate());
         txn.setRecurring(req.isRecurring());
+        txn.setAccountId(accountId);
 
         List<UUID> ownedTagIds = tagService.resolveOwnedIds(userId, req.tagIds());
         tagService.setTransactionTags(txn.getId(), ownedTagIds);
@@ -165,7 +181,7 @@ public class BudgetService {
                 AuditAction.BUDGET_TRANSACTION_UPDATED,
                 userId,
                 currentUsername(),
-                "id=" + txn.getId());
+                "id=" + txn.getId() + " accountId=" + accountId);
 
         eventPublisher.publishEvent(
                 new BudgetTransactionPersistedEvent(
@@ -176,12 +192,13 @@ public class BudgetService {
                         txn.getAmount(),
                         txn.getTxnDate(),
                         txn.getAccountId(),
-                        null));
+                        previousAccountId));
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
+        Map<UUID, String> accountLookup = buildAccountLookup(userId);
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup =
                 buildTagLookup(userId, List.of(txn.getId()));
-        return toResponse(txn, catLookup, tagLookup);
+        return toResponse(txn, catLookup, tagLookup, accountLookup);
     }
 
     @Transactional
@@ -189,10 +206,15 @@ public class BudgetService {
         BudgetTransaction txn =
                 txnRepo.findByIdAndUserId(txnId, userId)
                         .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        UUID accountId = txn.getAccountId();
+        BudgetTransaction.TxnType txnType = txn.getTxnType();
+        BigDecimal amount = txn.getAmount();
         txnRepo.delete(txn);
         log.info("Transaction deleted: id={}", txnId);
         auditService.success(
                 AuditAction.BUDGET_TRANSACTION_DELETED, userId, currentUsername(), "id=" + txnId);
+        eventPublisher.publishEvent(
+                new BudgetTransactionDeletedEvent(userId, txnId, txnType, amount, accountId));
     }
 
     @Transactional
@@ -200,6 +222,18 @@ public class BudgetService {
         if (ids == null || ids.isEmpty()) return 0;
         List<BudgetTransaction> owned = txnRepo.findByIdInAndUserId(ids, userId);
         if (owned.isEmpty()) return 0;
+        List<BudgetTransactionDeletedEvent> events = new ArrayList<>();
+        for (BudgetTransaction t : owned) {
+            if (t.getAccountId() != null) {
+                events.add(
+                        new BudgetTransactionDeletedEvent(
+                                userId,
+                                t.getId(),
+                                t.getTxnType(),
+                                t.getAmount(),
+                                t.getAccountId()));
+            }
+        }
         txnRepo.deleteAll(owned);
         log.info("Bulk delete transactions: requested={} deleted={}", ids.size(), owned.size());
         auditService.success(
@@ -207,6 +241,9 @@ public class BudgetService {
                 userId,
                 currentUsername(),
                 "bulk count=" + owned.size());
+        for (BudgetTransactionDeletedEvent e : events) {
+            eventPublisher.publishEvent(e);
+        }
         return owned.size();
     }
 
@@ -412,6 +449,21 @@ public class BudgetService {
     // -- Helpers --
 
     /**
+     * Validates that the supplied accountId (when non-null) belongs to the user and is not
+     * archived. Returns the accountId on success; emits an audit failure and throws on absence.
+     */
+    private UUID resolveAccountOwnership(UUID userId, UUID accountId, String failureAction) {
+        if (accountId == null) return null;
+        if (accountRepository.findByIdAndUserIdAndArchivedFalse(accountId, userId).isEmpty()) {
+            String message = "Account not found";
+            auditService.failure(
+                    failureAction, userId, currentUsername(), "accountId=" + accountId);
+            throw new BusinessRuleException(message, "ACCOUNT_NOT_OWNED");
+        }
+        return accountId;
+    }
+
+    /**
      * Resolve the user's home currency and convert the submitted amount if needed. Null/blank
      * incoming currency is treated as the user's home currency — keeps backwards compatibility with
      * old clients that never sent the field.
@@ -450,10 +502,12 @@ public class BudgetService {
     private TransactionResponse toResponse(
             BudgetTransaction t,
             Map<UUID, String[]> catLookup,
-            Map<UUID, List<TransactionResponse.TagRef>> tagLookup) {
+            Map<UUID, List<TransactionResponse.TagRef>> tagLookup,
+            Map<UUID, String> accountLookup) {
         String[] catInfo = catLookup.getOrDefault(t.getCategoryId(), new String[] {null, null});
         List<TransactionResponse.TagRef> tags = tagLookup.getOrDefault(t.getId(), List.of());
-        return TransactionResponse.from(t, catInfo[0], catInfo[1], tags);
+        String accountName = t.getAccountId() != null ? accountLookup.get(t.getAccountId()) : null;
+        return TransactionResponse.from(t, catInfo[0], catInfo[1], tags, accountName);
     }
 
     private Map<UUID, List<TransactionResponse.TagRef>> buildTagLookup(
@@ -475,6 +529,15 @@ public class BudgetService {
         expenseRepo
                 .findByUserIdOrderByNameAsc(userId)
                 .forEach(c -> map.put(c.getId(), new String[] {c.getName(), c.getColor()}));
+        return map;
+    }
+
+    private Map<UUID, String> buildAccountLookup(UUID userId) {
+        Map<UUID, String> map = new HashMap<>();
+        for (Account a :
+                accountRepository.findByUserIdAndArchivedFalseOrderByCreatedAtAsc(userId)) {
+            map.put(a.getId(), a.getName());
+        }
         return map;
     }
 
