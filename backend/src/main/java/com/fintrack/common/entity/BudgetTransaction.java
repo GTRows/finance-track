@@ -78,6 +78,9 @@ public class BudgetTransaction {
     @Column(name = "original_currency", length = 10)
     private String originalCurrency;
 
+    @Column(name = "import_fingerprint", length = 64)
+    private String importFingerprint;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
