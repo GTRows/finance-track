@@ -123,4 +123,64 @@ class TransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
         assertThat(sum).isEqualByComparingTo("0");
     }
+
+    @Test
+    void save_persistsImportFingerprint() {
+        UUID userId = seedUser("zehra");
+        UUID accountId = UUID.randomUUID();
+        BudgetTransaction t =
+                BudgetTransaction.builder()
+                        .userId(userId)
+                        .accountId(accountId)
+                        .txnType(TxnType.EXPENSE)
+                        .amount(new BigDecimal("100"))
+                        .txnDate(LocalDate.of(2026, 4, 1))
+                        .importFingerprint(
+                                "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789")
+                        .build();
+        BudgetTransaction saved = repo.save(t);
+        assertThat(repo.findById(saved.getId()).orElseThrow().getImportFingerprint())
+                .isEqualTo("abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789");
+    }
+
+    @Test
+    void findFingerprintsByAccountId_returnsOnlyForGivenAccount() {
+        UUID userId = seedUser("hakan");
+        UUID accountA = UUID.randomUUID();
+        UUID accountB = UUID.randomUUID();
+        repo.save(fingerprintRow(userId, accountA, "fp-a-1"));
+        repo.save(fingerprintRow(userId, accountA, "fp-a-2"));
+        repo.save(fingerprintRow(userId, accountB, "fp-b-1"));
+        // A row with no fingerprint must not appear in results.
+        repo.save(
+                BudgetTransaction.builder()
+                        .userId(userId)
+                        .accountId(accountA)
+                        .txnType(TxnType.EXPENSE)
+                        .amount(BigDecimal.ONE)
+                        .txnDate(LocalDate.of(2026, 4, 1))
+                        .build());
+        assertThat(repo.findFingerprintsByAccountId(accountA))
+                .containsExactlyInAnyOrder("fp-a-1", "fp-a-2");
+    }
+
+    @Test
+    void existsByAccountIdAndImportFingerprint_trueWhenStored_falseOtherwise() {
+        UUID userId = seedUser("merve");
+        UUID accountId = UUID.randomUUID();
+        repo.save(fingerprintRow(userId, accountId, "stored-fp"));
+        assertThat(repo.existsByAccountIdAndImportFingerprint(accountId, "stored-fp")).isTrue();
+        assertThat(repo.existsByAccountIdAndImportFingerprint(accountId, "missing-fp")).isFalse();
+    }
+
+    private BudgetTransaction fingerprintRow(UUID userId, UUID accountId, String fingerprint) {
+        return BudgetTransaction.builder()
+                .userId(userId)
+                .accountId(accountId)
+                .txnType(TxnType.EXPENSE)
+                .amount(new BigDecimal("100"))
+                .txnDate(LocalDate.of(2026, 4, 1))
+                .importFingerprint(fingerprint)
+                .build();
+    }
 }
