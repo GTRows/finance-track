@@ -632,6 +632,47 @@ converts non-TRY balances to a single TRY total via daily ECB rates
 arrives once the FX-rate snapshot service is in place — flagged in
 27-02-SUMMARY's "Deferred Enhancements".
 
+## Linking transactions to accounts
+
+What it does: every transaction (budget, investment, bill payment)
+can carry an optional `account_id`. When attached, the matching
+account's `current_balance` is recomputed asynchronously after the
+transaction commits via the AFTER_COMMIT event listener
+(`AccountBalanceListener`). Existing pre-27-03 rows stay at NULL —
+they are "out-of-band" and do not move any account balance.
+
+Operator workflow: use the new account dropdown on every create/edit
+form (default `(no account)`). To attach an account to a historical
+row, open the row, pick an account, and save — the listener applies
+the delta to the picked account on commit. Switching the account on
+an existing transaction reverses the delta on the previous account
+and applies it on the new one in a single AFTER_COMMIT pass.
+
+Reconciliation drift: if the displayed balance and the bank's
+reported balance drift (e.g. due to fee precision in investment
+transactions, or because a row was created out-of-band), edit the
+account directly via `/accounts` and overwrite `currentBalance`
+with the bank's figure. The listener does not undo manual balance
+edits.
+
+### Emergency-fund coverage
+
+What it does: the dashboard tile divides the sum of
+`Account.currentBalance` (across the operator's chosen account
+types) by the trailing 12-month average expense and surfaces the
+months-covered figure with red < 3 / amber 3-6 / green > 6 bands.
+
+Configuration: `BANK_SAVINGS` is always included. The dashboard
+tile lets the operator toggle `BANK_CHECKING` and `CASH` on/off via
+the inline switches. `BROKERAGE_CASH`, `CRYPTO_WALLET`, and `OTHER`
+are intentionally not surfaced — liquidity profile mismatches.
+
+Cross-currency limitation: the reserve sum is face-value across
+currencies; a USD savings balance and a TRY savings balance are
+added without conversion. The frontend tile shows the per-currency
+breakdown so the operator can interpret the number;
+cross-currency rollup with FX rates ships in 28-01.
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`
