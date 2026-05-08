@@ -59,7 +59,17 @@ class BillPaidNotificationListenerTest {
 
     private BillPaidEvent event() {
         return new BillPaidEvent(
-                userId, billId, "Electric", "2026-04", new BigDecimal("350"), "TRY", Instant.now());
+                userId,
+                billId,
+                "Electric",
+                "2026-04",
+                new BigDecimal("350"),
+                "TRY",
+                Instant.now(),
+                null,
+                null,
+                null,
+                null);
     }
 
     @Test

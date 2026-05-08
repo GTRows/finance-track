@@ -7,6 +7,9 @@ import java.util.UUID;
 /**
  * Published after the transaction row commits via {@code InvestmentTransactionService.record(...)}.
  * Subscribers run via {@code @TransactionalEventListener(phase = AFTER_COMMIT)}.
+ *
+ * <p>{@code accountId} is the linked cash/bank account at commit time. {@code previousAccountId}
+ * supports a future in-place edit path; create flows pass {@code null}.
  */
 public record InvestmentTransactionRecordedEvent(
         UUID userId,
@@ -16,4 +19,6 @@ public record InvestmentTransactionRecordedEvent(
         InvestmentTransaction.TxnType txnType,
         BigDecimal quantity,
         BigDecimal priceTry,
-        BigDecimal feeTry) {}
+        BigDecimal feeTry,
+        UUID accountId,
+        UUID previousAccountId) {}

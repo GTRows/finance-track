@@ -113,6 +113,10 @@ public class BillService {
                                                         ? req.amount()
                                                         : bill.getAmount())
                                         .build());
+        BillPayment.PaymentStatus previousStatus = payment.getStatus();
+        BigDecimal previousAmount =
+                payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO;
+        UUID previousAccountId = payment.getAccountId();
         payment.setStatus(BillPayment.PaymentStatus.PAID);
         payment.setPaidAt(Instant.now());
         payment.setAmount(req.amount() != null ? req.amount() : bill.getAmount());
@@ -138,7 +142,11 @@ public class BillService {
                         payment.getPeriod(),
                         payment.getAmount(),
                         bill.getCurrency(),
-                        payment.getPaidAt()));
+                        payment.getPaidAt(),
+                        payment.getAccountId(),
+                        previousStatus,
+                        previousAmount,
+                        previousAccountId));
         return BillResponse.from(bill, payment, computeVariance(bill.getId()));
     }
 

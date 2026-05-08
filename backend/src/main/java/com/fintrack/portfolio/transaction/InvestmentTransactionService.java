@@ -128,7 +128,9 @@ public class InvestmentTransactionService {
                         request.txnType(),
                         request.quantity(),
                         request.priceTry(),
-                        fee));
+                        fee,
+                        txn.getAccountId(),
+                        null));
 
         return TransactionResponse.from(txn, asset);
     }
@@ -146,6 +148,7 @@ public class InvestmentTransactionService {
         BigDecimal quantity = txn.getQuantity();
         BigDecimal priceTry = txn.getPriceTry();
         BigDecimal feeTry = txn.getFeeTry();
+        UUID accountId = txn.getAccountId();
 
         transactionRepository.delete(txn);
         log.info("Transaction deleted: id={} portfolioId={}", txnId, portfolioId);
@@ -157,7 +160,15 @@ public class InvestmentTransactionService {
 
         eventPublisher.publishEvent(
                 new InvestmentTransactionDeletedEvent(
-                        userId, portfolioId, assetId, txnId, txnType, quantity, priceTry, feeTry));
+                        userId,
+                        portfolioId,
+                        assetId,
+                        txnId,
+                        txnType,
+                        quantity,
+                        priceTry,
+                        feeTry,
+                        accountId));
     }
 
     /**

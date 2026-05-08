@@ -17,4 +17,5 @@ public record InvestmentTransactionDeletedEvent(
         InvestmentTransaction.TxnType txnType,
         BigDecimal quantity,
         BigDecimal priceTry,
-        BigDecimal feeTry) {}
+        BigDecimal feeTry,
+        UUID accountId) {}

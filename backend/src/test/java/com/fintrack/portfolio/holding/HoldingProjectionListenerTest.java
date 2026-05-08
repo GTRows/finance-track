@@ -43,7 +43,9 @@ class HoldingProjectionListenerTest {
                 type,
                 new BigDecimal(qty),
                 new BigDecimal(price),
-                fee == null ? BigDecimal.ZERO : new BigDecimal(fee));
+                fee == null ? BigDecimal.ZERO : new BigDecimal(fee),
+                null,
+                null);
     }
 
     @Test
@@ -181,7 +183,8 @@ class HoldingProjectionListenerTest {
                         TxnType.BUY,
                         BigDecimal.ONE,
                         BigDecimal.ONE,
-                        BigDecimal.ZERO);
+                        BigDecimal.ZERO,
+                        null);
 
         listener.onTransactionDeleted(deletedEvent);
 

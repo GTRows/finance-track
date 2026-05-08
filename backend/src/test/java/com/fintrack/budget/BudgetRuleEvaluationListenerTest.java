@@ -38,7 +38,9 @@ class BudgetRuleEvaluationListenerTest {
                 TxnType.EXPENSE,
                 categoryId,
                 new BigDecimal("125"),
-                LocalDate.of(2026, 4, 10));
+                LocalDate.of(2026, 4, 10),
+                null,
+                null);
     }
 
     @Test

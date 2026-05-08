@@ -132,7 +132,9 @@ public class BudgetService {
                         txn.getTxnType(),
                         txn.getCategoryId(),
                         txn.getAmount(),
-                        txn.getTxnDate()));
+                        txn.getTxnDate(),
+                        txn.getAccountId(),
+                        null));
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup =
@@ -172,7 +174,9 @@ public class BudgetService {
                         txn.getTxnType(),
                         txn.getCategoryId(),
                         txn.getAmount(),
-                        txn.getTxnDate()));
+                        txn.getTxnDate(),
+                        txn.getAccountId(),
+                        null));
 
         Map<UUID, String[]> catLookup = buildCategoryLookup(userId);
         Map<UUID, List<TransactionResponse.TagRef>> tagLookup =
