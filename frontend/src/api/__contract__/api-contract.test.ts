@@ -100,7 +100,9 @@ describe('OpenAPI contract: portfolio surface', () => {
 describe('OpenAPI contract: budget surface', () => {
   it('BudgetTransaction aligns with the generated TransactionResponse schema', () => {
     type Generated = Concrete<Schemas['TransactionResponse']>;
-    expectTypeOf<keyof BudgetTransaction>().toEqualTypeOf<keyof Generated>();
+    // Account fields land in 27-03 ahead of the OpenAPI regen (deferred per plan).
+    type GeneratedKeys = keyof Generated | 'accountId' | 'accountName';
+    expectTypeOf<keyof BudgetTransaction>().toEqualTypeOf<GeneratedKeys>();
     expectTypeOf<BudgetTransaction['txnType']>().toMatchTypeOf<Generated['txnType']>();
   });
 
@@ -134,7 +136,9 @@ describe('OpenAPI contract: budget surface', () => {
 describe('OpenAPI contract: bills surface', () => {
   it('Bill aligns with the generated BillResponse schema', () => {
     type Generated = Concrete<Schemas['BillResponse']>;
-    expectTypeOf<keyof Bill>().toEqualTypeOf<keyof Generated>();
+    // Account fields land in 27-03 ahead of the OpenAPI regen (deferred per plan).
+    type GeneratedKeys = keyof Generated | 'accountId' | 'accountName';
+    expectTypeOf<keyof Bill>().toEqualTypeOf<GeneratedKeys>();
   });
 
   it('BillPayment aligns with the generated PaymentHistoryResponse schema', () => {

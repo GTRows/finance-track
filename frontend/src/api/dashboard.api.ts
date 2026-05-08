@@ -1,4 +1,8 @@
 import client from './client';
+import type {
+  EmergencyFundResponse,
+  UpdateEmergencyFundTypesRequest,
+} from '@/types/emergency-fund.types';
 
 export interface DashboardData {
   totalNetWorth: number;
@@ -37,6 +41,19 @@ export interface UpcomingBill {
 export const dashboardApi = {
   get: async (): Promise<DashboardData> => {
     const { data } = await client.get<DashboardData>('/dashboard');
+    return data;
+  },
+  emergencyFund: async (): Promise<EmergencyFundResponse> => {
+    const { data } = await client.get<EmergencyFundResponse>('/dashboard/emergency-fund');
+    return data;
+  },
+  updateEmergencyFundTypes: async (
+    body: UpdateEmergencyFundTypesRequest,
+  ): Promise<EmergencyFundResponse> => {
+    const { data } = await client.put<EmergencyFundResponse>(
+      '/dashboard/emergency-fund/types',
+      body,
+    );
     return data;
   },
 };

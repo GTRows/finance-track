@@ -14,6 +14,7 @@ import { Plus, TrendingUp, TrendingDown, Tag as TagIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { BudgetTxnType, Category, CreateTransactionRequest } from '@/types/budget.types';
 import { useCreateTag, useTags } from '@/hooks/useTags';
+import { AccountPicker } from '@/components/accounts/AccountPicker';
 
 interface AddTransactionDialogProps {
   incomeCategories: Category[];
@@ -40,6 +41,7 @@ export function AddTransactionDialog({
   const [txnDate, setTxnDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [newTagName, setNewTagName] = useState('');
+  const [accountId, setAccountId] = useState<string | undefined>(undefined);
 
   const categories = txnType === 'INCOME' ? incomeCategories : expenseCategories;
 
@@ -51,6 +53,7 @@ export function AddTransactionDialog({
     setTxnDate(new Date().toISOString().slice(0, 10));
     setSelectedTagIds([]);
     setNewTagName('');
+    setAccountId(undefined);
   };
 
   const toggleTag = (id: string) => {
@@ -81,6 +84,7 @@ export function AddTransactionDialog({
       txnDate,
       isRecurring: false,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+      accountId,
     });
     reset();
     setOpen(false);
@@ -260,6 +264,9 @@ export function AddTransactionDialog({
               onChange={(e) => setTxnDate(e.target.value)}
             />
           </div>
+
+          {/* Account */}
+          <AccountPicker value={accountId} onChange={setAccountId} />
 
           <Button
             onClick={handleSubmit}

@@ -146,4 +146,5 @@ export interface RecordTransactionRequest {
   feeTry?: number;
   txnDate: string;
   notes?: string;
+  accountId?: string;
 }

@@ -157,6 +157,8 @@
   "accounts": {
     "title": "Accounts",
     "description": "Track every place value sits — banks, brokers, crypto wallets, cash",
+    "label": "Account",
+    "noAccount": "No account",
     "addAccount": "Add Account",
     "yourAccounts": "Your Accounts",
     "liveAccounts": "Live accounts",
@@ -214,6 +216,25 @@
       "failedToLoad": "Failed to load accounts",
       "failedToSave": "Failed to save account"
     }
+  },
+  "emergencyFund": {
+    "title": "Emergency Fund",
+    "subtitle": "Liquid reserve per monthly expense",
+    "monthsCoveredLabel": "Months covered",
+    "monthsUnit": "months",
+    "currentReserve": "Total reserve",
+    "monthlyAverage": "Monthly average expense",
+    "includedTypes": "Included types",
+    "includeToggles": "Include in reserve",
+    "statusRed": "Below 3 months — top up the reserve",
+    "statusAmber": "Between 3 and 6 months — keep building",
+    "statusGreen": "Above 6 months — strong reserve",
+    "statusInsufficientData": "Need more expense history",
+    "needMoreData": "Need {{count}} more months of expense data",
+    "crossCurrencyNote": "Face-value total across currencies; FX-converted rollup ships in 28-01",
+    "toggleSavings": "Bank savings (always on)",
+    "toggleChecking": "Bank checking",
+    "toggleCash": "Cash"
   },
   "portfolioTypes": {
     "INDIVIDUAL": "Individual",

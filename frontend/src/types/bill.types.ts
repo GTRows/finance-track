@@ -30,6 +30,8 @@ export interface Bill {
   lastUsedOn: string | null;
   daysSinceLastUse: number | null;
   variance: BillVariance | null;
+  accountId: string | null;
+  accountName: string | null;
 }
 
 /** Reason a bill was flagged in the subscription audit. */
@@ -80,4 +82,5 @@ export interface PayBillRequest {
   period: string;
   amount?: number;
   notes?: string;
+  accountId?: string;
 }

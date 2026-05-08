@@ -157,6 +157,8 @@
   "accounts": {
     "title": "Hesaplar",
     "description": "Banka, aracı kurum, kripto cüzdan ve nakit bakiyelerini tek noktadan yönet",
+    "label": "Hesap",
+    "noAccount": "Hesap yok",
     "addAccount": "Hesap Ekle",
     "yourAccounts": "Hesaplarınız",
     "liveAccounts": "Aktif hesap",
@@ -214,6 +216,25 @@
       "failedToLoad": "Hesaplar yüklenemedi",
       "failedToSave": "Hesap kaydedilemedi"
     }
+  },
+  "emergencyFund": {
+    "title": "Acil Durum Fonu",
+    "subtitle": "Aylık gider başına likit rezerv",
+    "monthsCoveredLabel": "Aylık karşılama",
+    "monthsUnit": "ay",
+    "currentReserve": "Toplam rezerv",
+    "monthlyAverage": "Aylık ortalama gider",
+    "includedTypes": "Dahil edilen tip",
+    "includeToggles": "Rezerve dahil",
+    "statusRed": "3 ayın altında — rezervi takviye et",
+    "statusAmber": "3 ile 6 ay arası — büyütmeye devam et",
+    "statusGreen": "6 ayın üzerinde — güçlü rezerv",
+    "statusInsufficientData": "Yeterli gider geçmişi yok",
+    "needMoreData": "{{count}} ay daha gider verisi gerekli",
+    "crossCurrencyNote": "Para birimleri arası nominal toplam; çapraz kur dönüşümü 28-01'de geliyor",
+    "toggleSavings": "Vadeli hesap (her zaman açık)",
+    "toggleChecking": "Vadesiz hesap",
+    "toggleCash": "Nakit"
   },
   "portfolioTypes": {
     "INDIVIDUAL": "Bireysel",

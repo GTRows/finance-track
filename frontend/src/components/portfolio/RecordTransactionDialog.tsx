@@ -19,6 +19,7 @@ import { useAssets } from '@/hooks/useAssets';
 import { useRecordTransaction } from '@/hooks/useTransactions';
 import { cn } from '@/lib/utils';
 import { formatTRY } from '@/utils/formatters';
+import { AccountPicker } from '@/components/accounts/AccountPicker';
 
 interface RecordTransactionDialogProps {
   open: boolean;
@@ -54,6 +55,7 @@ export function RecordTransactionDialog({
   const [fee, setFee] = useState('');
   const [txnDate, setTxnDate] = useState(todayIso());
   const [notes, setNotes] = useState('');
+  const [accountId, setAccountId] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -77,6 +79,7 @@ export function RecordTransactionDialog({
     setFee('');
     setTxnDate(todayIso());
     setNotes('');
+    setAccountId(undefined);
     setError(null);
   };
 
@@ -120,6 +123,7 @@ export function RecordTransactionDialog({
         feeTry: feeNum,
         txnDate,
         notes: notes.trim() || undefined,
+        accountId,
       });
       handleClose(false);
     } catch (err) {
@@ -282,6 +286,8 @@ export function RecordTransactionDialog({
               maxLength={500}
             />
           </div>
+
+          <AccountPicker value={accountId} onChange={setAccountId} />
 
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2.5">

@@ -40,6 +40,8 @@ export interface BudgetTransaction {
   ocrStatus: OcrStatus | null;
   ocrText: string | null;
   createdAt: string;
+  accountId: string | null;
+  accountName: string | null;
 }
 
 /** Request body for creating/updating a transaction. */
@@ -52,6 +54,7 @@ export interface CreateTransactionRequest {
   txnDate: string;
   isRecurring: boolean;
   tagIds?: string[];
+  accountId?: string;
 }
 
 /** Monthly budget summary (live, computed from transactions). */
