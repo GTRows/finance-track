@@ -25,6 +25,9 @@ public class InvestmentTransaction {
     @Column(name = "portfolio_id", nullable = false)
     private UUID portfolioId;
 
+    @Column(name = "account_id")
+    private UUID accountId;
+
     @Column(name = "asset_id", nullable = false)
     private UUID assetId;
 

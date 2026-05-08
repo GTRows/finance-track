@@ -26,6 +26,9 @@ public class BudgetTransaction {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    @Column(name = "account_id")
+    private UUID accountId;
+
     @Column(name = "txn_type", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private TxnType txnType;

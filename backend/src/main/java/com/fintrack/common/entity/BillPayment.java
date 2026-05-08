@@ -26,6 +26,9 @@ public class BillPayment {
     @Column(name = "bill_id", nullable = false)
     private UUID billId;
 
+    @Column(name = "account_id")
+    private UUID accountId;
+
     @Column(nullable = false, length = 7)
     private String period;
 

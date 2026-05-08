@@ -2,6 +2,8 @@ package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.*;
@@ -47,6 +49,11 @@ public class UserSettings {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "notification_preferences", columnDefinition = "jsonb")
     private Map<String, Object> notificationPreferences;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "emergency_fund_include_types", columnDefinition = "jsonb")
+    @Builder.Default
+    private List<String> emergencyFundIncludeTypes = new ArrayList<>(List.of("BANK_SAVINGS"));
 
     @Column(name = "onboarding_completed", nullable = false)
     @Builder.Default
