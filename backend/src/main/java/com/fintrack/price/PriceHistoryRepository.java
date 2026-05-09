@@ -16,4 +16,12 @@ public interface PriceHistoryRepository extends JpaRepository<PriceHistory, UUID
             "SELECT p FROM PriceHistory p WHERE p.assetId = :assetId AND p.recordedAt >= :since"
                     + " ORDER BY p.recordedAt ASC")
     List<PriceHistory> findSeries(@Param("assetId") UUID assetId, @Param("since") Instant since);
+
+    /**
+     * Returns chronologically-ordered price history rows for an asset within a bounded time range
+     * (inclusive of {@code from}, exclusive of {@code to} per JPA range semantics for the BETWEEN
+     * keyword which is inclusive on both ends — callers should pre-clamp to avoid off-by-one).
+     */
+    List<PriceHistory> findByAssetIdAndRecordedAtBetweenOrderByRecordedAtAsc(
+            UUID assetId, Instant from, Instant to);
 }

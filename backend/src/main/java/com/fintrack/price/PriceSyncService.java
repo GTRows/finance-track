@@ -1,6 +1,7 @@
 package com.fintrack.price;
 
 import com.fintrack.asset.AssetRepository;
+import com.fintrack.common.config.CacheConfig;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.PriceHistory;
 import com.fintrack.metrics.PriceSyncMetrics;
@@ -27,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -436,8 +438,13 @@ public class PriceSyncService {
      * Single transactional commit point for every per-source pipeline. Applies the new prices to
      * each (detached) asset captured during the fetch stage and writes a {@link PriceHistory} row
      * per update. Returns the number of updates that took effect.
+     *
+     * <p>Evicts the entire {@code analytics:correlations} cache because the matrix derives from
+     * {@code price_history} and any new row may shift any cell. Per-asset eviction is impractical
+     * since callers select arbitrary asset combinations.
      */
     @Transactional
+    @CacheEvict(value = CacheConfig.ANALYTICS_CORRELATIONS_CACHE, allEntries = true)
     protected int persistUpdates(List<PriceUpdate> updates) {
         if (updates == null || updates.isEmpty()) return 0;
 
@@ -458,6 +465,7 @@ public class PriceSyncService {
 
     /** Refreshes a single asset by id and returns true if a new price was written. */
     @Transactional
+    @CacheEvict(value = CacheConfig.ANALYTICS_CORRELATIONS_CACHE, allEntries = true)
     public boolean refreshAsset(UUID assetId) {
         Asset asset = assetRepository.findById(assetId).orElse(null);
         if (asset == null) return false;
