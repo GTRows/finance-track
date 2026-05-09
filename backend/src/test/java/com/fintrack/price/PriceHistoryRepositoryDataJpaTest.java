@@ -75,4 +75,36 @@ class PriceHistoryRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     void findSeriesEmptyForUnknownAsset() {
         assertThat(repo.findSeries(UUID.randomUUID(), Instant.now())).isEmpty();
     }
+
+    @Test
+    void findByAssetIdAndRecordedAtBetweenReturnsChronologicalSubset() {
+        UUID asset = seedAsset("ADA");
+        Instant base = Instant.parse("2026-04-01T00:00:00Z");
+        repo.save(price(asset, base.minus(2, ChronoUnit.DAYS), "10"));
+        repo.save(price(asset, base, "20"));
+        repo.save(price(asset, base.plus(1, ChronoUnit.DAYS), "30"));
+        repo.save(price(asset, base.plus(5, ChronoUnit.DAYS), "40"));
+
+        var series =
+                repo.findByAssetIdAndRecordedAtBetweenOrderByRecordedAtAsc(
+                        asset, base, base.plus(2, ChronoUnit.DAYS));
+
+        assertThat(series)
+                .extracting(PriceHistory::getPrice)
+                .extracting(BigDecimal::intValue)
+                .containsExactly(20, 30);
+    }
+
+    @Test
+    void findByAssetIdAndRecordedAtBetweenReturnsEmptyOutsideWindow() {
+        UUID asset = seedAsset("DOT");
+        Instant base = Instant.parse("2026-04-01T00:00:00Z");
+        repo.save(price(asset, base.minus(10, ChronoUnit.DAYS), "5"));
+
+        var series =
+                repo.findByAssetIdAndRecordedAtBetweenOrderByRecordedAtAsc(
+                        asset, base, base.plus(1, ChronoUnit.DAYS));
+
+        assertThat(series).isEmpty();
+    }
 }
