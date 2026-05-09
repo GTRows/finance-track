@@ -1,6 +1,7 @@
 import client from './client';
 import type {
   EmergencyFundResponse,
+  UpdateEmergencyFundConfigRequest,
   UpdateEmergencyFundTypesRequest,
 } from '@/types/emergency-fund.types';
 
@@ -52,6 +53,15 @@ export const dashboardApi = {
   ): Promise<EmergencyFundResponse> => {
     const { data } = await client.put<EmergencyFundResponse>(
       '/dashboard/emergency-fund/types',
+      body,
+    );
+    return data;
+  },
+  updateEmergencyFundConfig: async (
+    body: UpdateEmergencyFundConfigRequest,
+  ): Promise<EmergencyFundResponse> => {
+    const { data } = await client.put<EmergencyFundResponse>(
+      '/dashboard/emergency-fund/config',
       body,
     );
     return data;

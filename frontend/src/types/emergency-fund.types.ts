@@ -10,8 +10,16 @@ export interface EmergencyFundResponse {
   status: 'red' | 'amber' | 'green' | 'insufficient-data';
   includedTypes: AccountType[];
   sampleMonths: number;
+  targetMonths: number;
+  amberFloorMonths: number;
 }
 
 export interface UpdateEmergencyFundTypesRequest {
   types: AccountType[];
+}
+
+export interface UpdateEmergencyFundConfigRequest {
+  types: AccountType[];
+  targetMonths: number;
+  amberFloorMonths: number;
 }

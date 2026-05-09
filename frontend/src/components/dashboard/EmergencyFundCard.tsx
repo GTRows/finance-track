@@ -3,10 +3,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Shield, ShieldAlert, ShieldCheck, Wallet, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatTRY } from '@/utils/formatters';
-import { useEmergencyFund, useUpdateEmergencyFundTypes } from '@/hooks/useEmergencyFund';
+import {
+  useEmergencyFund,
+  useUpdateEmergencyFundConfig,
+  useUpdateEmergencyFundTypes,
+} from '@/hooks/useEmergencyFund';
 import type { AccountType } from '@/types/account.types';
 
 const TOGGLEABLE_TYPES: AccountType[] = ['BANK_CHECKING', 'CASH'];
+const MIN_TARGET = 2;
+const MAX_TARGET = 24;
+const MIN_AMBER_FLOOR = 1;
 
 function statusClasses(status: string): { tile: string; icon: string; iconBg: string } {
   switch (status) {
@@ -43,10 +50,17 @@ function statusIcon(status: string): React.ElementType {
   return Shield;
 }
 
+function bandCopyKey(status: string): string {
+  if (status === 'red') return 'emergencyFund.bandRedDynamic';
+  if (status === 'amber') return 'emergencyFund.bandAmberDynamic';
+  return 'emergencyFund.bandGreenDynamic';
+}
+
 export function EmergencyFundCard() {
   const { t } = useTranslation();
   const { data, isLoading } = useEmergencyFund();
   const updateTypes = useUpdateEmergencyFundTypes();
+  const updateConfig = useUpdateEmergencyFundConfig();
 
   const colors = data ? statusClasses(data.status) : statusClasses('insufficient-data');
   const Icon = data ? statusIcon(data.status) : Shield;
@@ -66,6 +80,28 @@ export function EmergencyFundCard() {
       next.unshift('BANK_SAVINGS');
     }
     updateTypes.mutate({ types: next });
+  };
+
+  const handleTargetChange = (next: number) => {
+    if (!data) return;
+    const safeNext = Math.min(MAX_TARGET, Math.max(MIN_TARGET, next));
+    const safeAmberFloor = Math.min(data.amberFloorMonths, safeNext - 1);
+    updateConfig.mutate({
+      types: data.includedTypes,
+      targetMonths: safeNext,
+      amberFloorMonths: safeAmberFloor,
+    });
+  };
+
+  const handleAmberFloorChange = (next: number) => {
+    if (!data) return;
+    const upperBound = data.targetMonths - 1;
+    const safeNext = Math.min(upperBound, Math.max(MIN_AMBER_FLOOR, next));
+    updateConfig.mutate({
+      types: data.includedTypes,
+      targetMonths: data.targetMonths,
+      amberFloorMonths: safeNext,
+    });
   };
 
   return (
@@ -131,7 +167,10 @@ export function EmergencyFundCard() {
                   ? t('emergencyFund.needMoreData', {
                       count: Math.max(0, 3 - data.sampleMonths),
                     })
-                  : t(`emergencyFund.status${capitalize(data.status)}`)}
+                  : t(bandCopyKey(data.status), {
+                      target: data.targetMonths,
+                      amber: data.amberFloorMonths,
+                    })}
               </p>
             </div>
 
@@ -151,6 +190,30 @@ export function EmergencyFundCard() {
                 value={String(data.includedTypes.length)}
                 icon={<Shield className="w-3.5 h-3.5 text-amber-400" />}
               />
+            </div>
+
+            <div className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                {t('emergencyFund.targetSection')}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <Stepper
+                  label={t('emergencyFund.targetMonths')}
+                  value={data.targetMonths}
+                  min={Math.max(MIN_TARGET, data.amberFloorMonths + 1)}
+                  max={MAX_TARGET}
+                  disabled={updateConfig.isPending}
+                  onChange={handleTargetChange}
+                />
+                <Stepper
+                  label={t('emergencyFund.amberFloorMonths')}
+                  value={data.amberFloorMonths}
+                  min={MIN_AMBER_FLOOR}
+                  max={Math.max(MIN_AMBER_FLOOR, data.targetMonths - 1)}
+                  disabled={updateConfig.isPending}
+                  onChange={handleAmberFloorChange}
+                />
+              </div>
             </div>
 
             <div className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
@@ -192,10 +255,6 @@ export function EmergencyFundCard() {
   );
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 function MiniTile({
   label,
   value,
@@ -212,6 +271,51 @@ function MiniTile({
         <span>{label}</span>
       </div>
       <p className="text-sm font-mono tabular-nums font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function Stepper({
+  label,
+  value,
+  min,
+  max,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  disabled?: boolean;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+        {label}
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(value - 1)}
+          disabled={disabled || value <= min}
+          aria-label={`${label} -`}
+          className="w-7 h-7 rounded-md border border-border/60 bg-card/50 hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm font-semibold leading-none flex items-center justify-center"
+        >
+          −
+        </button>
+        <span className="font-mono tabular-nums font-semibold w-8 text-center">{value}</span>
+        <button
+          type="button"
+          onClick={() => onChange(value + 1)}
+          disabled={disabled || value >= max}
+          aria-label={`${label} +`}
+          className="w-7 h-7 rounded-md border border-border/60 bg-card/50 hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm font-semibold leading-none flex items-center justify-center"
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 }
