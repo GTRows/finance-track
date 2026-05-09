@@ -1,6 +1,7 @@
 package com.fintrack.settings;
 
 import static com.fintrack.audit.AuditAction.USER_SETTINGS_EMERGENCY_FUND_UPDATED;
+import static com.fintrack.audit.AuditAction.USER_SETTINGS_REBALANCE_THRESHOLD_UPDATED;
 
 import com.fintrack.audit.AuditService;
 import com.fintrack.common.config.CacheConfig;
@@ -10,6 +11,7 @@ import com.fintrack.common.exception.BusinessRuleException;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.settings.dto.SettingsResponse;
 import com.fintrack.settings.dto.UpdateSettingsRequest;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,8 @@ public class SettingsService {
     static final int MIN_TARGET = 2;
     static final int MAX_TARGET = 24;
     static final int MIN_AMBER_FLOOR = 1;
+    static final BigDecimal MIN_REBALANCE_THRESHOLD = new BigDecimal("0.10");
+    static final BigDecimal MAX_REBALANCE_THRESHOLD = new BigDecimal("10.00");
 
     private final UserSettingsRepository repository;
     private final AuditService auditService;
@@ -157,6 +161,43 @@ public class SettingsService {
                 userId,
                 username,
                 "types=" + types + " target=" + targetMonths + " amberFloor=" + amberFloorMonths);
+    }
+
+    /**
+     * Updates the per-user rebalance drift tolerance threshold. The controller-level Bean
+     * Validation handles the obvious cases; this service-level guard catches direct internal calls
+     * and emits the {@code USER_SETTINGS_REBALANCE_THRESHOLD_UPDATED} audit on success or failure.
+     */
+    @Transactional
+    public BigDecimal updateRebalanceDriftThreshold(UUID userId, BigDecimal threshold) {
+        String username = currentUsername();
+        if (threshold == null
+                || threshold.compareTo(MIN_REBALANCE_THRESHOLD) < 0
+                || threshold.compareTo(MAX_REBALANCE_THRESHOLD) > 0) {
+            auditService.failure(
+                    USER_SETTINGS_REBALANCE_THRESHOLD_UPDATED,
+                    userId,
+                    username,
+                    "out of range: " + threshold);
+            throw new BusinessRuleException(
+                    "Rebalance drift threshold must be between "
+                            + MIN_REBALANCE_THRESHOLD
+                            + " and "
+                            + MAX_REBALANCE_THRESHOLD,
+                    "REBALANCE_THRESHOLD_OUT_OF_RANGE");
+        }
+        UserSettings settings =
+                repository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Settings not found"));
+        settings.setRebalanceDriftThresholdPercent(threshold);
+        repository.save(settings);
+        auditService.success(
+                USER_SETTINGS_REBALANCE_THRESHOLD_UPDATED,
+                userId,
+                username,
+                "threshold=" + threshold);
+        return threshold;
     }
 
     private SettingsResponse toResponse(UserSettings s) {

@@ -2,6 +2,8 @@ package com.fintrack.settings;
 
 import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.settings.dto.SettingsResponse;
+import com.fintrack.settings.dto.UpdateRebalanceThresholdRequest;
+import com.fintrack.settings.dto.UpdateRebalanceThresholdResponse;
 import com.fintrack.settings.dto.UpdateSettingsRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +34,15 @@ public class SettingsController {
     public ResponseEntity<SettingsResponse> completeOnboarding(
             @AuthenticationPrincipal FinTrackUserDetails user) {
         return ResponseEntity.ok(settingsService.markOnboardingComplete(user.getId()));
+    }
+
+    @PutMapping("/rebalance-threshold")
+    public ResponseEntity<UpdateRebalanceThresholdResponse> updateRebalanceThreshold(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @Valid @RequestBody UpdateRebalanceThresholdRequest request) {
+        return ResponseEntity.ok(
+                new UpdateRebalanceThresholdResponse(
+                        settingsService.updateRebalanceDriftThreshold(
+                                user.getId(), request.threshold())));
     }
 }

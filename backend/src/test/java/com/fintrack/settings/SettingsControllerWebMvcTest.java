@@ -101,4 +101,44 @@ class SettingsControllerWebMvcTest extends AbstractWebMvcTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.onboardingCompleted").value(true));
     }
+
+    @Test
+    void updateRebalanceThreshold_returnsUpdatedThreshold() throws Exception {
+        stubAuthenticatedUser();
+        when(settingsService.updateRebalanceDriftThreshold(
+                        eq(userId), eq(new java.math.BigDecimal("2.50"))))
+                .thenReturn(new java.math.BigDecimal("2.50"));
+
+        mockMvc.perform(
+                        put("/api/v1/settings/rebalance-threshold")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"threshold\":2.50}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.threshold").value(2.50));
+    }
+
+    @Test
+    void updateRebalanceThreshold_rejectsBelowMin() throws Exception {
+        stubAuthenticatedUser();
+        mockMvc.perform(
+                        put("/api/v1/settings/rebalance-threshold")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"threshold\":0.05}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void updateRebalanceThreshold_rejectsAboveMax() throws Exception {
+        stubAuthenticatedUser();
+        mockMvc.perform(
+                        put("/api/v1/settings/rebalance-threshold")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"threshold\":11.00}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
 }
