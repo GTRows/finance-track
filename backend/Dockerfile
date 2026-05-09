@@ -8,7 +8,7 @@ RUN mvn package -DskipTests -B
 # Fetch tessdata-fast for Turkish + English (used by the OCR worker).
 # Downloaded at build time so the runtime image is self-contained and does
 # not rely on network access for OCR.
-FROM alpine:3.20 AS tessdata
+FROM alpine:3.23 AS tessdata
 RUN apk add --no-cache curl
 RUN mkdir -p /tessdata && \
     curl -fsSL -o /tessdata/eng.traineddata \
