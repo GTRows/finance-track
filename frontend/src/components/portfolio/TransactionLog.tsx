@@ -4,7 +4,8 @@ import { Loader2, Plus, Trash2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/layout/EmptyState';
-import type { InvestmentTxnType } from '@/types/portfolio.types';
+import { VirtualizedList } from '@/components/common/VirtualizedList';
+import type { InvestmentTxnType, Transaction } from '@/types/portfolio.types';
 import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions';
 import { RecordTransactionDialog } from './RecordTransactionDialog';
 import { formatShortDate, formatTRY } from '@/utils/formatters';
@@ -23,6 +24,9 @@ const TYPE_TONE: Record<InvestmentTxnType, string> = {
   REBALANCE: 'bg-muted text-muted-foreground',
 };
 
+const GRID_COLS =
+  'grid-cols-[minmax(0,11ch)_minmax(0,8ch)_minmax(0,1fr)_minmax(0,12ch)_minmax(0,12ch)_minmax(0,12ch)_minmax(0,10ch)_minmax(0,4ch)]';
+
 export function TransactionLog({ portfolioId }: TransactionLogProps) {
   const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -34,6 +38,94 @@ export function TransactionLog({ portfolioId }: TransactionLogProps) {
     if (!window.confirm(t('transactions.confirmDelete'))) return;
     deleteTxn.mutate(id);
   };
+
+  const renderHeader = () => (
+    <div
+      role="rowgroup"
+      className="border-b text-[11px] uppercase tracking-wider text-muted-foreground"
+    >
+      <div role="row" className={cn('grid gap-0 px-4 py-2.5', GRID_COLS)}>
+        <div role="columnheader" className="text-left font-medium">
+          {t('transactions.colDate')}
+        </div>
+        <div role="columnheader" className="text-left font-medium">
+          {t('transactions.colType')}
+        </div>
+        <div role="columnheader" className="text-left font-medium">
+          {t('transactions.colAsset')}
+        </div>
+        <div role="columnheader" className="text-right font-medium">
+          {t('transactions.colQty')}
+        </div>
+        <div role="columnheader" className="text-right font-medium">
+          {t('transactions.colPrice')}
+        </div>
+        <div role="columnheader" className="text-right font-medium">
+          {t('transactions.colAmount')}
+        </div>
+        <div role="columnheader" className="text-right font-medium">
+          {t('transactions.colFee')}
+        </div>
+        <div role="columnheader" aria-label={t('common.actions')} />
+      </div>
+    </div>
+  );
+
+  const renderRow = (txn: Transaction) => (
+    <div
+      className={cn(
+        'grid gap-0 px-4 py-2.5 border-b last:border-b-0 hover:bg-accent/30 transition-colors',
+        GRID_COLS,
+      )}
+    >
+      <div role="cell" className="text-muted-foreground whitespace-nowrap">
+        {formatShortDate(txn.txnDate)}
+      </div>
+      <div role="cell">
+        <span
+          className={cn(
+            'inline-block text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded',
+            TYPE_TONE[txn.txnType],
+          )}
+        >
+          {t(`transactions.type.${txn.txnType}`)}
+        </span>
+      </div>
+      <div role="cell">
+        <div className="flex flex-col">
+          <span className="font-medium">{txn.assetSymbol ?? '--'}</span>
+          {txn.assetName && (
+            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+              {txn.assetName}
+            </span>
+          )}
+        </div>
+      </div>
+      <div role="cell" className="text-right font-mono tabular-nums">
+        {txn.quantity}
+      </div>
+      <div role="cell" className="text-right font-mono tabular-nums text-muted-foreground">
+        {formatTRY(txn.priceTry, true)}
+      </div>
+      <div role="cell" className="text-right font-mono tabular-nums">
+        {formatTRY(txn.amountTry, true)}
+      </div>
+      <div role="cell" className="text-right font-mono tabular-nums text-muted-foreground">
+        {txn.feeTry > 0 ? formatTRY(txn.feeTry, true) : '--'}
+      </div>
+      <div role="cell" className="text-right">
+        <button
+          type="button"
+          onClick={() => handleDelete(txn.id)}
+          disabled={deleteTxn.isPending}
+          title={t('common.delete')}
+          className="w-7 h-7 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 inline-flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <Card>
@@ -82,76 +174,16 @@ export function TransactionLog({ portfolioId }: TransactionLogProps) {
         )}
 
         {!txnQuery.isLoading && !txnQuery.isError && transactions.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-[11px] uppercase tracking-wider text-muted-foreground">
-                  <th className="text-left font-medium px-4 py-2.5">{t('transactions.colDate')}</th>
-                  <th className="text-left font-medium px-4 py-2.5">{t('transactions.colType')}</th>
-                  <th className="text-left font-medium px-4 py-2.5">{t('transactions.colAsset')}</th>
-                  <th className="text-right font-medium px-4 py-2.5">{t('transactions.colQty')}</th>
-                  <th className="text-right font-medium px-4 py-2.5">{t('transactions.colPrice')}</th>
-                  <th className="text-right font-medium px-4 py-2.5">{t('transactions.colAmount')}</th>
-                  <th className="text-right font-medium px-4 py-2.5">{t('transactions.colFee')}</th>
-                  <th className="px-4 py-2.5" aria-label={t('common.actions')} />
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((txn) => (
-                  <tr
-                    key={txn.id}
-                    className="border-b last:border-b-0 hover:bg-accent/30 transition-colors"
-                  >
-                    <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
-                      {formatShortDate(txn.txnDate)}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <span
-                        className={cn(
-                          'inline-block text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded',
-                          TYPE_TONE[txn.txnType]
-                        )}
-                      >
-                        {t(`transactions.type.${txn.txnType}`)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{txn.assetSymbol ?? '--'}</span>
-                        {txn.assetName && (
-                          <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                            {txn.assetName}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                      {txn.quantity}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono tabular-nums text-muted-foreground">
-                      {formatTRY(txn.priceTry, true)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                      {formatTRY(txn.amountTry, true)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono tabular-nums text-muted-foreground">
-                      {txn.feeTry > 0 ? formatTRY(txn.feeTry, true) : '--'}
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(txn.id)}
-                        disabled={deleteTxn.isPending}
-                        title={t('common.delete')}
-                        className="w-7 h-7 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 inline-flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div role="table" aria-label={t('transactions.title')} className="w-full text-sm overflow-x-auto">
+            <VirtualizedList<Transaction>
+              items={transactions}
+              getItemKey={(txn) => txn.id}
+              estimateSize={56}
+              overscan={10}
+              ariaLabel={t('transactions.title')}
+              renderHeader={renderHeader}
+              renderRow={renderRow}
+            />
           </div>
         )}
       </CardContent>
