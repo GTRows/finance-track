@@ -111,7 +111,7 @@ Plans:
 
 Plans:
 - [ ] 29-01: G4 — Portfolio comparison (multi-portfolio value/P&L overlay)
-- [ ] 29-02: G5 — Asset correlation matrix (heatmap of daily-return correlations)
+- [x] 29-02: G5 — Asset correlation matrix (heatmap of daily-return correlations)
 - [ ] 29-03: G6 — Monte Carlo net-worth projection (10k iterations, configurable parameters per class)
 
 ### Phase 30: Performance & Polish
