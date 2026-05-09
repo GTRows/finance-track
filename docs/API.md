@@ -778,6 +778,77 @@ Always 204.
 
 ---
 
+## Analytics
+
+### GET /api/v1/analytics/portfolios/compare
+Side-by-side TRY-denominated comparison series for two or more portfolios.
+Sourced from `PortfolioSnapshot` rows; `realizedPnlTry` is the
+running-average approximation `(priceTry - currentAvgCostTry) * quantity`
+for SELL transactions whose `txnDate <= snapshot.date`. Precise lot-level
+FIFO realised gains live in `/api/v1/reports/capital-gains`.
+
+Query parameters:
+- `ids` (required, comma-separated UUIDs, 1..10) — portfolio ids to compare.
+  Reordering or duplicating ids is a no-op (server dedupes and sorts for the
+  cache key).
+- `from` (optional, ISO `YYYY-MM-DD`) — inclusive lower bound. Defaults to
+  the earliest snapshot when only `to` is given, or all-time when both are
+  absent.
+- `to` (optional, ISO `YYYY-MM-DD`) — inclusive upper bound. Defaults to
+  today when only `from` is given.
+
+Validation errors (HTTP 400):
+- `COMPARE_IDS_REQUIRED` — empty `ids`.
+- `COMPARE_TOO_MANY` — more than 10 ids.
+- `COMPARE_RANGE_INVALID` — `from > to`.
+- `INVALID_PARAMETER` — malformed UUID or date.
+
+Inactive (archived) portfolios are excluded by the ownership check; they
+return a 404 (`Portfolio not found: <id>`).
+
+The response is server-side cached on Caffeine (`analytics:portfolios:compare`,
+60s TTL, max 200 entries) keyed by `(userId, sortedIds, from, to)`. Daily
+snapshot capture (`SnapshotService.captureDaily`) evicts the entire cache.
+
+```json
+// Response 200
+{
+  "currency": "TRY",
+  "series": [
+    {
+      "portfolioId": "uuid-A",
+      "name": "Bireysel",
+      "points": [
+        {
+          "date": "2026-04-01",
+          "totalValueTry": 165240.00,
+          "totalCostTry": 140000.00,
+          "unrealizedPnlTry": 25240.00,
+          "realizedPnlTry": 0.00,
+          "totalPnlTry": 25240.00
+        }
+      ]
+    },
+    {
+      "portfolioId": "uuid-B",
+      "name": "BES Prime",
+      "points": [
+        {
+          "date": "2026-04-01",
+          "totalValueTry": 52274.00,
+          "totalCostTry": 50000.00,
+          "unrealizedPnlTry": 2274.00,
+          "realizedPnlTry": 0.00,
+          "totalPnlTry": 2274.00
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
 ## Savings goals
 
 ### GET /api/v1/savings/goals

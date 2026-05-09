@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Owner can stop using the spreadsheet and trust this app for live portfolio P&L, monthly cash flow, and bill tracking — fully self-hosted.
-**Current focus:** Phase 28 complete — sub-plan 02 shipped the rebalance executor (drift -> one-click trades).
+**Current focus:** Phase 29 in progress — sub-plan 01 shipped multi-portfolio side-by-side comparison (Track G4).
 
 ## Current Position
 
-Phase: 6 of 8 (Phase 28 — Rebalance & Emergency Fund)
-Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-05-09 — Completed 28-02-PLAN.md (rebalance executor)
+Phase: 7 of 8 (Phase 29 — Portfolio Analytics)
+Plan: 1 of 3 in current phase
+Status: In progress (1/3 plans)
+Last activity: 2026-05-09 — Completed 29-01-PLAN.md (portfolio comparison endpoint + chart)
 
 Progress: █████░░░░░ 50%
 
@@ -29,6 +29,7 @@ Progress: █████░░░░░ 50%
 |-------|-------|-------|----------|
 | 27. Tax & Accounts (TR) | 4/4 | Complete | 2026-05-09 |
 | 28. Rebalance & Emergency Fund | 2/2 | Complete | 2026-05-09 |
+| 29. Portfolio Analytics | 1/3 | In progress | 2026-05-09 |
 
 **Recent Trend:**
 - Last 5 plans: —
@@ -90,7 +91,7 @@ Notes:
 
 Last session: 2026-05-09
 Stopped at: Phase 28 complete (2/2 plans). Plan 28-02 shipped the rebalance executor (Track G12). New Flyway migration `V46__user_settings_rebalance_drift_threshold.sql` adds a `NUMERIC(5,2)` column to `user_settings` with a single-column CHECK (`BETWEEN 0.10 AND 10.00`, default `1.00`) and a matching `BigDecimal` JPA field with `@Builder.Default`. New feature package `com.fintrack.portfolio.rebalance` with `RebalanceService` (preview + commit + bucket-to-holding projection algorithm), `RebalanceController` (`POST .../preview` + `POST .../commit`), four DTO records, and `RebalanceProposalStore` Redis adapter (30-minute open-proposal TTL + 24-hour committed-marker sentinel). New `RebalanceConflictException` mapped to HTTP 409 by `GlobalExceptionHandler` for stale-preview + double-commit (every other `BusinessRuleException` stays on 400). New `SettingsService.updateRebalanceDriftThreshold` + `PUT /api/v1/settings/rebalance-threshold` (folded into existing `SettingsController`). Three new `AuditAction` constants. The projection algorithm: per-bucket drift via `AllocationService.summarize` semantics → filter buckets within threshold → OVERWEIGHT = pro-rata SELL across bucket holdings; UNDERWEIGHT = single-holding BUY on highest-value existing holding (alphabetical tiebreak); empty underweight bucket emits `NO_HOLDING_TO_BUY` informational row. Cash scaling: BUY rows scale proportionally when required > available; SELL rows never scale. Quantity quirks: STOCK / FUND truncate to integer; CRYPTO / GOLD / CURRENCY / OTHER keep scale=8. Hash check: SHA-256 over `(portfolioId, accountId, suggestions[])` stored in Redis; commit recomputes from live state and rejects mismatches. Materialisation reuses `InvestmentTransactionService.record(...)` so 25-01 holding projection + 27-03 account-balance listener fire normally. Frontend `RebalanceCard` on `PortfolioDetailPage` (after `AllocationTargets`, gated behind `allocation.configured && holdings.length > 0`) with drift slider (400ms debounce), `AccountPicker`, generate button, suggestion table with per-row checkboxes, commit button. New `useRebalance.ts` trio + `rebalance.api.ts` + `rebalance.types.ts` + `rebalance.*` i18n namespace. Backend tests 1294 -> 1340 (+46, meets target); frontend 247 -> 255 (+8, meets target). `mvnw verify` green; JaCoCo 60% / 45%; Spotless clean. Frontend lint --max-warnings 0 + tsc strict + Vitest + Vite build all clean. OpenAPI regen still defers per the pre-existing 26-01 OpenTelemetry `ComponentLoader` `NoClassDefFoundError`; `RebalanceControllerWebMvcTest` + extended `SettingsControllerWebMvcTest` cover the new endpoint surface in the meantime. `.env.example`, `docker-compose.yml`, `CHANGELOG.md`, `package.json`, `package-lock.json`, `backend/pom.xml` left untouched per project guards. OPERATIONS.md gains `## Rebalancing a portfolio` H2.
-Resume file: Phase 28 complete (2/2 plans). Next operator action: cut the v1.4.0 release; Phase 29 (Portfolio Analytics) is the next planning target.
+Resume file: Phase 29 in progress (1/3 plans). 29-01 shipped portfolio comparison (Track G4) — next 29-02 / 29-03 plans cover the remaining analytics tracks.
 Earlier session: 2026-05-09
 Stopped at: Phase 28 in progress (1/2 plans). Plan 28-01 shipped configurable emergency-fund target months (Track G11). New Flyway migration `V45__user_settings_emergency_fund_targets.sql` adds two SMALLINT columns (`emergency_fund_target_months` default 6 / range 2-24, `emergency_fund_amber_floor_months` default 3 / range 1-23) to `user_settings`. The cross-column invariant `amber_floor < target_months` lives at the `SettingsService` layer per the 27-03 `BANK_SAVINGS`-membership precedent. `EmergencyFundService.compute(userId)` reads the configured pair via a defensive null-fallback and recomputes bands against the user-configured pair (`< amberFloor` -> red, `<= target` -> amber inclusive, `> target` -> green); the legacy 6/3 behaviour is preserved exactly when the columns hold the migration defaults. `EmergencyFundResponse` widens by two `int` fields (`targetMonths`, `amberFloorMonths`) at the END so existing consumers do not break. New `SettingsService.updateEmergencyFundConfig` writes all three fields atomically with full validation; legacy `updateEmergencyFundTypes` becomes a thin delegate. New `EmergencyFundController.updateConfig` mounts `PUT /api/v1/dashboard/emergency-fund/config` with Bean Validation; the legacy `PUT .../types` stays in place. `AuditAction` grew by 1 constant (`USER_SETTINGS_EMERGENCY_FUND_UPDATED`). Frontend ships a stepper pair on `EmergencyFundCard` (target + amber-floor) and a new `EmergencyFundSection` on `SettingsPage` between `PushNotificationSection` and `TagsSection`. Status copy switches to dynamic i18n with `{{target}}` / `{{amber}}` interpolation; legacy static keys removed. Frontend lint --max-warnings 0 + tsc strict + Vitest all clean. OpenAPI regen still defers per the pre-existing 26-01 OpenTelemetry issue; `EmergencyFundControllerWebMvcTest` covers the new endpoint surface in the meantime. `.env.example`, `docker-compose.yml`, `CHANGELOG.md`, `package.json`, `package-lock.json`, `backend/pom.xml` left untouched per project guards. OPERATIONS.md `### Emergency-fund coverage` extends with `#### Configuring target months`.
 Resume file: Phase 28 in progress (1 / 2 plans). Next sub-plan 02 not started — rebalance executor (Track G12). Run `/gsd:plan-phase 28 02`.
