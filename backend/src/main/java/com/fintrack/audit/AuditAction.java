@@ -74,4 +74,9 @@ public final class AuditAction {
 
     public static final String USER_SETTINGS_EMERGENCY_FUND_UPDATED =
             "USER_SETTINGS_EMERGENCY_FUND_UPDATED";
+
+    public static final String REBALANCE_PREVIEWED = "REBALANCE_PREVIEWED";
+    public static final String REBALANCE_COMMITTED = "REBALANCE_COMMITTED";
+    public static final String USER_SETTINGS_REBALANCE_THRESHOLD_UPDATED =
+            "USER_SETTINGS_REBALANCE_THRESHOLD_UPDATED";
 }

@@ -1,6 +1,7 @@
 package com.fintrack.common.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +63,10 @@ public class UserSettings {
     @Column(name = "emergency_fund_amber_floor_months", nullable = false)
     @Builder.Default
     private Short emergencyFundAmberFloorMonths = 3;
+
+    @Column(name = "rebalance_drift_threshold_percent", nullable = false, precision = 5, scale = 2)
+    @Builder.Default
+    private BigDecimal rebalanceDriftThresholdPercent = new BigDecimal("1.00");
 
     @Column(name = "onboarding_completed", nullable = false)
     @Builder.Default

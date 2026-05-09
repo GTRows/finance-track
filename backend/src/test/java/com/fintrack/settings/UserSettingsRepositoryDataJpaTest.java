@@ -9,6 +9,7 @@ import com.fintrack.common.entity.User;
 import com.fintrack.common.entity.UserSettings;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -68,6 +69,44 @@ class UserSettingsRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
                                             "UPDATE user_settings SET"
                                                     + " emergency_fund_target_months = 99 WHERE"
                                                     + " user_id = :uid")
+                                    .setParameter("uid", userId)
+                                    .executeUpdate();
+                            entityManager.flush();
+                        })
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void roundTripsRebalanceDriftThreshold() {
+        UUID userId = seedUser("xander");
+        UserSettings settings =
+                UserSettings.builder()
+                        .userId(userId)
+                        .rebalanceDriftThresholdPercent(new BigDecimal("0.50"))
+                        .build();
+        repo.save(settings);
+        entityManager.flush();
+        entityManager.clear();
+
+        UserSettings reloaded = repo.findById(userId).orElseThrow();
+        assertThat(reloaded.getRebalanceDriftThresholdPercent())
+                .isEqualByComparingTo(new BigDecimal("0.50"));
+    }
+
+    @Test
+    void rejectsRebalanceDriftThresholdBeyondCheckBound() {
+        UUID userId = seedUser("wendy");
+        repo.save(UserSettings.builder().userId(userId).build());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThatThrownBy(
+                        () -> {
+                            entityManager
+                                    .createNativeQuery(
+                                            "UPDATE user_settings SET"
+                                                    + " rebalance_drift_threshold_percent = 15.00"
+                                                    + " WHERE user_id = :uid")
                                     .setParameter("uid", userId)
                                     .executeUpdate();
                             entityManager.flush();
