@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 ### Security
 
+## [1.3.0] - 2026-05-09
+
+### Added
+- Phase 27-01: TR tax helper at `com.fintrack.report.tax.tr` with year-keyed `tax-parameters-tr.yml` (loaded lazily via `TrTaxParametersLoader`), `TrTaxService` reusing the existing `CapitalGainsService` for realized gains and adding 80%/100% threshold-banding, two new `DividendRepository` queries that aggregate stoppage per fiscal year, and `GET /api/v1/reports/tax/tr?year=YYYY`. Frontend ships a lazy-loaded `/reports/tax/tr` page with status / realized / threshold / headroom cards plus a per-asset stoppage table. The owner edits one YAML block per January and rebuilds, no migration or admin UI required.
+- Phase 27-02: standalone `accounts` entity end-to-end. Flyway V41 with a partial unique index for live-rows-only duplicate-name enforcement; `Account` JPA entity with a 6-value `AccountType` enum (BANK_CHECKING, BANK_SAVINGS, BROKERAGE_CASH, CRYPTO_WALLET, CASH, OTHER) and `NUMERIC(20,8)` balance precision; full `com.fintrack.account` feature package mirroring the Portfolio template (repository, service, controller, four DTO records); three new `AuditAction` constants wired through `AuditService.success/failure`; lazy-loaded `/accounts` frontend page with stat strip, grouped list, Add/Edit dialog, archive flow, and per-currency totals rollup; full `accounts.*` i18n namespace.
+- Phase 27-03: transactions wired to the new `accounts` entity. Flyway V42 adds nullable `account_id` FKs with `ON DELETE SET NULL` and partial indexes on `transactions`, `investment_transactions`, and `bill_payments`; V43 adds a JSONB `emergency_fund_include_types` column on `user_settings` (default `["BANK_SAVINGS"]`). Five event records widened with `accountId` / `previousAccountId` / `previousStatus` / `previousAmount`; new `BudgetTransactionDeletedEvent`. A pure-static `AccountTransactionAggregator` covers every `TxnType` and `PaymentStatus` transition. `AccountBalanceListener` (`@TransactionalEventListener(AFTER_COMMIT)`) delegates to a separate `AccountBalanceUpdater` bean carrying `@Transactional(REQUIRES_NEW)` so the rollup write commits independently of the originating transaction. `EmergencyFundService` + `EmergencyFundController` + `SettingsService.updateEmergencyFundTypes` surface a dashboard tile that bands red < 3, amber 3-6, green > 6 against trailing-12-month average expenses. Frontend `AccountPicker` mounted on budget + investment transaction dialogs; `EmergencyFundCard` mounted on the dashboard.
+- Phase 27-04: TR bank CSV statement import behind preview + commit. Flyway V44 adds a nullable `import_fingerprint` column on transactions with a partial unique index; `BudgetTransaction` carries the new field; three new `AuditAction` constants (`BANK_CSV_PREVIEWED` / `BANK_CSV_COMMITTED` / `BANK_CSV_FAILED`). New `com.fintrack.imports.bank` package: a `BankCsvParser` interface plus three per-bank implementations encoding their encoding / delimiter / date / decimal / sign quirks (GARANTI, ISBANK, AKBANK), a registry that resolves by enum, a `BankCsvCategoryMatcher` that reuses the existing `TransactionCategoryRule` regex resolver (no parallel rule engine), and a `BankCsvImportService` that hashes `(accountId, date, signedAmount, balanceAfter, description)` to a SHA-256 fingerprint for race-safe dedupe and publishes `BudgetTransactionPersistedEvent` per row so the 27-03 `AccountBalanceListener` rolls imported rows straight into `Account.currentBalance`. `BankCsvImportController` exposes `POST /api/v1/import/bank-csv/preview` + `/commit`, both authenticated and ownership-guarded against the supplied `account_id`. Frontend ships a lazy-loaded `/imports/bank-csv` page with bank radios, file upload, preview table, and commit button, reusing the shared `AccountPicker`.
+
 ## [1.2.0] - 2026-05-07
 
 ### Added
@@ -36,7 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial public release covering portfolio, budget, bill, audit, and security foundations (Phases 1-22).
 
-[Unreleased]: https://github.com/GTRows/fintrack/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/GTRows/fintrack/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/GTRows/fintrack/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/GTRows/fintrack/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/GTRows/fintrack/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/GTRows/fintrack/releases/tag/v1.0.0
