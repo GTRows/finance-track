@@ -37,11 +37,17 @@ class EmergencyFundServiceTest {
 
     private final UUID userId = UUID.randomUUID();
 
-    private UserSettings settings(List<String> types) {
+    private UserSettings settings(List<String> types, Short targetMonths, Short amberFloorMonths) {
         return UserSettings.builder()
                 .userId(userId)
                 .emergencyFundIncludeTypes(types == null ? null : new java.util.ArrayList<>(types))
+                .emergencyFundTargetMonths(targetMonths)
+                .emergencyFundAmberFloorMonths(amberFloorMonths)
                 .build();
+    }
+
+    private UserSettings settings(List<String> types) {
+        return settings(types, (short) 6, (short) 3);
     }
 
     @Test
@@ -230,5 +236,115 @@ class EmergencyFundServiceTest {
         EmergencyFundResponse res = service.compute(userId);
 
         assertThat(res.includedTypes()).containsExactly(Account.AccountType.BANK_SAVINGS);
+    }
+
+    @Test
+    void compute_usesCustomTargetMonths() {
+        when(userSettingsRepo.findById(userId))
+                .thenReturn(Optional.of(settings(List.of("BANK_SAVINGS"), (short) 9, (short) 3)));
+        when(accountRepository.sumBalancesByTypeForUser(eq(userId), any()))
+                .thenReturn(
+                        java.util.Arrays.<Object[]>asList(
+                                new Object[] {"TRY", new BigDecimal("8000")}));
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(
+                        eq(userId), eq(BudgetTransaction.TxnType.EXPENSE), any(), any()))
+                .thenReturn(new BigDecimal("1000"));
+
+        EmergencyFundResponse res = service.compute(userId);
+
+        // 8000 / 1000 = 8.0 -> with target=9 -> amber (would be green at default target=6).
+        assertThat(res.monthsCovered()).isEqualByComparingTo("8.0");
+        assertThat(res.status()).isEqualTo("amber");
+        assertThat(res.targetMonths()).isEqualTo(9);
+        assertThat(res.amberFloorMonths()).isEqualTo(3);
+    }
+
+    @Test
+    void compute_usesCustomAmberFloor() {
+        when(userSettingsRepo.findById(userId))
+                .thenReturn(Optional.of(settings(List.of("BANK_SAVINGS"), (short) 6, (short) 2)));
+        when(accountRepository.sumBalancesByTypeForUser(eq(userId), any()))
+                .thenReturn(
+                        java.util.Arrays.<Object[]>asList(
+                                new Object[] {"TRY", new BigDecimal("2500")}));
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(
+                        eq(userId), eq(BudgetTransaction.TxnType.EXPENSE), any(), any()))
+                .thenReturn(new BigDecimal("1000"));
+
+        EmergencyFundResponse res = service.compute(userId);
+
+        // 2500 / 1000 = 2.5 -> with amberFloor=2 -> amber (would be red at default amberFloor=3).
+        assertThat(res.monthsCovered()).isEqualByComparingTo("2.5");
+        assertThat(res.status()).isEqualTo("amber");
+    }
+
+    @Test
+    void compute_targetBoundaryInclusiveAmber() {
+        when(userSettingsRepo.findById(userId))
+                .thenReturn(Optional.of(settings(List.of("BANK_SAVINGS"), (short) 6, (short) 3)));
+        when(accountRepository.sumBalancesByTypeForUser(eq(userId), any()))
+                .thenReturn(
+                        java.util.Arrays.<Object[]>asList(
+                                new Object[] {"TRY", new BigDecimal("6000")}));
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(
+                        eq(userId), eq(BudgetTransaction.TxnType.EXPENSE), any(), any()))
+                .thenReturn(new BigDecimal("1000"));
+
+        EmergencyFundResponse res = service.compute(userId);
+
+        // 6000 / 1000 = 6.0 -> exactly at target=6 -> still amber (inclusive boundary).
+        assertThat(res.monthsCovered()).isEqualByComparingTo("6.0");
+        assertThat(res.status()).isEqualTo("amber");
+    }
+
+    @Test
+    void compute_amberFloorBoundaryInclusiveAmber() {
+        when(userSettingsRepo.findById(userId))
+                .thenReturn(Optional.of(settings(List.of("BANK_SAVINGS"), (short) 6, (short) 3)));
+        when(accountRepository.sumBalancesByTypeForUser(eq(userId), any()))
+                .thenReturn(
+                        java.util.Arrays.<Object[]>asList(
+                                new Object[] {"TRY", new BigDecimal("3000")}));
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(
+                        eq(userId), eq(BudgetTransaction.TxnType.EXPENSE), any(), any()))
+                .thenReturn(new BigDecimal("1000"));
+
+        EmergencyFundResponse res = service.compute(userId);
+
+        // 3000 / 1000 = 3.0 -> exactly at amberFloor=3 -> amber (inclusive lower bound).
+        assertThat(res.monthsCovered()).isEqualByComparingTo("3.0");
+        assertThat(res.status()).isEqualTo("amber");
+    }
+
+    @Test
+    void compute_fallsBackToDefaultsWhenColumnsAreNull() {
+        when(userSettingsRepo.findById(userId))
+                .thenReturn(Optional.of(settings(List.of("BANK_SAVINGS"), null, null)));
+        when(accountRepository.sumBalancesByTypeForUser(eq(userId), any()))
+                .thenReturn(java.util.Collections.<Object[]>emptyList());
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(
+                        eq(userId), eq(BudgetTransaction.TxnType.EXPENSE), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
+
+        EmergencyFundResponse res = service.compute(userId);
+
+        assertThat(res.targetMonths()).isEqualTo(6);
+        assertThat(res.amberFloorMonths()).isEqualTo(3);
+    }
+
+    @Test
+    void compute_responseCarriesActiveTargets() {
+        when(userSettingsRepo.findById(userId))
+                .thenReturn(Optional.of(settings(List.of("BANK_SAVINGS"), (short) 9, (short) 3)));
+        when(accountRepository.sumBalancesByTypeForUser(eq(userId), any()))
+                .thenReturn(java.util.Collections.<Object[]>emptyList());
+        when(txnRepo.sumByUserIdAndTypeAndDateRange(
+                        eq(userId), eq(BudgetTransaction.TxnType.EXPENSE), any(), any()))
+                .thenReturn(BigDecimal.ZERO);
+
+        EmergencyFundResponse res = service.compute(userId);
+
+        assertThat(res.targetMonths()).isEqualTo(9);
+        assertThat(res.amberFloorMonths()).isEqualTo(3);
     }
 }

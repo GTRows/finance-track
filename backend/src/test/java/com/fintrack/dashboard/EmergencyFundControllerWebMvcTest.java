@@ -49,7 +49,9 @@ class EmergencyFundControllerWebMvcTest extends AbstractWebMvcTestSupport {
                 new BigDecimal("6.0"),
                 "amber",
                 List.of(Account.AccountType.BANK_SAVINGS),
-                12);
+                12,
+                6,
+                3);
     }
 
     @Test

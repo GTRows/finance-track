@@ -32,8 +32,8 @@ public class EmergencyFundService {
 
     static final int SAMPLE_MONTHS = 12;
     static final int MIN_SAMPLES = 3;
-    static final BigDecimal RED_BAND = new BigDecimal("3");
-    static final BigDecimal AMBER_BAND = new BigDecimal("6");
+    static final int DEFAULT_TARGET_MONTHS = 6;
+    static final int DEFAULT_AMBER_FLOOR = 3;
     static final BigDecimal SENTINEL_INFINITE = new BigDecimal("999");
     static final List<Account.AccountType> DEFAULT_INCLUDED =
             List.of(Account.AccountType.BANK_SAVINGS);
@@ -42,9 +42,13 @@ public class EmergencyFundService {
     private final TransactionRepository txnRepo;
     private final UserSettingsRepository userSettingsRepo;
 
+    private record Targets(int targetMonths, int amberFloorMonths) {}
+
     @Transactional(readOnly = true)
     public EmergencyFundResponse compute(UUID userId) {
-        List<Account.AccountType> includedTypes = resolveIncludedTypes(userId);
+        UserSettings settings = userSettingsRepo.findById(userId).orElse(null);
+        List<Account.AccountType> includedTypes = resolveIncludedTypes(userId, settings);
+        Targets targets = resolveTargets(settings);
         List<CurrencyBucket> buckets =
                 accountRepository.sumBalancesByTypeForUser(userId, includedTypes).stream()
                         .map(row -> new CurrencyBucket((String) row[0], (BigDecimal) row[1]))
@@ -81,6 +85,8 @@ public class EmergencyFundService {
 
         BigDecimal monthsCovered;
         String status;
+        BigDecimal target = BigDecimal.valueOf(targets.targetMonths());
+        BigDecimal amberFloor = BigDecimal.valueOf(targets.amberFloorMonths());
         if (samples < MIN_SAMPLES) {
             monthsCovered = null;
             status = "insufficient-data";
@@ -89,9 +95,9 @@ public class EmergencyFundService {
             status = "green";
         } else {
             monthsCovered = currentReserve.divide(monthlyAverageExpense, 1, RoundingMode.HALF_UP);
-            if (monthsCovered.compareTo(RED_BAND) < 0) {
+            if (monthsCovered.compareTo(amberFloor) < 0) {
                 status = "red";
-            } else if (monthsCovered.compareTo(AMBER_BAND) <= 0) {
+            } else if (monthsCovered.compareTo(target) <= 0) {
                 status = "amber";
             } else {
                 status = "green";
@@ -105,11 +111,12 @@ public class EmergencyFundService {
                 monthsCovered,
                 status,
                 includedTypes,
-                samples);
+                samples,
+                targets.targetMonths(),
+                targets.amberFloorMonths());
     }
 
-    private List<Account.AccountType> resolveIncludedTypes(UUID userId) {
-        UserSettings settings = userSettingsRepo.findById(userId).orElse(null);
+    private List<Account.AccountType> resolveIncludedTypes(UUID userId, UserSettings settings) {
         if (settings == null
                 || settings.getEmergencyFundIncludeTypes() == null
                 || settings.getEmergencyFundIncludeTypes().isEmpty()) {
@@ -131,6 +138,18 @@ public class EmergencyFundService {
             out.add(0, Account.AccountType.BANK_SAVINGS);
         }
         return out;
+    }
+
+    private Targets resolveTargets(UserSettings settings) {
+        int target =
+                settings != null && settings.getEmergencyFundTargetMonths() != null
+                        ? settings.getEmergencyFundTargetMonths()
+                        : DEFAULT_TARGET_MONTHS;
+        int amberFloor =
+                settings != null && settings.getEmergencyFundAmberFloorMonths() != null
+                        ? settings.getEmergencyFundAmberFloorMonths()
+                        : DEFAULT_AMBER_FLOOR;
+        return new Targets(target, amberFloor);
     }
 
     private static BigDecimal nvl(BigDecimal v) {
