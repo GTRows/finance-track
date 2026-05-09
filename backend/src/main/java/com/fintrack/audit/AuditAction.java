@@ -71,4 +71,7 @@ public final class AuditAction {
     public static final String BANK_CSV_PREVIEWED = "BANK_CSV_PREVIEWED";
     public static final String BANK_CSV_COMMITTED = "BANK_CSV_COMMITTED";
     public static final String BANK_CSV_FAILED = "BANK_CSV_FAILED";
+
+    public static final String USER_SETTINGS_EMERGENCY_FUND_UPDATED =
+            "USER_SETTINGS_EMERGENCY_FUND_UPDATED";
 }

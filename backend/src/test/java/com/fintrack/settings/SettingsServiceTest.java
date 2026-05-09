@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.entity.UserSettings;
 import com.fintrack.common.exception.ResourceNotFoundException;
 import com.fintrack.settings.dto.SettingsResponse;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SettingsServiceTest {
 
     @Mock UserSettingsRepository repository;
+    @Mock AuditService auditService;
 
     @InjectMocks SettingsService service;
 

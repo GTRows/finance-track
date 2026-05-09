@@ -1,5 +1,8 @@
 package com.fintrack.settings;
 
+import static com.fintrack.audit.AuditAction.USER_SETTINGS_EMERGENCY_FUND_UPDATED;
+
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.config.CacheConfig;
 import com.fintrack.common.entity.Account;
 import com.fintrack.common.entity.UserSettings;
@@ -12,6 +15,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SettingsService {
 
+    static final int MIN_TARGET = 2;
+    static final int MAX_TARGET = 24;
+    static final int MIN_AMBER_FLOOR = 1;
+
     private final UserSettingsRepository repository;
+    private final AuditService auditService;
 
     @Cacheable(value = CacheConfig.USER_SETTINGS_CACHE, key = "#userId")
     @Transactional(readOnly = true)
@@ -73,19 +83,80 @@ public class SettingsService {
      * Persists the emergency-fund account-type inclusion list. {@link
      * Account.AccountType#BANK_SAVINGS} must be in the list; otherwise a {@link
      * BusinessRuleException} with code {@code EMERGENCY_FUND_BANK_SAVINGS_REQUIRED} is thrown.
+     *
+     * <p>This method delegates to {@link #updateEmergencyFundConfig(UUID, List, int, int)} reusing
+     * the user's existing target / amber-floor values, preserving the legacy single-shot types-only
+     * contract.
      */
     @Transactional
     public void updateEmergencyFundTypes(UUID userId, List<Account.AccountType> types) {
+        UserSettings current =
+                repository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Settings not found"));
+        int target =
+                current.getEmergencyFundTargetMonths() != null
+                        ? current.getEmergencyFundTargetMonths()
+                        : 6;
+        int amberFloor =
+                current.getEmergencyFundAmberFloorMonths() != null
+                        ? current.getEmergencyFundAmberFloorMonths()
+                        : 3;
+        updateEmergencyFundConfig(userId, types, target, amberFloor);
+    }
+
+    /**
+     * Persists the full emergency-fund configuration atomically: account-type inclusion list,
+     * target months, and amber-floor months. {@link Account.AccountType#BANK_SAVINGS} must be in
+     * the types list. {@code targetMonths} must be in {@code [2, 24]}; {@code amberFloorMonths}
+     * must be in {@code [1, targetMonths - 1]}.
+     */
+    @Transactional
+    public void updateEmergencyFundConfig(
+            UUID userId, List<Account.AccountType> types, int targetMonths, int amberFloorMonths) {
+        String username = currentUsername();
+
         if (types == null || !types.contains(Account.AccountType.BANK_SAVINGS)) {
+            auditService.failure(
+                    USER_SETTINGS_EMERGENCY_FUND_UPDATED, userId, username, "BANK_SAVINGS missing");
             throw new BusinessRuleException(
                     "BANK_SAVINGS must be included", "EMERGENCY_FUND_BANK_SAVINGS_REQUIRED");
         }
+        if (targetMonths < MIN_TARGET || targetMonths > MAX_TARGET) {
+            auditService.failure(
+                    USER_SETTINGS_EMERGENCY_FUND_UPDATED,
+                    userId,
+                    username,
+                    "target out of range: " + targetMonths);
+            throw new BusinessRuleException(
+                    "Target months must be between " + MIN_TARGET + " and " + MAX_TARGET,
+                    "EMERGENCY_FUND_TARGET_OUT_OF_RANGE");
+        }
+        if (amberFloorMonths < MIN_AMBER_FLOOR || amberFloorMonths >= targetMonths) {
+            auditService.failure(
+                    USER_SETTINGS_EMERGENCY_FUND_UPDATED,
+                    userId,
+                    username,
+                    "amber floor invalid: " + amberFloorMonths + " (target=" + targetMonths + ")");
+            throw new BusinessRuleException(
+                    "Amber floor must be at least " + MIN_AMBER_FLOOR + " and less than target",
+                    "EMERGENCY_FUND_AMBER_FLOOR_INVALID");
+        }
+
         UserSettings settings =
                 repository
                         .findById(userId)
                         .orElseThrow(() -> new ResourceNotFoundException("Settings not found"));
         settings.setEmergencyFundIncludeTypes(types.stream().map(Enum::name).toList());
+        settings.setEmergencyFundTargetMonths((short) targetMonths);
+        settings.setEmergencyFundAmberFloorMonths((short) amberFloorMonths);
         repository.save(settings);
+
+        auditService.success(
+                USER_SETTINGS_EMERGENCY_FUND_UPDATED,
+                userId,
+                username,
+                "types=" + types + " target=" + targetMonths + " amberFloor=" + amberFloorMonths);
     }
 
     private SettingsResponse toResponse(UserSettings s) {
@@ -95,5 +166,10 @@ public class SettingsService {
                 s.getTheme(),
                 s.getTimezone(),
                 s.isOnboardingCompleted());
+    }
+
+    private static String currentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : null;
     }
 }

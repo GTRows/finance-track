@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fintrack.audit.AuditService;
 import com.fintrack.common.config.CacheConfig;
 import com.fintrack.common.entity.UserSettings;
 import com.fintrack.common.exception.ResourceNotFoundException;
@@ -30,6 +31,7 @@ class SettingsServiceCacheTest {
     static class TestConfig {}
 
     @MockBean UserSettingsRepository repository;
+    @MockBean AuditService auditService;
 
     @Autowired SettingsService service;
     @Autowired CacheManager cacheManager;
