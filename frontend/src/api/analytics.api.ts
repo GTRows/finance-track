@@ -45,6 +45,35 @@ export interface BenchmarkResponse {
   series: BenchmarkSeries[];
 }
 
+/** A single point on a portfolio comparison series. All monetary fields are TRY-denominated. */
+export interface PortfolioComparisonPoint {
+  date: string;
+  totalValueTry: number;
+  totalCostTry: number;
+  unrealizedPnlTry: number;
+  realizedPnlTry: number;
+  totalPnlTry: number;
+}
+
+/** One portfolio's chronological series in a multi-portfolio comparison response. */
+export interface PortfolioComparisonSeries {
+  portfolioId: string;
+  name: string;
+  points: PortfolioComparisonPoint[];
+}
+
+/** Response shape for {@link analyticsApi.fetchPortfolioComparison}. */
+export interface PortfolioComparisonResponse {
+  currency: string;
+  series: PortfolioComparisonSeries[];
+}
+
+export interface PortfolioComparisonParams {
+  ids: string[];
+  from?: string;
+  to?: string;
+}
+
 export const analyticsApi = {
   async projectCashFlow(months?: number, startingBalance?: number): Promise<CashFlowProjection> {
     const params: Record<string, string> = {};
@@ -57,6 +86,20 @@ export const analyticsApi = {
     const { data } = await client.get<BenchmarkResponse>('/analytics/benchmarks', {
       params: { days: String(days) },
     });
+    return data;
+  },
+  async fetchPortfolioComparison({
+    ids,
+    from,
+    to,
+  }: PortfolioComparisonParams): Promise<PortfolioComparisonResponse> {
+    const params: Record<string, string> = { ids: ids.join(',') };
+    if (from) params.from = from;
+    if (to) params.to = to;
+    const { data } = await client.get<PortfolioComparisonResponse>(
+      '/analytics/portfolios/compare',
+      { params },
+    );
     return data;
   },
 };

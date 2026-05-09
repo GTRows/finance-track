@@ -878,6 +878,31 @@
         "title": "TR Vergi Yardımcısı",
         "description": "Yıllık temettü stopajı ve sermaye kazancı eşik durumu — beyan öncesi tek sayfa özeti."
       }
+    },
+    "tabs": {
+      "overview": "Genel bakış",
+      "compare": "Karşılaştır"
+    },
+    "compare": {
+      "title": "Portföy karşılaştırma",
+      "description": "İki veya daha fazla portföyün TRY değeri, maliyeti ve P&L'sini aynı grafikte yan yana gör.",
+      "selectPortfolios": "{{count}} seçili",
+      "selectPortfoliosPlaceholder": "Portföy seç",
+      "noPortfoliosSelected": "Karşılaştırma için en az bir portföy oluştur.",
+      "modePercent": "Yüzde",
+      "modeAbsolute": "Mutlak TRY",
+      "range1M": "1A",
+      "range3M": "3A",
+      "rangeYTD": "YBA",
+      "range1Y": "1Y",
+      "rangeAll": "Tümü",
+      "tooltipValue": "Değer",
+      "tooltipChange": "Değişim",
+      "tooltipPnl": "K/Z",
+      "emptyTitle": "Karşılaştırılacak portföyleri seç",
+      "emptyDesc": "Aynı grafikte üst üste bindirmek için iki veya daha fazla portföy seç.",
+      "loadingError": "Karşılaştırma yüklenemedi",
+      "realisedPnlNote": "Gerçekleşen K/Z, satış tarihindeki ağırlıklı ortalama maliyeti kullanır. Lot bazlı FIFO hesaplaması sermaye kazancı raporundadır."
     }
   },
   "benchmarks": {

@@ -1,6 +1,11 @@
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { snapshotApi } from '@/api/snapshot.api';
-import { analyticsApi, type CashFlowProjection, type BenchmarkResponse } from '@/api/analytics.api';
+import {
+  analyticsApi,
+  type CashFlowProjection,
+  type BenchmarkResponse,
+  type PortfolioComparisonResponse,
+} from '@/api/analytics.api';
 import type { Portfolio, PortfolioSnapshot } from '@/types/portfolio.types';
 
 export interface AggregatedSnapshotPoint {
@@ -76,5 +81,20 @@ export function useBenchmarks(days = 365) {
     queryKey: ['analytics', 'benchmarks', days],
     queryFn: () => analyticsApi.fetchBenchmarks(days),
     staleTime: 15 * 60_000,
+  });
+}
+
+/**
+ * Fetches a multi-portfolio comparison series. The cache key sorts ids before joining so
+ * reordering the selection does not double-fetch.
+ */
+export function usePortfolioComparison(ids: string[], from?: string, to?: string) {
+  const sortedKey = [...ids].sort().join(',');
+  return useQuery<PortfolioComparisonResponse>({
+    queryKey: ['analytics', 'compare', sortedKey, from ?? null, to ?? null],
+    queryFn: () => analyticsApi.fetchPortfolioComparison({ ids, from, to }),
+    enabled: ids.length > 0,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

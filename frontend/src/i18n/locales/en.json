@@ -877,6 +877,31 @@
         "title": "TR Tax Helper",
         "description": "Annual dividend stoppage and capital-gains threshold status — single-page summary before filing."
       }
+    },
+    "tabs": {
+      "overview": "Overview",
+      "compare": "Compare"
+    },
+    "compare": {
+      "title": "Portfolio comparison",
+      "description": "Side-by-side TRY value, cost basis, and P&L overlay for any two or more of your portfolios.",
+      "selectPortfolios": "{{count}} selected",
+      "selectPortfoliosPlaceholder": "Select portfolios",
+      "noPortfoliosSelected": "Create at least one portfolio to compare.",
+      "modePercent": "Percentage",
+      "modeAbsolute": "Absolute TRY",
+      "range1M": "1M",
+      "range3M": "3M",
+      "rangeYTD": "YTD",
+      "range1Y": "1Y",
+      "rangeAll": "All",
+      "tooltipValue": "Value",
+      "tooltipChange": "Change",
+      "tooltipPnl": "P&L",
+      "emptyTitle": "Select portfolios to compare",
+      "emptyDesc": "Pick two or more portfolios to overlay them on the same chart.",
+      "loadingError": "Could not load comparison",
+      "realisedPnlNote": "Realised P&L uses the running-average cost basis on the SELL date. The lot-level FIFO calculation lives in the capital gains report."
     }
   },
   "benchmarks": {

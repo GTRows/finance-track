@@ -33,6 +33,16 @@ export function formatPercent(value: number, decimals = 2): string {
   }).format(value);
 }
 
+/** Compact TRY formatter for chart axis ticks ("1.2M ₺", "45K ₺"). */
+export function formatCompactTRY(value: number): string {
+  if (value === 0) return '0 ₺';
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B ₺`;
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M ₺`;
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(0)}K ₺`;
+  return `${value.toFixed(0)} ₺`;
+}
+
 export function formatDate(date: string | Date): string {
   return new Intl.DateTimeFormat(currentLocale(), {
     day: 'numeric',

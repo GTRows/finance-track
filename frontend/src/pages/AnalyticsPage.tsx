@@ -24,7 +24,14 @@ import { usePortfolios } from '@/hooks/usePortfolios';
 import { usePortfolioSnapshotsAggregate } from '@/hooks/useAnalytics';
 import { CashFlowProjectionChart } from '@/components/analytics/CashFlowProjectionChart';
 import { BenchmarkOverlayChart } from '@/components/analytics/BenchmarkOverlayChart';
-import { formatMonth, formatPercent, formatShortDate, formatTRY } from '@/utils/formatters';
+import { PortfolioComparisonChart } from '@/components/analytics/PortfolioComparisonChart';
+import {
+  formatCompactTRY,
+  formatMonth,
+  formatPercent,
+  formatShortDate,
+  formatTRY,
+} from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 import {
   DateRangePicker,
@@ -33,14 +40,7 @@ import {
   type DateRange,
 } from '@/components/ui/date-range-picker';
 
-function compactTRY(value: number): string {
-  if (value === 0) return '0 ₺';
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B ₺`;
-  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M ₺`;
-  if (abs >= 1_000) return `${(value / 1_000).toFixed(0)}K ₺`;
-  return `${value.toFixed(0)} ₺`;
-}
+type AnalyticsTab = 'overview' | 'compare';
 
 function yearsBetween(startIso: string, endIso: string): number {
   const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
@@ -50,6 +50,7 @@ function yearsBetween(startIso: string, endIso: string): number {
 export function AnalyticsPage() {
   const { t } = useTranslation();
   const [range, setRange] = useState<DateRange>(() => defaultDateRange());
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>('overview');
   const summariesQuery = useMonthlySummaries();
   const portfoliosQuery = usePortfolios();
   const snapshots = usePortfolioSnapshotsAggregate(portfoliosQuery.data);
@@ -126,352 +127,397 @@ export function AnalyticsPage() {
         actions={<DateRangePicker value={range} onChange={setRange} />}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={PiggyBank}
-          label={t('analytics.avgSavingsRate')}
-          value={
-            avgSavingsRate != null
-              ? `%${(avgSavingsRate).toFixed(1)}`
-              : '--'
-          }
-          hint={t('analytics.avgSavingsRateHint', {
-            count: budgetSeries.length,
-          })}
-        />
-        <StatCard
-          icon={Activity}
-          label={t('analytics.expenseGrowth')}
-          value={expenseGrowth != null ? formatPercent(expenseGrowth) : '--'}
-          hint={
-            budgetSeries.length >= 2
-              ? t('analytics.expenseGrowthHint', {
-                  from: formatMonth(budgetSeries[0].period),
-                  to: formatMonth(budgetSeries[budgetSeries.length - 1].period),
-                })
-              : t('analytics.expenseGrowthEmpty')
-          }
-          tone={
-            expenseGrowth == null
-              ? undefined
-              : expenseGrowth > 0
-                ? 'negative'
-                : 'positive'
-          }
-        />
-        <StatCard
-          icon={TrendingUp}
-          label={t('analytics.portfolioCagr')}
-          value={cagr != null ? formatPercent(cagr) : '--'}
-          hint={
-            portfolioSeries.length >= 2
-              ? t('analytics.portfolioCagrHint', {
-                  from: formatShortDate(portfolioSeries[0].date),
-                  to: formatShortDate(
-                    portfolioSeries[portfolioSeries.length - 1].date
-                  ),
-                })
-              : t('analytics.portfolioCagrEmpty')
-          }
-          tone={cagr == null ? undefined : cagr >= 0 ? 'positive' : 'negative'}
-        />
-        <StatCard
-          icon={LineIcon}
-          label={t('analytics.monthsTracked')}
-          value={String(budgetSeries.length)}
-          hint={
-            portfoliosQuery.data
-              ? t('analytics.portfoliosCount', {
-                  count: portfoliosQuery.data.length,
-                })
-              : '--'
-          }
-        />
-      </div>
+      <AnalyticsTabsBar value={activeTab} onChange={setActiveTab} />
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">
-            {t('analytics.savingsRateTrend')}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {t('analytics.savingsRateTrendHint')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!hasBudget ? (
-            <EmptyState
+      {activeTab === 'compare' ? (
+        <PortfolioComparisonChart />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
               icon={PiggyBank}
-              title={t('analytics.emptyBudgetTitle')}
-              description={t('analytics.emptyBudgetDesc')}
+              label={t('analytics.avgSavingsRate')}
+              value={
+                avgSavingsRate != null
+                  ? `%${(avgSavingsRate).toFixed(1)}`
+                  : '--'
+              }
+              hint={t('analytics.avgSavingsRateHint', {
+                count: budgetSeries.length,
+              })}
             />
-          ) : (
-            <div className="h-[260px] w-full -ml-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={budgetSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(172 70% 50%)" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="hsl(172 70% 50%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    stroke="hsl(var(--border))"
-                    strokeDasharray="2 4"
-                    vertical={false}
-                    opacity={0.4}
-                  />
-                  <XAxis
-                    dataKey="periodLabel"
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    minTickGap={32}
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    width={50}
-                    tickFormatter={(v: number) => `%${v.toFixed(0)}`}
-                  />
-                  <Tooltip
-                    cursor={{
-                      stroke: 'hsl(var(--border))',
-                      strokeWidth: 1,
-                      strokeDasharray: '2 4',
-                    }}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                    }}
-                    formatter={(v: number) => [`%${v.toFixed(1)}`, t('analytics.savingsRate')]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="savingsRate"
-                    stroke="hsl(172 70% 50%)"
-                    strokeWidth={2}
-                    fill="url(#savingsGradient)"
-                    isAnimationActive
-                    animationDuration={500}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">
-            {t('analytics.incomeExpense')}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {t('analytics.incomeExpenseHint')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!hasBudget ? (
-            <EmptyState
+            <StatCard
               icon={Activity}
-              title={t('analytics.emptyBudgetTitle')}
-              description={t('analytics.emptyBudgetDesc')}
+              label={t('analytics.expenseGrowth')}
+              value={expenseGrowth != null ? formatPercent(expenseGrowth) : '--'}
+              hint={
+                budgetSeries.length >= 2
+                  ? t('analytics.expenseGrowthHint', {
+                      from: formatMonth(budgetSeries[0].period),
+                      to: formatMonth(budgetSeries[budgetSeries.length - 1].period),
+                    })
+                  : t('analytics.expenseGrowthEmpty')
+              }
+              tone={
+                expenseGrowth == null
+                  ? undefined
+                  : expenseGrowth > 0
+                    ? 'negative'
+                    : 'positive'
+              }
             />
-          ) : (
-            <div className="h-[260px] w-full -ml-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={budgetSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid
-                    stroke="hsl(var(--border))"
-                    strokeDasharray="2 4"
-                    vertical={false}
-                    opacity={0.4}
-                  />
-                  <XAxis
-                    dataKey="periodLabel"
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    minTickGap={32}
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    width={64}
-                    tickFormatter={compactTRY}
-                  />
-                  <Tooltip
-                    cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                    }}
-                    formatter={(v: number) => formatTRY(v)}
-                  />
-                  <Legend
-                    verticalAlign="top"
-                    height={28}
-                    iconType="circle"
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <Bar
-                    dataKey="income"
-                    name={t('analytics.income')}
-                    fill="hsl(172 70% 50%)"
-                    radius={[3, 3, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="expense"
-                    name={t('analytics.expense')}
-                    fill="hsl(0 75% 60%)"
-                    radius={[3, 3, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <CashFlowProjectionChart />
-
-      <Link
-        to="/reports/capital-gains"
-        className="group block rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
-      >
-        <div className="flex items-center gap-4 p-5">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Coins className="w-5 h-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">{t('capitalGains.title')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t('capitalGains.description')}</p>
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-        </div>
-      </Link>
-
-      <Link
-        to="/reports/tax/tr"
-        className="group block rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
-      >
-        <div className="flex items-center gap-4 p-5">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Receipt className="w-5 h-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">{t('analytics.tiles.taxTr.title')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {t('analytics.tiles.taxTr.description')}
-            </p>
-          </div>
-          <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-        </div>
-      </Link>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">
-            {t('analytics.netWorthTrend')}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {t('analytics.netWorthTrendHint')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!hasPortfolio ? (
-            <EmptyState
+            <StatCard
               icon={TrendingUp}
-              title={t('analytics.emptyPortfolioTitle')}
-              description={t('analytics.emptyPortfolioDesc')}
+              label={t('analytics.portfolioCagr')}
+              value={cagr != null ? formatPercent(cagr) : '--'}
+              hint={
+                portfolioSeries.length >= 2
+                  ? t('analytics.portfolioCagrHint', {
+                      from: formatShortDate(portfolioSeries[0].date),
+                      to: formatShortDate(
+                        portfolioSeries[portfolioSeries.length - 1].date
+                      ),
+                    })
+                  : t('analytics.portfolioCagrEmpty')
+              }
+              tone={cagr == null ? undefined : cagr >= 0 ? 'positive' : 'negative'}
             />
-          ) : (
-            <div className="h-[280px] w-full -ml-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={portfolioSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid
-                    stroke="hsl(var(--border))"
-                    strokeDasharray="2 4"
-                    vertical={false}
-                    opacity={0.4}
-                  />
-                  <XAxis
-                    dataKey="dateLabel"
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    minTickGap={40}
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    width={64}
-                    tickFormatter={compactTRY}
-                  />
-                  <Tooltip
-                    cursor={{
-                      stroke: 'hsl(var(--border))',
-                      strokeWidth: 1,
-                      strokeDasharray: '2 4',
-                    }}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                    }}
-                    formatter={(v: number, key: string) => [
-                      formatTRY(v),
-                      key === 'totalValueTry' ? t('analytics.value') : t('analytics.cost'),
-                    ]}
-                  />
-                  <Legend
-                    verticalAlign="top"
-                    height={28}
-                    iconType="circle"
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="totalValueTry"
-                    name={t('analytics.value')}
-                    stroke="hsl(172 70% 50%)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="totalCostTry"
-                    name={t('analytics.cost')}
-                    stroke="hsl(var(--muted-foreground))"
-                    strokeWidth={1.5}
-                    strokeDasharray="4 3"
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            <StatCard
+              icon={LineIcon}
+              label={t('analytics.monthsTracked')}
+              value={String(budgetSeries.length)}
+              hint={
+                portfoliosQuery.data
+                  ? t('analytics.portfoliosCount', {
+                      count: portfoliosQuery.data.length,
+                    })
+                  : '--'
+              }
+            />
+          </div>
 
-      <BenchmarkOverlayChart snapshots={snapshots.data} />
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">
+                {t('analytics.savingsRateTrend')}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {t('analytics.savingsRateTrendHint')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!hasBudget ? (
+                <EmptyState
+                  icon={PiggyBank}
+                  title={t('analytics.emptyBudgetTitle')}
+                  description={t('analytics.emptyBudgetDesc')}
+                />
+              ) : (
+                <div className="h-[260px] w-full -ml-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={budgetSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(172 70% 50%)" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="hsl(172 70% 50%)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        stroke="hsl(var(--border))"
+                        strokeDasharray="2 4"
+                        vertical={false}
+                        opacity={0.4}
+                      />
+                      <XAxis
+                        dataKey="periodLabel"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        minTickGap={32}
+                      />
+                      <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        width={50}
+                        tickFormatter={(v: number) => `%${v.toFixed(0)}`}
+                      />
+                      <Tooltip
+                        cursor={{
+                          stroke: 'hsl(var(--border))',
+                          strokeWidth: 1,
+                          strokeDasharray: '2 4',
+                        }}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                        }}
+                        formatter={(v: number) => [`%${v.toFixed(1)}`, t('analytics.savingsRate')]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="savingsRate"
+                        stroke="hsl(172 70% 50%)"
+                        strokeWidth={2}
+                        fill="url(#savingsGradient)"
+                        isAnimationActive
+                        animationDuration={500}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">
+                {t('analytics.incomeExpense')}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {t('analytics.incomeExpenseHint')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!hasBudget ? (
+                <EmptyState
+                  icon={Activity}
+                  title={t('analytics.emptyBudgetTitle')}
+                  description={t('analytics.emptyBudgetDesc')}
+                />
+              ) : (
+                <div className="h-[260px] w-full -ml-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={budgetSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid
+                        stroke="hsl(var(--border))"
+                        strokeDasharray="2 4"
+                        vertical={false}
+                        opacity={0.4}
+                      />
+                      <XAxis
+                        dataKey="periodLabel"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        minTickGap={32}
+                      />
+                      <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        width={64}
+                        tickFormatter={formatCompactTRY}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                        }}
+                        formatter={(v: number) => formatTRY(v)}
+                      />
+                      <Legend
+                        verticalAlign="top"
+                        height={28}
+                        iconType="circle"
+                        iconSize={8}
+                        wrapperStyle={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <Bar
+                        dataKey="income"
+                        name={t('analytics.income')}
+                        fill="hsl(172 70% 50%)"
+                        radius={[3, 3, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="expense"
+                        name={t('analytics.expense')}
+                        fill="hsl(0 75% 60%)"
+                        radius={[3, 3, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <CashFlowProjectionChart />
+
+          <Link
+            to="/reports/capital-gains"
+            className="group block rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
+          >
+            <div className="flex items-center gap-4 p-5">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Coins className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('capitalGains.title')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('capitalGains.description')}</p>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+            </div>
+          </Link>
+
+          <Link
+            to="/reports/tax/tr"
+            className="group block rounded-lg border border-border bg-card hover:border-primary/40 transition-colors"
+          >
+            <div className="flex items-center gap-4 p-5">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Receipt className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('analytics.tiles.taxTr.title')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('analytics.tiles.taxTr.description')}
+                </p>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+            </div>
+          </Link>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">
+                {t('analytics.netWorthTrend')}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {t('analytics.netWorthTrendHint')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!hasPortfolio ? (
+                <EmptyState
+                  icon={TrendingUp}
+                  title={t('analytics.emptyPortfolioTitle')}
+                  description={t('analytics.emptyPortfolioDesc')}
+                />
+              ) : (
+                <div className="h-[280px] w-full -ml-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={portfolioSeries} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid
+                        stroke="hsl(var(--border))"
+                        strokeDasharray="2 4"
+                        vertical={false}
+                        opacity={0.4}
+                      />
+                      <XAxis
+                        dataKey="dateLabel"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        minTickGap={40}
+                      />
+                      <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        width={64}
+                        tickFormatter={formatCompactTRY}
+                      />
+                      <Tooltip
+                        cursor={{
+                          stroke: 'hsl(var(--border))',
+                          strokeWidth: 1,
+                          strokeDasharray: '2 4',
+                        }}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                        }}
+                        formatter={(v: number, key: string) => [
+                          formatTRY(v),
+                          key === 'totalValueTry' ? t('analytics.value') : t('analytics.cost'),
+                        ]}
+                      />
+                      <Legend
+                        verticalAlign="top"
+                        height={28}
+                        iconType="circle"
+                        iconSize={8}
+                        wrapperStyle={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="totalValueTry"
+                        name={t('analytics.value')}
+                        stroke="hsl(172 70% 50%)"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="totalCostTry"
+                        name={t('analytics.cost')}
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 3"
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <BenchmarkOverlayChart snapshots={snapshots.data} />
+        </>
+      )}
+    </div>
+  );
+}
+
+interface AnalyticsTabsBarProps {
+  value: AnalyticsTab;
+  onChange: (tab: AnalyticsTab) => void;
+}
+
+function AnalyticsTabsBar({ value, onChange }: AnalyticsTabsBarProps) {
+  const { t } = useTranslation();
+  const tabs: Array<{ key: AnalyticsTab; labelKey: string }> = [
+    { key: 'overview', labelKey: 'analytics.tabs.overview' },
+    { key: 'compare', labelKey: 'analytics.tabs.compare' },
+  ];
+  return (
+    <div
+      role="tablist"
+      className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background/40 p-0.5"
+    >
+      {tabs.map((tab) => (
+        <button
+          key={tab.key}
+          role="tab"
+          aria-selected={value === tab.key}
+          type="button"
+          onClick={() => onChange(tab.key)}
+          className={cn(
+            'h-8 px-3 rounded text-xs font-medium tracking-tight transition-colors cursor-pointer',
+            value === tab.key
+              ? 'bg-primary/15 text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          {t(tab.labelKey)}
+        </button>
+      ))}
     </div>
   );
 }
