@@ -8,6 +8,7 @@ import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
 import com.fintrack.common.entity.User;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -89,5 +90,49 @@ class BillPaymentRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
         assertThat(repo.findByBillIdAndPeriod(bill.getId(), "2026-04")).isPresent();
         assertThat(repo.findByBillIdAndPeriod(bill.getId(), "2026-99")).isEmpty();
+    }
+
+    @Test
+    void findByBillIdInAndPeriodReturnsRowsAcrossRequestedBillsOnly() {
+        UUID userId = seedUser("zeynep");
+        Bill b1 = seedBill(userId, "B1");
+        Bill b2 = seedBill(userId, "B2");
+        Bill b3 = seedBill(userId, "B3");
+        repo.save(payment(b1.getId(), "2026-04", BillPayment.PaymentStatus.PAID));
+        repo.save(payment(b2.getId(), "2026-04", BillPayment.PaymentStatus.PENDING));
+        repo.save(payment(b3.getId(), "2026-04", BillPayment.PaymentStatus.PAID));
+        // different period — must not appear in the result
+        repo.save(payment(b1.getId(), "2026-03", BillPayment.PaymentStatus.PAID));
+
+        List<BillPayment> rows =
+                repo.findByBillIdInAndPeriod(List.of(b1.getId(), b2.getId()), "2026-04");
+
+        assertThat(rows).hasSize(2);
+        assertThat(rows)
+                .extracting(BillPayment::getBillId)
+                .allSatisfy(id -> assertThat(id).isIn(b1.getId(), b2.getId()));
+        assertThat(rows).extracting(BillPayment::getPeriod).containsOnly("2026-04");
+    }
+
+    @Test
+    void findByBillIdInAndStatusOrderByPeriodDescReturnsPaidRowsAcrossBillsDescending() {
+        UUID userId = seedUser("ali2");
+        Bill b1 = seedBill(userId, "B1");
+        Bill b2 = seedBill(userId, "B2");
+        repo.save(payment(b1.getId(), "2026-01", BillPayment.PaymentStatus.PAID));
+        repo.save(payment(b1.getId(), "2026-03", BillPayment.PaymentStatus.PAID));
+        repo.save(payment(b2.getId(), "2026-02", BillPayment.PaymentStatus.PAID));
+        repo.save(payment(b2.getId(), "2026-04", BillPayment.PaymentStatus.PAID));
+        // PENDING must be filtered out
+        repo.save(payment(b1.getId(), "2026-04", BillPayment.PaymentStatus.PENDING));
+
+        List<BillPayment> rows =
+                repo.findByBillIdInAndStatusOrderByPeriodDesc(
+                        List.of(b1.getId(), b2.getId()), BillPayment.PaymentStatus.PAID);
+
+        assertThat(rows).hasSize(4);
+        assertThat(rows)
+                .extracting(BillPayment::getPeriod)
+                .containsExactly("2026-04", "2026-03", "2026-02", "2026-01");
     }
 }

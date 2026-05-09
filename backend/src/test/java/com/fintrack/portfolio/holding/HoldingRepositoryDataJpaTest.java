@@ -11,6 +11,7 @@ import com.fintrack.common.entity.PortfolioHolding;
 import com.fintrack.common.entity.User;
 import com.fintrack.portfolio.PortfolioRepository;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -98,5 +99,28 @@ class HoldingRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
         assertThat(repo.findByIdAndPortfolioId(own.getId(), p1)).isPresent();
         assertThat(repo.findByIdAndPortfolioId(own.getId(), p2)).isEmpty();
+    }
+
+    @Test
+    void findByPortfolioIdInReturnsHoldingsAcrossRequestedPortfoliosOnly() {
+        UUID userId = seedUser("zeynep");
+        UUID p1 = seedPortfolio(userId, "P1");
+        UUID p2 = seedPortfolio(userId, "P2");
+        UUID p3 = seedPortfolio(userId, "P3");
+        UUID btc = seedAsset("BTC2");
+        UUID eth = seedAsset("ETH2");
+        repo.save(holding(p1, btc, "1"));
+        repo.save(holding(p1, eth, "2"));
+        repo.save(holding(p2, btc, "3"));
+        repo.save(holding(p2, eth, "4"));
+        repo.save(holding(p3, btc, "5"));
+        repo.save(holding(p3, eth, "6"));
+
+        List<PortfolioHolding> rows = repo.findByPortfolioIdIn(List.of(p1, p2));
+
+        assertThat(rows).hasSize(4);
+        assertThat(rows)
+                .extracting(PortfolioHolding::getPortfolioId)
+                .allSatisfy(id -> assertThat(id).isIn(p1, p2));
     }
 }
