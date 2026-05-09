@@ -854,6 +854,135 @@ of `rebalance:<proposalId>` so a portfolio-level query
 `SELECT * FROM investment_transactions WHERE portfolio_id = <id> AND notes LIKE 'rebalance:%'`
 returns every row a rebalance batch ever produced.
 
+## Inspecting slow queries with pg_stat_statements
+
+What it does: provides an opt-in path to enable the `pg_stat_statements`
+extension on the running Postgres container so the operator can list the
+top-N queries by execution time and run `EXPLAIN (ANALYZE, BUFFERS)` on
+the offenders. Used during ad-hoc performance investigations (Phase 30
+"Performance & Polish" landed the first index pass via the V47 Flyway
+migration; this runbook covers how to surface the next one).
+
+The `pg_stat_statements` extension is shipped as an **operator-only**
+overlay. The live `docker-compose.yml` does NOT load
+`shared_preload_libraries = 'pg_stat_statements'` and is intentionally
+NOT modified by Phase 30-02 (Claude tooling is denied write access via
+the project's `pre_guard_release_files.py` PreToolUse hook). The overlay
+file ships at `monitoring/postgres/docker-compose.postgres.yml` alongside
+a custom `monitoring/postgres/postgresql.conf` and a helper
+`monitoring/postgres/queries.sql`. The overlay is invoked manually only
+when an investigation is in flight.
+
+### Bringing the overlay up
+
+Bring Postgres up with the overlay layered on top of the main compose:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f monitoring/postgres/docker-compose.postgres.yml \
+  up -d postgres
+```
+
+This restarts the `postgres` service with `config_file=/etc/postgresql/postgresql.conf`
+pointing at the overlay-mounted config that loads `pg_stat_statements`.
+The other FinTrack services (backend, frontend, prometheus, grafana,
+tempo, redis) are not affected.
+
+### Enabling the extension once per database
+
+`pg_stat_statements` is loaded by the Postgres process at startup but
+the extension itself must be installed once per database lifetime.
+After the container is up:
+
+```bash
+docker compose exec postgres psql -U fintrack -d fintrack \
+  -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
+```
+
+The extension persists in the database; rebooting the overlay does not
+require re-running this step.
+
+### Reading the top-N
+
+The canonical query lives at `monitoring/postgres/queries.sql`. Run it
+inside the container:
+
+```bash
+docker compose exec postgres psql -U fintrack -d fintrack \
+  < monitoring/postgres/queries.sql
+```
+
+Or interactively:
+
+```bash
+docker compose exec postgres psql -U fintrack -d fintrack
+fintrack=# SELECT query, calls, total_exec_time, mean_exec_time, rows
+fintrack=#   FROM pg_stat_statements
+fintrack=#   ORDER BY total_exec_time DESC
+fintrack=#   LIMIT 20;
+```
+
+`total_exec_time` is in milliseconds across all calls; `mean_exec_time`
+is the per-call mean. Rows with high `mean_exec_time` and high `calls`
+are the prime EXPLAIN candidates.
+
+### EXPLAIN (ANALYZE, BUFFERS) on a slow query
+
+For each offender, copy the JPQL-rendered SQL out of the backend logs
+(set `spring.jpa.properties.hibernate.show_sql=true` temporarily, or
+read it back from the `query` column of `pg_stat_statements`) and run:
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS) <statement>;
+```
+
+Look for `Seq Scan` rows on tables with > 1k rows, missing indexes
+where the planner falls back to bitmap heap scans, and high
+`shared read` counts that indicate cache-cold paths.
+
+### Resetting between investigations
+
+`pg_stat_statements` accumulates counters across the lifetime of the
+extension. Reset them at the start of a focused investigation so the
+top-N reflects only the workload under test:
+
+```sql
+SELECT pg_stat_statements_reset();
+```
+
+### Bringing the overlay back down
+
+Cycle the postgres service back to the default config:
+
+```bash
+docker compose stop postgres
+docker compose -f docker-compose.yml up -d postgres
+```
+
+The default invocation (without the overlay file) brings the service
+back up under the upstream image's stock `postgresql.conf` —
+`pg_stat_statements` stops collecting until the overlay is layered on
+again. The extension itself remains installed in the database; future
+overlay invocations can `SELECT pg_stat_statements_reset()` and resume.
+
+### Hard rules
+
+- NEVER edit the live `docker-compose.yml` to load `pg_stat_statements`
+  in the default deployment. The extension carries non-trivial CPU
+  overhead at high query rates and the homelab deployment runs without
+  it for a reason.
+- The overlay is operator-only and runs ad-hoc. It is NOT enabled in
+  CI, NOT enabled by `docker compose up -d` without the explicit
+  overlay flag, and is NOT referenced by any service file outside
+  `monitoring/postgres/`.
+- Findings translate into Flyway migrations. When the EXPLAIN walk
+  surfaces a NEW slow query path that the V47 index inventory does not
+  cover, write a NEW `V{n}__index_audit_*.sql` forward migration —
+  NEVER an ad-hoc `CREATE INDEX` against the live database. The V47
+  migration's index batch is the canonical "missing index" snapshot
+  that documents which queries motivated each index.
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`
