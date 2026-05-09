@@ -55,6 +55,14 @@ public class UserSettings {
     @Builder.Default
     private List<String> emergencyFundIncludeTypes = new ArrayList<>(List.of("BANK_SAVINGS"));
 
+    @Column(name = "emergency_fund_target_months", nullable = false)
+    @Builder.Default
+    private Short emergencyFundTargetMonths = 6;
+
+    @Column(name = "emergency_fund_amber_floor_months", nullable = false)
+    @Builder.Default
+    private Short emergencyFundAmberFloorMonths = 3;
+
     @Column(name = "onboarding_completed", nullable = false)
     @Builder.Default
     private boolean onboardingCompleted = false;
