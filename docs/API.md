@@ -912,6 +912,139 @@ method)`. The price-sync write paths (`PriceSyncService.persistUpdates` /
 }
 ```
 
+### POST /api/v1/analytics/monte-carlo
+Stochastic projection of net-worth across a configurable horizon. The simulation
+runs `iterations` independent paths; each path walks `horizonYears * 12` monthly
+steps drawing one normal sample per allocation class per step, weights the
+draws into a portfolio return, applies the monthly contribution at end-of-month,
+and captures end-of-year balances. Iterations fan out across the existing
+virtual-thread executor (`tracingPriceVirtualExecutor`); per-year percentile
+aggregation runs in a single sort + linear interpolation pass.
+
+Request body:
+```json
+{
+  "horizonYears": 20,
+  "iterations": 10000,
+  "currentNetWorth": 250000,
+  "monthlyContribution": 30000,
+  "targetNetWorth": 5000000,
+  "allocations": [
+    { "assetClass": "STOCK",  "weight": 0.50, "annualMeanReturn": 0.07, "annualStdDev": 0.18 },
+    { "assetClass": "BOND",   "weight": 0.20, "annualMeanReturn": 0.03, "annualStdDev": 0.06 },
+    { "assetClass": "CASH",   "weight": 0.10, "annualMeanReturn": 0.01, "annualStdDev": 0.01 },
+    { "assetClass": "CRYPTO", "weight": 0.10, "annualMeanReturn": 0.20, "annualStdDev": 0.60 },
+    { "assetClass": "GOLD",   "weight": 0.10, "annualMeanReturn": 0.05, "annualStdDev": 0.15 }
+  ]
+}
+```
+
+Field rules:
+- `horizonYears` ∈ [1, 50]; `iterations` ∈ [1, 10000].
+- `currentNetWorth` and `monthlyContribution` ≥ 0; debt-position simulations
+  are out of scope for v1.
+- `targetNetWorth` is optional; when omitted the response's
+  `summary.successProbability` is `null`.
+- `allocations` non-empty. Per row: `weight` ∈ [0, 1], `annualMeanReturn`
+  may be negative (down-trending assumption permitted), `annualStdDev` ≥
+  0.0001 — a stochastic simulation with a deterministic class collapses
+  the per-year percentile spread.
+- `annualMeanReturn` and `annualStdDev` are individually nullable per row;
+  the server falls back to the YAML default for that class and echoes the
+  resolved tuple in `response.defaultsApplied`.
+- Service-side cross-field validation: weights sum to 1.0 ± 0.001.
+- `assetClass` must be one of `STOCK / BOND / CASH / CRYPTO / GOLD / FUND
+  / CURRENCY / OTHER` (the macro-class enum; not a copy of `Asset.AssetType`).
+
+Validation errors (HTTP 400):
+- `MONTE_CARLO_ALLOCATIONS_REQUIRED` — empty `allocations`.
+- `MONTE_CARLO_ITERATIONS_OUT_OF_RANGE` — iterations not in [1, 10000].
+- `MONTE_CARLO_HORIZON_OUT_OF_RANGE` — horizonYears not in [1, 50].
+- `MONTE_CARLO_WEIGHTS_INVALID` — weights sum outside [0.999, 1.001] or any
+  weight negative.
+- `MONTE_CARLO_NET_WORTH_NEGATIVE` — `currentNetWorth < 0`.
+- `MONTE_CARLO_CONTRIBUTION_NEGATIVE` — `monthlyContribution < 0`.
+- `MONTE_CARLO_STDDEV_INVALID` — any class stddev below 0.0001.
+- `VALIDATION_ERROR` — Bean Validation failure (missing `@NotNull` field,
+  out-of-range `@Min/@Max`, etc.).
+
+The response is server-side cached on Caffeine
+(`analytics:monteCarlo`, 60s TTL, max 200 entries) keyed by
+`(userId, normalisedHash(request))` — the hash sorts allocation rows by
+`AssetClass.name()` so two equivalent requests with different row order
+share an entry. The price-sync write paths
+(`PriceSyncService.persistUpdates` / `refreshAsset`) evict the entire
+cache; current net worth (the simulation's starting point) drifts with
+price ticks.
+
+```json
+// Response 200
+{
+  "horizonYears": 20,
+  "iterations": 10000,
+  "currentNetWorth": 250000.00,
+  "monthlyContribution": 30000.00,
+  "targetNetWorth": 5000000.00,
+  "fan": [
+    {
+      "year": 1,
+      "p10": 590000.00,
+      "p25": 615000.00,
+      "p50": 640000.00,
+      "p75": 665000.00,
+      "p90": 690000.00
+    }
+  ],
+  "summary": {
+    "mean": 6420000.00,
+    "p10": 4180000.00,
+    "p50": 6310000.00,
+    "p90": 8920000.00,
+    "successProbability": 0.7425
+  },
+  "defaultsApplied": [
+    { "assetClass": "STOCK", "defaultWeight": 0.50, "annualMeanReturn": 0.07, "annualStdDev": 0.18 }
+  ]
+}
+```
+
+`fan` carries one row per year (1..horizonYears) — no year-0 point because
+the simulation captures end-of-year values. `defaultsApplied` always
+echoes the per-class tuple the simulation actually used (whether the
+request supplied the value explicitly or relied on the YAML default).
+
+### GET /api/v1/analytics/monte-carlo/defaults
+Editor pre-fill values served from
+`backend/src/main/resources/analytics/monte-carlo-defaults.yml`. Returns
+the iteration / horizon / weight defaults plus the per-class mean / stddev
+tuples so the frontend can hit Run on first render without configuration.
+
+```json
+// Response 200
+{
+  "defaultIterations": 10000,
+  "defaultHorizonYears": 20,
+  "defaultMonthlyContribution": 0,
+  "defaultCurrentNetWorth": 0,
+  "defaultTargetNetWorth": null,
+  "classes": [
+    { "assetClass": "STOCK",    "defaultWeight": 0.50, "annualMeanReturn": 0.07, "annualStdDev": 0.18 },
+    { "assetClass": "BOND",     "defaultWeight": 0.20, "annualMeanReturn": 0.03, "annualStdDev": 0.06 },
+    { "assetClass": "CASH",     "defaultWeight": 0.10, "annualMeanReturn": 0.01, "annualStdDev": 0.01 },
+    { "assetClass": "CRYPTO",   "defaultWeight": 0.10, "annualMeanReturn": 0.20, "annualStdDev": 0.60 },
+    { "assetClass": "GOLD",     "defaultWeight": 0.10, "annualMeanReturn": 0.05, "annualStdDev": 0.15 },
+    { "assetClass": "FUND",     "defaultWeight": 0.00, "annualMeanReturn": 0.06, "annualStdDev": 0.14 },
+    { "assetClass": "CURRENCY", "defaultWeight": 0.00, "annualMeanReturn": 0.00, "annualStdDev": 0.08 },
+    { "assetClass": "OTHER",    "defaultWeight": 0.00, "annualMeanReturn": 0.05, "annualStdDev": 0.12 }
+  ]
+}
+```
+
+The defaults endpoint reads the YAML at startup; reload requires an app
+restart. The five classes with `defaultWeight > 0` (STOCK / BOND / CASH /
+CRYPTO / GOLD) sum to 1.0 and seed the editor as visible-by-default rows;
+FUND / CURRENCY / OTHER are reachable via the editor's add-class menu.
+
 ---
 
 ## Savings goals

@@ -20,7 +20,7 @@ None — full-stack Spring Boot + React + Postgres + Redis is already encoded in
 - [ ] **Phase 26: Observability** — End-to-end traces, errors, and SLO burn alerts
 - [ ] **Phase 27: Tax & Accounts (TR)** — Tax helper, bank account entity, TR bank CSV import
 - [x] **Phase 28: Rebalance & Emergency Fund** — Complete (2026-05-09)
-- [ ] **Phase 29: Portfolio Analytics** — Comparison, correlation matrix, Monte Carlo
+- [x] **Phase 29: Portfolio Analytics** — Complete (2026-05-09)
 - [ ] **Phase 30: Performance & Polish** — N+1 audit, index pass, virtualized lists
 
 ## Phase Details
@@ -110,9 +110,9 @@ Plans:
 **Plans**: TBD (estimate 3 plans)
 
 Plans:
-- [ ] 29-01: G4 — Portfolio comparison (multi-portfolio value/P&L overlay)
+- [x] 29-01: G4 — Portfolio comparison (multi-portfolio value/P&L overlay)
 - [x] 29-02: G5 — Asset correlation matrix (heatmap of daily-return correlations)
-- [ ] 29-03: G6 — Monte Carlo net-worth projection (10k iterations, configurable parameters per class)
+- [x] 29-03: G6 — Monte Carlo net-worth projection (10k iterations, configurable parameters per class)
 
 ### Phase 30: Performance & Polish
 **Goal**: Track F1-F3 plus the per-asset delta broadcast flagged in CONCERNS.md. Hibernate N+1 audit with targeted `@EntityGraph`/`join fetch`, Postgres `EXPLAIN ANALYZE` pass through `pg_stat_statements` plus indexes via Flyway, virtualized transaction list with `@tanstack/react-virtual` once rows exceed ~1000, and trim the WebSocket broadcaster to only changed assets.
@@ -138,5 +138,5 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 | 26. Observability | 0/3 | Not started | - |
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
 | 28. Rebalance & Emergency Fund | 2/2 | Complete | 2026-05-09 |
-| 29. Portfolio Analytics | 0/3 | Not started | - |
+| 29. Portfolio Analytics | 3/3 | Complete | 2026-05-09 |
 | 30. Performance & Polish | 0/3 | Not started | - |
