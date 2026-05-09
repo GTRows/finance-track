@@ -1398,6 +1398,55 @@ This is destructive. Clients must confirm with the user before calling it.
 
 ---
 
+## WebSocket
+
+### Endpoint
+
+`/ws` — STOMP over WebSocket. No auth (price data is public market data).
+
+### /topic/prices — Per-asset price deltas
+
+The price scheduler invokes `PriceBroadcaster.broadcastAll()` after each successful sync cycle.
+Subscribers on `/topic/prices` receive a `PriceBatch` envelope:
+
+```json
+{
+  "publishedAt": "2026-05-09T18:30:00Z",
+  "count": 1,
+  "totalAssets": 80,
+  "deltaOnly": true,
+  "prices": [
+    {
+      "symbol": "BTC",
+      "assetType": "CRYPTO",
+      "price": "65000.00",
+      "priceUsd": "1955.45",
+      "updatedAt": "2026-05-09T18:30:00Z"
+    }
+  ]
+}
+```
+
+**Fields:**
+
+- `publishedAt` — ISO-8601 timestamp of the broadcast.
+- `count` — number of price rows in `prices`.
+- `totalAssets` — size of the current priced universe (so the client can render "showing N changed of M total" UX text).
+- `deltaOnly` — `true` for the steady-state delta tick; `false` only for the cold-boot full broadcast (first tick after JVM start).
+- `prices[]` — array of `{ symbol, assetType, price, priceUsd, updatedAt }`.
+
+**Cold-boot semantics.** The first `broadcastAll()` invocation after JVM start emits `deltaOnly=false` plus the entire priced universe so freshly-connected clients receive a snapshot of current state.
+
+**Steady-state semantics.** Subsequent ticks emit only assets whose `(price)` or `(priceUsd)` moved by more than `0.0001` (0.01%) relative to the prior tick OR transitioned across `null`. Ticks with no material change emit no frame at all (debug-logged as `"No price changes since last tick; skipping broadcast"`).
+
+**Removal events.** Asset removal between ticks is NOT broadcast. The client retains the stale value until reconnect. Asset removal from the priced set is currently impossible (assets are seeded globally and never deleted at runtime).
+
+**Client merge contract.** When `deltaOnly === true`, callers SHOULD merge incoming rows into their existing price map (keep stale symbols). When `deltaOnly === false`, callers SHOULD replace the entire map. The frontend's `mergePriceBatch` utility (`frontend/src/utils/priceBatch.ts`) and the `useLivePricesStore.mergeBatch` action implement this contract.
+
+**Tolerance rationale.** `0.0001` (0.01%) is large enough to swallow last-decimal `setScale(4, HALF_UP)` rounding noise and small enough to never miss a real move. Smaller would re-broadcast cosmetic noise; larger would miss real moves on stable-coin pairs.
+
+---
+
 ## Common Patterns
 
 **Pagination:** `?page=0&size=20` on all list endpoints.
