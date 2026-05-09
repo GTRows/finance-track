@@ -660,18 +660,46 @@ edits.
 What it does: the dashboard tile divides the sum of
 `Account.currentBalance` (across the operator's chosen account
 types) by the trailing 12-month average expense and surfaces the
-months-covered figure with red < 3 / amber 3-6 / green > 6 bands.
+months-covered figure with red / amber / green bands keyed off the
+operator's configured target.
 
 Configuration: `BANK_SAVINGS` is always included. The dashboard
 tile lets the operator toggle `BANK_CHECKING` and `CASH` on/off via
 the inline switches. `BROKERAGE_CASH`, `CRYPTO_WALLET`, and `OTHER`
 are intentionally not surfaced — liquidity profile mismatches.
 
+#### Configuring target months
+
+What it does: the dashboard tile and the Settings page (Settings ->
+Emergency Fund section) both let the operator set:
+
+- **Target months** (`2 .. 24`, default 6): the reserve target in
+  months of trailing 12-month average expense. Above this -> green.
+- **Amber floor months** (`1 .. target - 1`, default 3): the lower
+  boundary of the amber band. Below this -> red. Between amber-floor
+  and target inclusive -> amber.
+
+The cross-field invariant `amber_floor < target` is enforced at the
+service layer with a 400 response (`code=EMERGENCY_FUND_AMBER_FLOOR_INVALID`);
+the dashboard stepper UI also clamps the amber floor automatically
+when the target decreases below the current floor. The dashboard
+exposes a stepper pair (+/- buttons) for both values; the Settings
+section uses `Input type="number"` with the same min/max guards.
+
+Per-user — every owner sees their own target. Stored in the
+`user_settings` table (`emergency_fund_target_months`,
+`emergency_fund_amber_floor_months`). The legacy
+`PUT /api/v1/dashboard/emergency-fund/types` endpoint stays in
+place; the new `PUT /api/v1/dashboard/emergency-fund/config`
+endpoint accepts `(types, targetMonths, amberFloorMonths)` in a
+single round-trip.
+
 Cross-currency limitation: the reserve sum is face-value across
 currencies; a USD savings balance and a TRY savings balance are
 added without conversion. The frontend tile shows the per-currency
 breakdown so the operator can interpret the number;
-cross-currency rollup with FX rates ships in 28-01.
+cross-currency rollup with FX rates is deferred to a future
+Phase 28 plan.
 
 ## Importing TR bank CSV statements
 
