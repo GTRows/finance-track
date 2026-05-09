@@ -1148,5 +1148,57 @@
     "groupRecent": "Recent",
     "hintNavigate": "Navigate",
     "hintSelect": "Select"
+  },
+  "rebalance": {
+    "header": "Rebalance",
+    "description": "Bring drifted buckets back to their target allocation in one click using the selected account.",
+    "driftThresholdLabel": "Drift tolerance",
+    "driftThresholdHint": "Buckets whose absolute drift falls below this threshold are excluded from the suggestion list.",
+    "accountPickerLabel": "Funding account",
+    "generateButton": "Generate suggestions",
+    "generateButtonHint": "Pick an account first.",
+    "commitButton": "Commit selected ({{count}})",
+    "commitButtonHint": "Each ticked row is recorded as one investment transaction.",
+    "noDriftEmpty": "Every bucket is within tolerance — nothing to do.",
+    "noTargetsEmpty": "This portfolio has no allocation targets configured.",
+    "actions": {
+      "BUY": "BUY",
+      "SELL": "SELL"
+    },
+    "warnings": {
+      "NO_HOLDING_TO_BUY": "This bucket has no existing holding to BUY — add one first.",
+      "QUANTITY_BELOW_LOT": "The whole-lot constraint truncated the quantity to zero.",
+      "INSUFFICIENT_HOLDING": "The SELL amount exceeds the current holding.",
+      "CASH_PARTIAL_SCALEDOWN": "BUY rows were proportionally scaled down due to insufficient cash.",
+      "INSUFFICIENT_CASH": "The account has no cash — BUY rows were zeroed out."
+    },
+    "errors": {
+      "REBALANCE_PROPOSAL_NOT_FOUND": "The proposal expired, please regenerate.",
+      "REBALANCE_PROPOSAL_STALE": "Prices or balances moved, please regenerate.",
+      "REBALANCE_PROPOSAL_ALREADY_COMMITTED": "This proposal has already been committed.",
+      "REBALANCE_NO_TARGETS": "This portfolio has no allocation targets configured.",
+      "REBALANCE_NO_DRIFT": "Every bucket is within tolerance.",
+      "REBALANCE_INSUFFICIENT_CASH": "The account has no available cash.",
+      "REBALANCE_SELECTION_OUT_OF_RANGE": "Selection is invalid — please regenerate.",
+      "ACCOUNT_NOT_OWNED": "Account not found or archived.",
+      "GENERIC": "Something went wrong, please try again."
+    },
+    "summary": {
+      "selectedRows": "{{selected}}/{{total}} rows selected",
+      "estimatedCost": "Estimated cost {{value}}",
+      "availableCash": "Available cash {{value}}"
+    },
+    "successToast": "{{count}} transactions committed.",
+    "col": {
+      "symbol": "Symbol",
+      "assetType": "Asset Type",
+      "currentWeight": "Current %",
+      "targetWeight": "Target %",
+      "drift": "Drift",
+      "action": "Action",
+      "quantity": "Quantity",
+      "amount": "Amount",
+      "warning": "Warning"
+    }
   }
 }

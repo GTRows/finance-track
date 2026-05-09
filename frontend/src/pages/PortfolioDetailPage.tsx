@@ -27,6 +27,7 @@ import { TransactionLog } from '@/components/portfolio/TransactionLog';
 import { DividendLedger } from '@/components/portfolio/DividendLedger';
 import { AllocationChart } from '@/components/portfolio/AllocationChart';
 import { AllocationTargets } from '@/components/portfolio/AllocationTargets';
+import { RebalanceCard } from '@/components/portfolio/RebalanceCard';
 import { PortfolioHistoryChart } from '@/components/portfolio/PortfolioHistoryChart';
 import { PortfolioRiskMetrics } from '@/components/portfolio/PortfolioRiskMetrics';
 import { formatTRY, formatPercent } from '@/utils/formatters';
@@ -267,6 +268,8 @@ export function PortfolioDetailPage() {
       </Card>
 
       {holdings.length > 0 && <AllocationTargets portfolioId={portfolio.id} />}
+
+      {holdings.length > 0 && <RebalanceCard portfolioId={portfolio.id} />}
 
       {holdings.length > 0 && <PortfolioRiskMetrics portfolioId={portfolio.id} />}
 

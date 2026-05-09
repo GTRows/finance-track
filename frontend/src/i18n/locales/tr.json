@@ -1149,5 +1149,57 @@
     "groupRecent": "Son kullanılanlar",
     "hintNavigate": "Gezin",
     "hintSelect": "Seç"
+  },
+  "rebalance": {
+    "header": "Yeniden Dengeleme",
+    "description": "Hedef tahsisinden sapan kovaları seçtiğiniz hesabı kullanarak tek tıkla düzeltin.",
+    "driftThresholdLabel": "Sapma toleransı",
+    "driftThresholdHint": "Mutlak sapması bu eşiğin altında kalan kovalar öneri listesinden çıkarılır.",
+    "accountPickerLabel": "İşlem hesabı",
+    "generateButton": "Önerileri oluştur",
+    "generateButtonHint": "Önce hesap seçmelisiniz.",
+    "commitButton": "Seçilenleri uygula ({{count}})",
+    "commitButtonHint": "Onayladığınız satırlar birer yatırım işlemi olarak kaydedilir.",
+    "noDriftEmpty": "Tüm kovalar tolerans dahilinde — yapılacak bir şey yok.",
+    "noTargetsEmpty": "Bu portföyde tahsis hedefi yok.",
+    "actions": {
+      "BUY": "AL",
+      "SELL": "SAT"
+    },
+    "warnings": {
+      "NO_HOLDING_TO_BUY": "Bu kovada AL yapılacak mevcut bir varlık yok — önce manuel ekleyin.",
+      "QUANTITY_BELOW_LOT": "Tam lot kuralı miktarı sıfıra çevirdi.",
+      "INSUFFICIENT_HOLDING": "SAT miktarı eldeki bakiyeyi aşıyor.",
+      "CASH_PARTIAL_SCALEDOWN": "Yetersiz nakit nedeniyle AL satırları orantılı küçültüldü.",
+      "INSUFFICIENT_CASH": "Hesapta yeterli nakit yok — AL satırları sıfırlandı."
+    },
+    "errors": {
+      "REBALANCE_PROPOSAL_NOT_FOUND": "Öneri süresi doldu, lütfen tekrar oluşturun.",
+      "REBALANCE_PROPOSAL_STALE": "Fiyatlar veya bakiyeler değişti, lütfen yeniden oluşturun.",
+      "REBALANCE_PROPOSAL_ALREADY_COMMITTED": "Bu öneri daha önce uygulandı.",
+      "REBALANCE_NO_TARGETS": "Bu portföyde tahsis hedefi yok.",
+      "REBALANCE_NO_DRIFT": "Tüm kovalar tolerans dahilinde.",
+      "REBALANCE_INSUFFICIENT_CASH": "Hesapta yeterli nakit bulunmuyor.",
+      "REBALANCE_SELECTION_OUT_OF_RANGE": "Seçim listesi geçersiz — yeniden oluşturun.",
+      "ACCOUNT_NOT_OWNED": "Hesap bulunamadı veya arşivlenmiş.",
+      "GENERIC": "Bir hata oluştu, lütfen tekrar deneyin."
+    },
+    "summary": {
+      "selectedRows": "{{selected}}/{{total}} satır seçili",
+      "estimatedCost": "Tahmini maliyet {{value}}",
+      "availableCash": "Mevcut nakit {{value}}"
+    },
+    "successToast": "{{count}} işlem başarıyla kaydedildi.",
+    "col": {
+      "symbol": "Sembol",
+      "assetType": "Varlık Türü",
+      "currentWeight": "Mevcut %",
+      "targetWeight": "Hedef %",
+      "drift": "Sapma",
+      "action": "Aksiyon",
+      "quantity": "Miktar",
+      "amount": "Tutar",
+      "warning": "Uyarı"
+    }
   }
 }
