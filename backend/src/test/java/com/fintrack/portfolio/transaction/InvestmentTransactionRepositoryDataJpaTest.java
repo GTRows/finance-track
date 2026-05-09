@@ -170,4 +170,78 @@ class InvestmentTransactionRepositoryDataJpaTest extends AbstractDataJpaTestSupp
         assertThat(repo.findByPortfolioIdInAndNotesStartingWith(List.of(portfolio), "AUTO:"))
                 .isEmpty();
     }
+
+    @Test
+    void findByTxnTypeAndDateLessThanEqualReturnsOnlyMatchingType() {
+        UUID userId = seedUser("burak");
+        UUID portfolio = seedPortfolio(userId, "Main");
+        UUID asset = seedAsset("ABC");
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.BUY,
+                        LocalDate.of(2026, 1, 1),
+                        null));
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.SELL,
+                        LocalDate.of(2026, 2, 1),
+                        null));
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.SELL,
+                        LocalDate.of(2026, 5, 1),
+                        null));
+
+        var matches =
+                repo.findByPortfolioIdAndTxnTypeAndTxnDateLessThanEqualOrderByTxnDateAsc(
+                        portfolio, InvestmentTransaction.TxnType.SELL, LocalDate.of(2026, 3, 1));
+
+        assertThat(matches).hasSize(1);
+        assertThat(matches.get(0).getTxnDate()).isEqualTo(LocalDate.of(2026, 2, 1));
+    }
+
+    @Test
+    void findByTxnTypeAndDateLessThanEqualOrdersAscending() {
+        UUID userId = seedUser("derya");
+        UUID portfolio = seedPortfolio(userId, "Main");
+        UUID asset = seedAsset("XYZ");
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.SELL,
+                        LocalDate.of(2026, 3, 1),
+                        null));
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.SELL,
+                        LocalDate.of(2026, 1, 1),
+                        null));
+        repo.save(
+                txn(
+                        portfolio,
+                        asset,
+                        InvestmentTransaction.TxnType.SELL,
+                        LocalDate.of(2026, 2, 1),
+                        null));
+
+        var matches =
+                repo.findByPortfolioIdAndTxnTypeAndTxnDateLessThanEqualOrderByTxnDateAsc(
+                        portfolio, InvestmentTransaction.TxnType.SELL, LocalDate.of(2026, 12, 31));
+
+        assertThat(matches)
+                .extracting(InvestmentTransaction::getTxnDate)
+                .containsExactly(
+                        LocalDate.of(2026, 1, 1),
+                        LocalDate.of(2026, 2, 1),
+                        LocalDate.of(2026, 3, 1));
+    }
 }

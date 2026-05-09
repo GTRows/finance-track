@@ -13,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 /** Central exception handler. Every API error follows the consistent ErrorResponse format. */
@@ -89,6 +90,15 @@ public class GlobalExceptionHandler {
             MissingServletRequestParameterException ex, HttpServletRequest request) {
         log.warn("Missing request parameter: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "MISSING_PARAMETER", request);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String name = ex.getName();
+        log.warn("Type mismatch on parameter {}: {}", name, ex.getMessage());
+        String message = "Invalid value for parameter '" + name + "'";
+        return buildResponse(HttpStatus.BAD_REQUEST, message, "INVALID_PARAMETER", request);
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)

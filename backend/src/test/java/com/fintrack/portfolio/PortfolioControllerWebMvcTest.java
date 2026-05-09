@@ -175,7 +175,6 @@ class PortfolioControllerWebMvcTest extends AbstractWebMvcTestSupport {
     void malformedIdReturnsBadRequest() throws Exception {
         stubAuthenticatedUser();
 
-        mockMvc.perform(get("/api/v1/portfolios/not-a-uuid"))
-                .andExpect(status().is5xxServerError());
+        mockMvc.perform(get("/api/v1/portfolios/not-a-uuid")).andExpect(status().isBadRequest());
     }
 }

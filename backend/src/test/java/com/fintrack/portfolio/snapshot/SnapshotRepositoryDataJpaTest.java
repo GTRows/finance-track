@@ -93,4 +93,32 @@ class SnapshotRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
     void sumLatestTotalValueTryReturnsZeroWhenEmpty() {
         assertThat(repo.sumLatestTotalValueTry()).isEqualByComparingTo("0");
     }
+
+    @Test
+    void findByPortfolioIdAndSnapshotDateBetweenReturnsChronologicalSubset() {
+        UUID userId = seedUser("merve");
+        UUID portfolio = seedPortfolio(userId, "Main");
+        repo.save(snapshot(portfolio, LocalDate.of(2026, 1, 1), "100"));
+        repo.save(snapshot(portfolio, LocalDate.of(2026, 2, 1), "200"));
+        repo.save(snapshot(portfolio, LocalDate.of(2026, 3, 1), "300"));
+        repo.save(snapshot(portfolio, LocalDate.of(2026, 4, 1), "400"));
+
+        assertThat(
+                        repo.findByPortfolioIdAndSnapshotDateBetweenOrderBySnapshotDateAsc(
+                                portfolio, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 3, 1)))
+                .extracting(PortfolioSnapshot::getSnapshotDate)
+                .containsExactly(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 3, 1));
+    }
+
+    @Test
+    void findByPortfolioIdAndSnapshotDateBetweenEmptyRangeReturnsEmpty() {
+        UUID userId = seedUser("emir");
+        UUID portfolio = seedPortfolio(userId, "Main");
+        repo.save(snapshot(portfolio, LocalDate.of(2026, 1, 1), "100"));
+
+        assertThat(
+                        repo.findByPortfolioIdAndSnapshotDateBetweenOrderBySnapshotDateAsc(
+                                portfolio, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 6, 1)))
+                .isEmpty();
+    }
 }

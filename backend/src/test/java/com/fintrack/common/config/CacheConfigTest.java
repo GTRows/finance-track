@@ -24,7 +24,8 @@ class CacheConfigTest {
                 .containsExactlyInAnyOrder(
                         CacheConfig.ASSETS_CACHE,
                         CacheConfig.USER_SETTINGS_CACHE,
-                        CacheConfig.CATEGORY_LOOKUP_CACHE);
+                        CacheConfig.CATEGORY_LOOKUP_CACHE,
+                        CacheConfig.ANALYTICS_PORTFOLIOS_COMPARE_CACHE);
     }
 
     @Test
@@ -34,6 +35,8 @@ class CacheConfigTest {
         assertThat(cacheManager.getCache(CacheConfig.USER_SETTINGS_CACHE))
                 .isInstanceOf(CaffeineCache.class);
         assertThat(cacheManager.getCache(CacheConfig.CATEGORY_LOOKUP_CACHE))
+                .isInstanceOf(CaffeineCache.class);
+        assertThat(cacheManager.getCache(CacheConfig.ANALYTICS_PORTFOLIOS_COMPARE_CACHE))
                 .isInstanceOf(CaffeineCache.class);
     }
 }
