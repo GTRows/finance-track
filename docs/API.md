@@ -847,6 +847,71 @@ snapshot capture (`SnapshotService.captureDaily`) evicts the entire cache.
 }
 ```
 
+### GET /api/v1/analytics/correlations
+Pairwise log-return correlation matrix across the requested assets. Sourced
+from `PriceHistory` rows over the local `price_history` table (90-day
+retention). Daily returns are `log(p_t / p_{t-1})` over the **pair-wise
+intersection** of dates where both assets have a price — forward-fill is
+deliberately NOT used because flat days masquerading as zero-return days
+bias correlations toward 1.0. Multiple intra-day rows on the same calendar
+UTC date collapse to the latest `recorded_at` value.
+
+Query parameters:
+- `assetIds` (required, comma-separated UUIDs, 2..25) — assets to correlate.
+  Reordering or duplicating ids is a no-op (server dedupes and sorts for
+  the cache key).
+- `from` (optional, ISO `YYYY-MM-DD`) — inclusive lower bound. Defaults to
+  `today - 90d` when both `from` and `to` are absent. Values older than
+  `today - 90d` are clamped to the retention floor.
+- `to` (optional, ISO `YYYY-MM-DD`) — inclusive upper bound. Defaults to
+  `today` when only `from` is given.
+- `method` (optional, `PEARSON` (default) or `SPEARMAN`, case-insensitive) —
+  Pearson on log returns or Spearman on rank-encoded log returns. Spearman
+  is robust to outliers / monotonic-but-non-linear relationships.
+
+Validation errors (HTTP 400):
+- `CORRELATION_IDS_REQUIRED` — empty `assetIds`.
+- `CORRELATION_TOO_FEW` — fewer than 2 ids after dedup.
+- `CORRELATION_TOO_MANY` — more than 25 ids.
+- `CORRELATION_RANGE_INVALID` — `from > to`.
+- `INVALID_PARAMETER` — malformed UUID, date, or method literal.
+
+Unknown asset ids return 404 (`Asset not found: <id>`). Cells where the
+pair has fewer than 2 overlapping returns OR either series has zero
+stddev surface as `null` in `matrix[i][j]` and `0` (or the actual count)
+in `dataPoints[i][j]`. The diagonal is `1.0` for valid rows and `null`
+for degenerate ones (e.g. an asset that never moved over the window).
+
+The response is server-side cached on Caffeine (`analytics:correlations`,
+60s TTL, max 200 entries) keyed by `(userId, sortedAssetIds, from, to,
+method)`. The price-sync write paths (`PriceSyncService.persistUpdates` /
+`refreshAsset`) evict the entire cache.
+
+```json
+// Response 200
+{
+  "assetIds": ["uuid-BTC", "uuid-ETH", "uuid-GOLD"],
+  "assetSymbols": ["BTC", "ETH", "GOLD"],
+  "assetNames": ["Bitcoin", "Ethereum", "Gold (gram)"],
+  "matrix": [
+    [1.000, 0.812, null],
+    [0.812, 1.000, 0.143],
+    [null,  0.143, 1.000]
+  ],
+  "dataPoints": [
+    [89, 88, 0],
+    [88, 89, 76],
+    [0,  76, 89]
+  ],
+  "samplePeriod": {
+    "from": "2026-02-08",
+    "to": "2026-05-09",
+    "alignedDays": 76
+  },
+  "method": "PEARSON"
+}
+```
+
 ---
 
 ## Savings goals
