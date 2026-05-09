@@ -2,6 +2,7 @@ package com.fintrack.dashboard;
 
 import com.fintrack.auth.FinTrackUserDetails;
 import com.fintrack.dashboard.dto.EmergencyFundResponse;
+import com.fintrack.dashboard.dto.UpdateEmergencyFundConfigRequest;
 import com.fintrack.dashboard.dto.UpdateEmergencyFundTypesRequest;
 import com.fintrack.settings.SettingsService;
 import jakarta.validation.Valid;
@@ -34,6 +35,15 @@ public class EmergencyFundController {
             @AuthenticationPrincipal FinTrackUserDetails user,
             @Valid @RequestBody UpdateEmergencyFundTypesRequest request) {
         settingsService.updateEmergencyFundTypes(user.getId(), request.types());
+        return ResponseEntity.ok(emergencyFundService.compute(user.getId()));
+    }
+
+    @PutMapping("/config")
+    public ResponseEntity<EmergencyFundResponse> updateConfig(
+            @AuthenticationPrincipal FinTrackUserDetails user,
+            @Valid @RequestBody UpdateEmergencyFundConfigRequest request) {
+        settingsService.updateEmergencyFundConfig(
+                user.getId(), request.types(), request.targetMonths(), request.amberFloorMonths());
         return ResponseEntity.ok(emergencyFundService.compute(user.getId()));
     }
 }

@@ -109,4 +109,86 @@ class EmergencyFundControllerWebMvcTest extends AbstractWebMvcTestSupport {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
+
+    @Test
+    void updateConfigReturnsRefreshedResponse() throws Exception {
+        stubAuthenticatedUser();
+        when(emergencyFundService.compute(eq(userId))).thenReturn(sampleResponse());
+
+        mockMvc.perform(
+                        put("/api/v1/dashboard/emergency-fund/config")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"types\":[\"BANK_SAVINGS\",\"CASH\"],"
+                                                + "\"targetMonths\":9,\"amberFloorMonths\":4}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.targetMonths").value(6))
+                .andExpect(jsonPath("$.amberFloorMonths").value(3));
+
+        verify(settingsService)
+                .updateEmergencyFundConfig(
+                        eq(userId),
+                        eq(List.of(Account.AccountType.BANK_SAVINGS, Account.AccountType.CASH)),
+                        eq(9),
+                        eq(4));
+    }
+
+    @Test
+    void updateConfig400OnTargetMonthsBelowMin() throws Exception {
+        stubAuthenticatedUser();
+
+        mockMvc.perform(
+                        put("/api/v1/dashboard/emergency-fund/config")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"types\":[\"BANK_SAVINGS\"],"
+                                                + "\"targetMonths\":1,\"amberFloorMonths\":1}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void updateConfig400OnTargetMonthsAboveMax() throws Exception {
+        stubAuthenticatedUser();
+
+        mockMvc.perform(
+                        put("/api/v1/dashboard/emergency-fund/config")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"types\":[\"BANK_SAVINGS\"],"
+                                                + "\"targetMonths\":25,\"amberFloorMonths\":3}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void updateConfig400OnEmptyTypes() throws Exception {
+        stubAuthenticatedUser();
+
+        mockMvc.perform(
+                        put("/api/v1/dashboard/emergency-fund/config")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"types\":[],"
+                                                + "\"targetMonths\":6,\"amberFloorMonths\":3}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void updateConfig400OnNullTargetMonths() throws Exception {
+        stubAuthenticatedUser();
+
+        mockMvc.perform(
+                        put("/api/v1/dashboard/emergency-fund/config")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"types\":[\"BANK_SAVINGS\"],\"amberFloorMonths\":3}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
 }
