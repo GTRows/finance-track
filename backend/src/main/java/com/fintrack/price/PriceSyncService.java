@@ -444,7 +444,12 @@ public class PriceSyncService {
      * since callers select arbitrary asset combinations.
      */
     @Transactional
-    @CacheEvict(value = CacheConfig.ANALYTICS_CORRELATIONS_CACHE, allEntries = true)
+    @CacheEvict(
+            value = {
+                CacheConfig.ANALYTICS_CORRELATIONS_CACHE,
+                CacheConfig.ANALYTICS_MONTE_CARLO_CACHE
+            },
+            allEntries = true)
     protected int persistUpdates(List<PriceUpdate> updates) {
         if (updates == null || updates.isEmpty()) return 0;
 
@@ -465,7 +470,12 @@ public class PriceSyncService {
 
     /** Refreshes a single asset by id and returns true if a new price was written. */
     @Transactional
-    @CacheEvict(value = CacheConfig.ANALYTICS_CORRELATIONS_CACHE, allEntries = true)
+    @CacheEvict(
+            value = {
+                CacheConfig.ANALYTICS_CORRELATIONS_CACHE,
+                CacheConfig.ANALYTICS_MONTE_CARLO_CACHE
+            },
+            allEntries = true)
     public boolean refreshAsset(UUID assetId) {
         Asset asset = assetRepository.findById(assetId).orElse(null);
         if (asset == null) return false;

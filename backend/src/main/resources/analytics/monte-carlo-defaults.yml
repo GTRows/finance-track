@@ -1,0 +1,54 @@
+# FinTrack Pro - Monte Carlo simulation defaults keyed by AssetClass enum name.
+# Source: Long-run historical norms; verify and edit per asset class as understanding evolves.
+# Per-class rationale:
+#   STOCK   - S&P 500 long-run real-return + post-2000 vol.
+#   BOND    - US 10y Treasury long-run nominal.
+#   CASH    - TR mevduat post-tax baseline.
+#   CRYPTO  - BTC 2014-2024 annualised.
+#   GOLD    - XAU long-run nominal.
+#   FUND    - TEFAS YAT mid-cap aggregate baseline.
+#   CURRENCY- TRY-anchored carry-neutral assumption.
+#   OTHER   - catch-all conservative split.
+#
+# defaultWeight is the visible-by-default editor weight; STOCK/BOND/CASH/CRYPTO/GOLD sum to 1.0.
+# annualMeanReturn and annualStdDev are decimal fractions (0.07 = 7%).
+source: "Long-run historical norms; verify and edit per asset class as understanding evolves."
+defaults:
+  iterations: 10000
+  horizonYears: 20
+  currentNetWorth: 0
+  monthlyContribution: 0
+  targetNetWorth: null
+classes:
+  STOCK:
+    defaultWeight: 0.50
+    annualMeanReturn: 0.07
+    annualStdDev: 0.18
+  BOND:
+    defaultWeight: 0.20
+    annualMeanReturn: 0.03
+    annualStdDev: 0.06
+  CASH:
+    defaultWeight: 0.10
+    annualMeanReturn: 0.01
+    annualStdDev: 0.01
+  CRYPTO:
+    defaultWeight: 0.10
+    annualMeanReturn: 0.20
+    annualStdDev: 0.60
+  GOLD:
+    defaultWeight: 0.10
+    annualMeanReturn: 0.05
+    annualStdDev: 0.15
+  FUND:
+    defaultWeight: 0.0
+    annualMeanReturn: 0.06
+    annualStdDev: 0.14
+  CURRENCY:
+    defaultWeight: 0.0
+    annualMeanReturn: 0.0
+    annualStdDev: 0.08
+  OTHER:
+    defaultWeight: 0.0
+    annualMeanReturn: 0.05
+    annualStdDev: 0.12
