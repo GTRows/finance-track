@@ -3,6 +3,7 @@ package com.fintrack.bills;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -234,8 +235,8 @@ class BillServiceTest {
     void listFlagsVarianceWhenLatestPaidJumpsOver10PercentAnd25Absolute() {
         Bill b = bill("Electric", "350", 15);
         when(billRepo.findByUserIdOrderByDueDayAsc(userId)).thenReturn(List.of(b));
-        when(paymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
-        when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
+        when(paymentRepo.findByBillIdInAndPeriod(any(), any())).thenReturn(List.of());
+        when(paymentRepo.findByBillIdInAndStatusOrderByPeriodDesc(any(), any()))
                 .thenReturn(
                         List.of(
                                 BillPayment.builder()
@@ -258,14 +259,17 @@ class BillServiceTest {
         assertThat(v.flagged()).isTrue();
         assertThat(v.delta()).isEqualByComparingTo("120");
         assertThat(v.deltaPercent()).isEqualByComparingTo("40.00");
+
+        verify(paymentRepo, never()).findByBillIdAndPeriod(any(), any());
+        verify(paymentRepo, never()).findTop2ByBillIdAndStatusOrderByPeriodDesc(any(), any());
     }
 
     @Test
     void listDoesNotFlagVarianceForSmallDelta() {
         Bill b = bill("Water", "120", 8);
         when(billRepo.findByUserIdOrderByDueDayAsc(userId)).thenReturn(List.of(b));
-        when(paymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
-        when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
+        when(paymentRepo.findByBillIdInAndPeriod(any(), any())).thenReturn(List.of());
+        when(paymentRepo.findByBillIdInAndStatusOrderByPeriodDesc(any(), any()))
                 .thenReturn(
                         List.of(
                                 BillPayment.builder()
@@ -290,8 +294,8 @@ class BillServiceTest {
     void listOmitsVarianceWhenFewerThanTwoPayments() {
         Bill b = bill("Gym", "200", 10);
         when(billRepo.findByUserIdOrderByDueDayAsc(userId)).thenReturn(List.of(b));
-        when(paymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
-        when(paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(b.getId(), PaymentStatus.PAID))
+        when(paymentRepo.findByBillIdInAndPeriod(any(), any())).thenReturn(List.of());
+        when(paymentRepo.findByBillIdInAndStatusOrderByPeriodDesc(any(), any()))
                 .thenReturn(
                         List.of(
                                 BillPayment.builder()

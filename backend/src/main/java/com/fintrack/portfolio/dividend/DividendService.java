@@ -10,9 +10,14 @@ import com.fintrack.portfolio.dividend.dto.DividendResponse;
 import com.fintrack.portfolio.dividend.dto.RecordDividendRequest;
 import com.fintrack.price.FxConversionService;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,8 +39,19 @@ public class DividendService {
     public List<DividendResponse> listForPortfolio(UUID userId, UUID portfolioId) {
         requireOwnedPortfolio(userId, portfolioId);
         List<Dividend> rows = dividendRepo.findByPortfolioIdOrderByPaymentDateDesc(portfolioId);
+        if (rows.isEmpty()) return List.of();
+
+        Set<UUID> assetIds =
+                rows.stream()
+                        .map(Dividend::getAssetId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+        Map<UUID, Asset> assetsById = new HashMap<>();
+        if (!assetIds.isEmpty()) {
+            assetRepo.findAllById(assetIds).forEach(a -> assetsById.put(a.getId(), a));
+        }
         return rows.stream()
-                .map(d -> DividendResponse.from(d, assetRepo.findById(d.getAssetId()).orElse(null)))
+                .map(d -> DividendResponse.from(d, assetsById.get(d.getAssetId())))
                 .toList();
     }
 

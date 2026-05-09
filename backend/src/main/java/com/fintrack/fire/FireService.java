@@ -13,6 +13,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,27 +115,21 @@ public class FireService {
                 portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId);
         if (portfolios.isEmpty()) return BigDecimal.ZERO;
 
-        Set<UUID> assetIds = new HashSet<>();
-        Map<UUID, List<PortfolioHolding>> byPortfolio = new HashMap<>();
-        for (Portfolio p : portfolios) {
-            List<PortfolioHolding> holdings = holdingRepo.findByPortfolioId(p.getId());
-            byPortfolio.put(p.getId(), holdings);
-            holdings.forEach(h -> assetIds.add(h.getAssetId()));
-        }
+        List<UUID> portfolioIds = portfolios.stream().map(Portfolio::getId).toList();
+        List<PortfolioHolding> allHoldings = holdingRepo.findByPortfolioIdIn(portfolioIds);
+        if (allHoldings.isEmpty()) return BigDecimal.ZERO;
 
+        Set<UUID> assetIds =
+                allHoldings.stream().map(PortfolioHolding::getAssetId).collect(Collectors.toSet());
         Map<UUID, Asset> assets = new HashMap<>();
-        if (!assetIds.isEmpty()) {
-            assetRepo.findAllById(assetIds).forEach(a -> assets.put(a.getId(), a));
-        }
+        assetRepo.findAllById(assetIds).forEach(a -> assets.put(a.getId(), a));
 
         BigDecimal total = BigDecimal.ZERO;
-        for (Portfolio p : portfolios) {
-            for (PortfolioHolding h : byPortfolio.getOrDefault(p.getId(), List.of())) {
-                Asset asset = assets.get(h.getAssetId());
-                if (asset == null || asset.getPrice() == null) continue;
-                BigDecimal qty = h.getQuantity() != null ? h.getQuantity() : BigDecimal.ZERO;
-                total = total.add(asset.getPrice().multiply(qty));
-            }
+        for (PortfolioHolding h : allHoldings) {
+            Asset asset = assets.get(h.getAssetId());
+            if (asset == null || asset.getPrice() == null) continue;
+            BigDecimal qty = h.getQuantity() != null ? h.getQuantity() : BigDecimal.ZERO;
+            total = total.add(asset.getPrice().multiply(qty));
         }
         return total;
     }

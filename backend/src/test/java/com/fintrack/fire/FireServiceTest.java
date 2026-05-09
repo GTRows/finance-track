@@ -3,6 +3,8 @@ package com.fintrack.fire;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fintrack.asset.AssetRepository;
@@ -323,12 +325,13 @@ class FireServiceTest {
                                 summary("2026-01", "10000", "5000")));
         when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId())).thenReturn(List.of(hBtc, hEth));
+        when(holdingRepo.findByPortfolioIdIn(any())).thenReturn(List.of(hBtc, hEth));
         when(assetRepo.findAllById(any())).thenReturn(List.of(btc, eth));
 
         FireResponse res = service.compute(userId, null, null, null, null, null);
 
         assertThat(res.currentNetWorth()).isEqualByComparingTo("400.00");
+        verify(holdingRepo, never()).findByPortfolioId(any());
     }
 
     @Test
@@ -384,7 +387,7 @@ class FireServiceTest {
         when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any())).thenReturn(null);
         when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId())).thenReturn(List.of(good, priceless, orphan));
+        when(holdingRepo.findByPortfolioIdIn(any())).thenReturn(List.of(good, priceless, orphan));
         when(assetRepo.findAllById(any())).thenReturn(List.of(btc, noPrice));
 
         FireResponse res = service.compute(userId, null, null, null, null, null);

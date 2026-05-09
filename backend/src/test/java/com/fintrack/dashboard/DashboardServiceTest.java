@@ -3,6 +3,8 @@ package com.fintrack.dashboard;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fintrack.asset.AssetRepository;
@@ -25,7 +27,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -113,7 +114,7 @@ class DashboardServiceTest {
         Asset eth = asset("ETH", "50");
         when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId()))
+        when(holdingRepo.findByPortfolioIdIn(any()))
                 .thenReturn(
                         List.of(
                                 holding(p.getId(), btc.getId(), "2", "80"),
@@ -131,6 +132,9 @@ class DashboardServiceTest {
         assertThat(s.pnlTry()).isEqualByComparingTo("70");
         assertThat(s.pnlPercent()).isEqualByComparingTo("0.250000");
         assertThat(res.totalNetWorth()).isEqualByComparingTo("350");
+
+        verify(holdingRepo, never()).findByPortfolioId(any());
+        verify(billPaymentRepo, never()).findByBillIdAndPeriod(any(), any());
     }
 
     @Test
@@ -139,7 +143,7 @@ class DashboardServiceTest {
         Asset btc = asset("BTC", "100");
         when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId()))
+        when(holdingRepo.findByPortfolioIdIn(any()))
                 .thenReturn(List.of(holding(p.getId(), btc.getId(), "1", "0")));
         when(assetRepo.findAllById(any())).thenReturn(List.of(btc));
         when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
@@ -166,7 +170,7 @@ class DashboardServiceTest {
                         .build();
         when(portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId))
                 .thenReturn(List.of(p));
-        when(holdingRepo.findByPortfolioId(p.getId()))
+        when(holdingRepo.findByPortfolioIdIn(any()))
                 .thenReturn(
                         List.of(
                                 holding(p.getId(), btc.getId(), "1", "90"),
@@ -237,16 +241,16 @@ class DashboardServiceTest {
                         .amount(new BigDecimal("1000"))
                         .status(PaymentStatus.PAID)
                         .build();
-        when(billPaymentRepo.findByBillIdAndPeriod(paid.getId(), period))
-                .thenReturn(Optional.of(paidEntry));
-        when(billPaymentRepo.findByBillIdAndPeriod(pending.getId(), period))
-                .thenReturn(Optional.empty());
+        when(billPaymentRepo.findByBillIdInAndPeriod(any(), eq(period)))
+                .thenReturn(List.of(paidEntry));
 
         DashboardResponse res = service.build(userId);
 
         assertThat(res.upcomingBills()).hasSize(1);
         assertThat(res.upcomingBills().get(0).name()).isEqualTo("Internet");
         assertThat(res.upcomingBills().get(0).status()).isEqualTo("PENDING");
+
+        verify(billPaymentRepo, never()).findByBillIdAndPeriod(any(), any());
     }
 
     @Test
@@ -264,7 +268,7 @@ class DashboardServiceTest {
         when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
                 .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(six);
-        when(billPaymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
+        when(billPaymentRepo.findByBillIdInAndPeriod(any(), any())).thenReturn(List.of());
 
         DashboardResponse res = service.build(userId);
 
@@ -292,7 +296,7 @@ class DashboardServiceTest {
         when(txnRepo.sumByUserIdAndTypeAndDateRange(any(), any(), any(), any()))
                 .thenReturn(BigDecimal.ZERO);
         when(billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId)).thenReturn(List.of(past));
-        when(billPaymentRepo.findByBillIdAndPeriod(any(), any())).thenReturn(Optional.empty());
+        when(billPaymentRepo.findByBillIdInAndPeriod(any(), any())).thenReturn(List.of());
 
         DashboardResponse res = service.build(userId);
 
@@ -316,8 +320,8 @@ class DashboardServiceTest {
                         .amount(new BigDecimal("1000"))
                         .status(PaymentStatus.SKIPPED)
                         .build();
-        when(billPaymentRepo.findByBillIdAndPeriod(b.getId(), YearMonth.now().toString()))
-                .thenReturn(Optional.of(skipped));
+        when(billPaymentRepo.findByBillIdInAndPeriod(any(), eq(YearMonth.now().toString())))
+                .thenReturn(List.of(skipped));
 
         DashboardResponse res = service.build(userId);
 

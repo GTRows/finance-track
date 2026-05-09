@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,16 +46,23 @@ public class BillService {
     public List<BillResponse> listForUser(UUID userId) {
         String currentPeriod = currentPeriod();
         List<Bill> bills = billRepo.findByUserIdOrderByDueDayAsc(userId);
-        Map<UUID, BillPayment> paymentByBillId = new HashMap<>();
+        if (bills.isEmpty()) return List.of();
+
+        List<UUID> billIds = bills.stream().map(Bill::getId).toList();
+        Map<UUID, BillPayment> paymentByBillId =
+                paymentRepo.findByBillIdInAndPeriod(billIds, currentPeriod).stream()
+                        .collect(Collectors.toMap(BillPayment::getBillId, p -> p, (a, b) -> a));
+        Map<UUID, List<BillPayment>> paidPaymentsByBillId =
+                paymentRepo
+                        .findByBillIdInAndStatusOrderByPeriodDesc(
+                                billIds, BillPayment.PaymentStatus.PAID)
+                        .stream()
+                        .collect(Collectors.groupingBy(BillPayment::getBillId));
+
         Set<UUID> accountIds = new HashSet<>();
-        for (Bill bill : bills) {
-            BillPayment payment =
-                    paymentRepo.findByBillIdAndPeriod(bill.getId(), currentPeriod).orElse(null);
-            if (payment != null) {
-                paymentByBillId.put(bill.getId(), payment);
-                if (payment.getAccountId() != null) {
-                    accountIds.add(payment.getAccountId());
-                }
+        for (BillPayment payment : paymentByBillId.values()) {
+            if (payment.getAccountId() != null) {
+                accountIds.add(payment.getAccountId());
             }
         }
         Map<UUID, String> accountNameById = new HashMap<>();
@@ -71,8 +79,14 @@ public class BillService {
                                     payment != null && payment.getAccountId() != null
                                             ? accountNameById.get(payment.getAccountId())
                                             : null;
-                            return BillResponse.from(
-                                    bill, payment, computeVariance(bill.getId()), accountName);
+                            List<BillPayment> paidRows =
+                                    paidPaymentsByBillId.getOrDefault(bill.getId(), List.of());
+                            BillVarianceDto variance =
+                                    varianceFromTopTwo(
+                                            paidRows.size() <= 2
+                                                    ? paidRows
+                                                    : paidRows.subList(0, 2));
+                            return BillResponse.from(bill, payment, variance, accountName);
                         })
                 .toList();
     }
@@ -301,10 +315,20 @@ public class BillService {
         List<BillPayment> latest =
                 paymentRepo.findTop2ByBillIdAndStatusOrderByPeriodDesc(
                         billId, BillPayment.PaymentStatus.PAID);
-        if (latest.size() < 2) return null;
+        return varianceFromTopTwo(latest);
+    }
 
-        BillPayment current = latest.get(0);
-        BillPayment previous = latest.get(1);
+    /**
+     * Builds a variance DTO from the latest two PAID payments for a bill (descending by period).
+     * Mirrors {@link #computeVariance(UUID)} but accepts the top-two payments directly so callers
+     * that already batched the lookup can avoid re-querying. Returns {@code null} when fewer than
+     * two payments are supplied.
+     */
+    static BillVarianceDto varianceFromTopTwo(List<BillPayment> topTwo) {
+        if (topTwo == null || topTwo.size() < 2) return null;
+
+        BillPayment current = topTwo.get(0);
+        BillPayment previous = topTwo.get(1);
         BigDecimal delta = current.getAmount().subtract(previous.getAmount());
         BigDecimal deltaPercent =
                 previous.getAmount().signum() == 0

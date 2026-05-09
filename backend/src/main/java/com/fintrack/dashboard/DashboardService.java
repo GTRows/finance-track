@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,13 +50,13 @@ public class DashboardService {
                 portfolioRepo.findByUserIdAndActiveTrueOrderByCreatedAtAsc(userId);
         if (portfolios.isEmpty()) return List.of();
 
-        Set<UUID> allAssetIds = new HashSet<>();
-        Map<UUID, List<PortfolioHolding>> holdingsByPortfolio = new HashMap<>();
-        for (Portfolio p : portfolios) {
-            List<PortfolioHolding> holdings = holdingRepo.findByPortfolioId(p.getId());
-            holdingsByPortfolio.put(p.getId(), holdings);
-            holdings.forEach(h -> allAssetIds.add(h.getAssetId()));
-        }
+        List<UUID> portfolioIds = portfolios.stream().map(Portfolio::getId).toList();
+        List<PortfolioHolding> allHoldings = holdingRepo.findByPortfolioIdIn(portfolioIds);
+        Map<UUID, List<PortfolioHolding>> holdingsByPortfolio =
+                allHoldings.stream()
+                        .collect(Collectors.groupingBy(PortfolioHolding::getPortfolioId));
+        Set<UUID> allAssetIds =
+                allHoldings.stream().map(PortfolioHolding::getAssetId).collect(Collectors.toSet());
 
         Map<UUID, Asset> assetsById = new HashMap<>();
         if (!allAssetIds.isEmpty()) {
@@ -118,7 +119,15 @@ public class DashboardService {
         LocalDate today = LocalDate.now();
         String currentPeriod = today.getYear() + "-" + String.format("%02d", today.getMonthValue());
 
-        return billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId).stream()
+        List<Bill> bills = billRepo.findByUserIdAndActiveTrueOrderByDueDayAsc(userId);
+        if (bills.isEmpty()) return List.of();
+
+        List<UUID> billIds = bills.stream().map(Bill::getId).toList();
+        Map<UUID, BillPayment> paymentByBillId =
+                billPaymentRepo.findByBillIdInAndPeriod(billIds, currentPeriod).stream()
+                        .collect(Collectors.toMap(BillPayment::getBillId, p -> p, (a, b) -> a));
+
+        return bills.stream()
                 .map(
                         bill -> {
                             int dueDay = Math.min(bill.getDueDay(), today.lengthOfMonth());
@@ -132,11 +141,9 @@ public class DashboardService {
                             }
                             long daysUntil = ChronoUnit.DAYS.between(today, dueDate);
 
+                            BillPayment payment = paymentByBillId.get(bill.getId());
                             String status =
-                                    billPaymentRepo
-                                            .findByBillIdAndPeriod(bill.getId(), currentPeriod)
-                                            .map(p -> p.getStatus().name())
-                                            .orElse("PENDING");
+                                    payment != null ? payment.getStatus().name() : "PENDING";
 
                             return new DashboardResponse.UpcomingBill(
                                     bill.getId(),

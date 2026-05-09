@@ -19,6 +19,7 @@ import com.fintrack.portfolio.dividend.dto.RecordDividendRequest;
 import com.fintrack.price.FxConversionService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -194,5 +195,42 @@ class DividendServiceTest {
         service.delete(userId, portfolioId, dividendId);
 
         verify(dividendRepo).delete(dividend);
+    }
+
+    @Test
+    void listForPortfolio_resolvesAssetsViaSingleBatchedCall() {
+        UUID assetA = UUID.randomUUID();
+        UUID assetB = UUID.randomUUID();
+        Asset a = Asset.builder().id(assetA).symbol("AAA").name("AssetA").build();
+        Asset b = Asset.builder().id(assetB).symbol("BBB").name("AssetB").build();
+        Dividend d1 =
+                Dividend.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(assetA)
+                        .build();
+        Dividend d2 =
+                Dividend.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(assetB)
+                        .build();
+        Dividend d3 =
+                Dividend.builder()
+                        .id(UUID.randomUUID())
+                        .portfolioId(portfolioId)
+                        .assetId(assetA)
+                        .build();
+        when(dividendRepo.findByPortfolioIdOrderByPaymentDateDesc(portfolioId))
+                .thenReturn(List.of(d1, d2, d3));
+        when(assetRepo.findAllById(any())).thenReturn(List.of(a, b));
+
+        List<DividendResponse> rows = service.listForPortfolio(userId, portfolioId);
+
+        assertThat(rows).hasSize(3);
+        assertThat(rows)
+                .extracting(DividendResponse::assetSymbol)
+                .containsExactly("AAA", "BBB", "AAA");
+        verify(assetRepo, never()).findById(any());
     }
 }
