@@ -78,4 +78,59 @@ describe('useLivePricesStore', () => {
     expect(useLivePricesStore.getState().prices).toEqual({});
     expect(useLivePricesStore.getState().publishedAt).toBe('2026-04-01T00:00:00Z');
   });
+
+  it('mergeBatch with deltaOnly=true merges into existing prices', () => {
+    useLivePricesStore.getState().mergeBatch({
+      publishedAt: '2026-04-01T00:00:00Z',
+      count: 1,
+      totalAssets: 2,
+      deltaOnly: false,
+      prices: [
+        { symbol: 'BTC', assetType: 'CRYPTO', price: 100, priceUsd: null, updatedAt: '2026-04-01T00:00:00Z' },
+        { symbol: 'ETH', assetType: 'CRYPTO', price: 50, priceUsd: null, updatedAt: '2026-04-01T00:00:00Z' },
+      ],
+    });
+
+    useLivePricesStore.getState().mergeBatch({
+      publishedAt: '2026-04-01T00:00:30Z',
+      count: 1,
+      totalAssets: 2,
+      deltaOnly: true,
+      prices: [
+        { symbol: 'BTC', assetType: 'CRYPTO', price: 110, priceUsd: null, updatedAt: '2026-04-01T00:00:30Z' },
+      ],
+    });
+
+    const s = useLivePricesStore.getState();
+    expect(s.prices.BTC.price).toBe(110);
+    expect(s.prices.BTC.previousPrice).toBe(100);
+    expect(s.prices.ETH.price).toBe(50);
+  });
+
+  it('mergeBatch with deltaOnly=false replaces the entire map', () => {
+    useLivePricesStore.getState().mergeBatch({
+      publishedAt: '2026-04-01T00:00:00Z',
+      count: 1,
+      totalAssets: 1,
+      deltaOnly: true,
+      prices: [
+        { symbol: 'OLD', assetType: 'CRYPTO', price: 7, priceUsd: null, updatedAt: '2026-04-01T00:00:00Z' },
+      ],
+    });
+
+    useLivePricesStore.getState().mergeBatch({
+      publishedAt: '2026-04-01T00:01:00Z',
+      count: 1,
+      totalAssets: 1,
+      deltaOnly: false,
+      prices: [
+        { symbol: 'BTC', assetType: 'CRYPTO', price: 100, priceUsd: null, updatedAt: '2026-04-01T00:01:00Z' },
+      ],
+    });
+
+    const s = useLivePricesStore.getState();
+    expect(Object.keys(s.prices)).toEqual(['BTC']);
+    expect(s.prices.OLD).toBeUndefined();
+    expect(s.prices.BTC.price).toBe(100);
+  });
 });

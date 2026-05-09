@@ -12,6 +12,12 @@ const PRICES_TOPIC = '/topic/prices';
  *
  * Connects once, reconnects automatically on failure, and disconnects when
  * the calling component unmounts.
+ *
+ * Frame envelope: `{ publishedAt, count, totalAssets, deltaOnly, prices: [...] }`. When
+ * `deltaOnly === true`, only the changed prices arrive; the store's `mergeBatch` keeps stale
+ * symbols around. When `deltaOnly === false`, the store replaces the entire price map (cold-boot
+ * full broadcast). Older payloads without `deltaOnly` default to `false` so the merge falls back
+ * to replacement.
  */
 export function useLivePrices() {
   const queryClient = useQueryClient();
@@ -33,26 +39,31 @@ export function useLivePrices() {
         try {
           const batch = JSON.parse(frame.body);
           if (batch && Array.isArray(batch.prices)) {
-            useLivePricesStore.getState().applyBatch({
+            const prices = batch.prices.map((p: {
+              symbol: string;
+              assetType: string;
+              price: string | number;
+              priceUsd: string | number | null;
+              updatedAt: string;
+            }) => ({
+              symbol: p.symbol,
+              assetType: p.assetType,
+              price: typeof p.price === 'string' ? Number(p.price) : p.price,
+              priceUsd:
+                p.priceUsd == null
+                  ? null
+                  : typeof p.priceUsd === 'string'
+                    ? Number(p.priceUsd)
+                    : p.priceUsd,
+              updatedAt: p.updatedAt,
+            }));
+            useLivePricesStore.getState().mergeBatch({
               publishedAt: batch.publishedAt,
-              prices: batch.prices.map((p: {
-                symbol: string;
-                assetType: string;
-                price: string | number;
-                priceUsd: string | number | null;
-                updatedAt: string;
-              }) => ({
-                symbol: p.symbol,
-                assetType: p.assetType,
-                price: typeof p.price === 'string' ? Number(p.price) : p.price,
-                priceUsd:
-                  p.priceUsd == null
-                    ? null
-                    : typeof p.priceUsd === 'string'
-                      ? Number(p.priceUsd)
-                      : p.priceUsd,
-                updatedAt: p.updatedAt,
-              })),
+              count: typeof batch.count === 'number' ? batch.count : prices.length,
+              totalAssets:
+                typeof batch.totalAssets === 'number' ? batch.totalAssets : prices.length,
+              deltaOnly: typeof batch.deltaOnly === 'boolean' ? batch.deltaOnly : false,
+              prices,
             });
           }
         } catch {
