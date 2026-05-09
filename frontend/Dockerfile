@@ -6,7 +6,7 @@ ARG VITE_APP_NAME="FinTrack Pro"
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_WS_URL=$VITE_WS_URL
 ENV VITE_APP_NAME=$VITE_APP_NAME
-COPY package*.json ./
+COPY package*.json .npmrc ./
 RUN npm ci
 COPY . .
 RUN npm run build
