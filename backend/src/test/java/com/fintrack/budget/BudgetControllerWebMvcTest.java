@@ -88,7 +88,7 @@ class BudgetControllerWebMvcTest extends AbstractWebMvcTestSupport {
     void listTransactionsRejectsMissingMonth() throws Exception {
         stubAuthenticatedUser();
 
-        mockMvc.perform(get("/api/v1/budget/transactions")).andExpect(status().is5xxServerError());
+        mockMvc.perform(get("/api/v1/budget/transactions")).andExpect(status().isBadRequest());
     }
 
     @Test

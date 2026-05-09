@@ -673,6 +673,75 @@ added without conversion. The frontend tile shows the per-currency
 breakdown so the operator can interpret the number;
 cross-currency rollup with FX rates ships in 28-01.
 
+## Importing TR bank CSV statements
+
+What it does: lets the operator land a month of bank-statement rows
+as `BudgetTransaction`s linked to a chosen account. Re-uploading the
+same file is a no-op — the per-account import fingerprint (V44)
+dedupes byte-identical rows. Categorisation reuses the existing
+`TransactionCategoryRule` regex set; rows that do not match a rule
+land with a NULL category and can be assigned in the budget UI.
+
+Monthly workflow:
+
+1. Log in to internet banking, export the month's statement as CSV.
+   Per-bank export options that produce the parser-expected format:
+   - **Garanti BBVA** — Hesap Hareketleri -> Excel/CSV (Windows
+     1254, semicolon delimiter, `dd/MM/yyyy` date, `1.234,56`
+     decimal locale).
+   - **İş Bankası** — Hesap Özeti -> CSV (UTF-8, comma delimiter,
+     `dd.MM.yyyy` date, `1.234,56` decimal locale).
+   - **Akbank** — Hareketler -> CSV (UTF-8, semicolon delimiter,
+     `dd.MM.yyyy` date, `1234,56` decimal locale).
+   Other banks: ask the planner to add a new parser; uploading a
+   file whose header does not match the picked bank's expected set
+   is rejected with `BANK_CSV_INVALID` instead of corrupting data.
+2. Open `/imports/bank-csv` in the app, pick the bank from the
+   dropdown, pick the target account (must be a live, owner-scoped
+   `BANK_CHECKING` / `BANK_SAVINGS` row), upload the file, click
+   **Preview**.
+3. The preview pane shows row count, the first N parsed rows, the
+   matched category per row (or `(uncategorised)`), the duplicate
+   count (rows already imported on a previous run), and any parser
+   warnings (e.g. unparseable amount on row K). Scan the preview;
+   if anything looks wrong, abort — `Preview` writes nothing.
+4. Click **Commit**. The service inserts only the non-duplicate
+   rows in a single transaction, stamps `account_id` on each, and
+   the 27-03 `AccountBalanceListener` recomputes the account's
+   `current_balance` after commit. The audit log carries one
+   `BANK_CSV_PREVIEWED` entry from step 3 and one
+   `BANK_CSV_COMMITTED` entry from step 4 with `imported=N,
+   duplicates=M, warnings=K` detail.
+5. Cross-check the new transactions in `/budget` (filter by month
+   and account) and confirm the account balance on `/accounts`
+   matches the bank's reported figure.
+
+Idempotency note: re-uploading the same file is a no-op. The
+fingerprint column on `transactions` (V44) is a SHA-256 over
+`accountId|txnDate|amount|description` and is enforced by a
+partial unique index. The second commit reports `imported=0,
+duplicates=N`.
+
+Categorisation note: rows pick up the operator's existing
+`TransactionCategoryRule` regex matches via `BankCsvCategoryMatcher`
+(case-insensitive `Pattern.compile`). Rows that match nothing land
+with a NULL category and are visible in `/budget` with the
+`(uncategorised)` filter; the operator can categorise inline or add
+a new rule and re-import.
+
+Troubleshooting:
+- `BANK_CSV_INVALID` — the uploaded file is empty, the header row
+  is missing, or the file does not match the picked bank's expected
+  header set. Re-pick the bank or re-export from internet banking.
+- `ACCOUNT_NOT_OWNED` — the picked account is archived or belongs
+  to a different user. Pick a live, owner-scoped account.
+
+Scope note: current accounts only. Credit-card statements, FX
+sub-accounts, and brokerage cash statements are not supported by
+the v1 parsers — those formats carry FX-rate columns and per-row
+fee splits the parser does not model. They are deferred to a
+future plan.
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`
