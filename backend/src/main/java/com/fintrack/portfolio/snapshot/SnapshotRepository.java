@@ -20,6 +20,10 @@ public interface SnapshotRepository extends JpaRepository<PortfolioSnapshot, UUI
     /** Chronological history for a single portfolio. */
     List<PortfolioSnapshot> findByPortfolioIdOrderBySnapshotDateAsc(UUID portfolioId);
 
+    /** Chronological history for a single portfolio bounded by an inclusive date range. */
+    List<PortfolioSnapshot> findByPortfolioIdAndSnapshotDateBetweenOrderBySnapshotDateAsc(
+            UUID portfolioId, LocalDate fromDate, LocalDate toDate);
+
     /** Looks up an existing snapshot for the given day so we can update instead of insert. */
     Optional<PortfolioSnapshot> findByPortfolioIdAndSnapshotDate(
             UUID portfolioId, LocalDate snapshotDate);

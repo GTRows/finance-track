@@ -22,6 +22,7 @@ public class CacheConfig {
     public static final String ASSETS_CACHE = "assets";
     public static final String USER_SETTINGS_CACHE = "userSettings";
     public static final String CATEGORY_LOOKUP_CACHE = "categoryLookup";
+    public static final String ANALYTICS_PORTFOLIOS_COMPARE_CACHE = "analytics:portfolios:compare";
 
     @Bean
     public CacheManager cacheManager() {
@@ -47,6 +48,13 @@ public class CacheConfig {
                                 Caffeine.newBuilder()
                                         .expireAfterAccess(30, TimeUnit.MINUTES)
                                         .maximumSize(16)
+                                        .recordStats()
+                                        .build()),
+                        new CaffeineCache(
+                                ANALYTICS_PORTFOLIOS_COMPARE_CACHE,
+                                Caffeine.newBuilder()
+                                        .expireAfterWrite(60, TimeUnit.SECONDS)
+                                        .maximumSize(200)
                                         .recordStats()
                                         .build())));
         return manager;

@@ -1,6 +1,7 @@
 package com.fintrack.portfolio.snapshot;
 
 import com.fintrack.asset.AssetRepository;
+import com.fintrack.common.config.CacheConfig;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Portfolio;
 import com.fintrack.common.entity.PortfolioHolding;
@@ -21,6 +22,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,9 +44,11 @@ public class SnapshotService {
 
     /**
      * Captures one snapshot per active portfolio for today (Europe/Istanbul). Safe to run multiple
-     * times per day -- existing rows are updated in place.
+     * times per day -- existing rows are updated in place. Evicts the analytics compare cache so
+     * subsequent compare reads see the new daily point.
      */
     @Transactional
+    @CacheEvict(value = CacheConfig.ANALYTICS_PORTFOLIOS_COMPARE_CACHE, allEntries = true)
     public CaptureResult captureDaily() {
         LocalDate today = LocalDate.now(ISTANBUL);
         List<Portfolio> portfolios = portfolioRepository.findAllByActiveTrue();
