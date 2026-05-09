@@ -50,6 +50,9 @@ const TrTaxPage = lazy(() =>
 const AccountsPage = lazy(() =>
   import('@/pages/AccountsPage').then((m) => ({ default: m.AccountsPage })),
 );
+const BankCsvImportPage = lazy(() =>
+  import('@/pages/BankCsvImportPage').then((m) => ({ default: m.BankCsvImportPage })),
+);
 
 export function App() {
   return (
@@ -77,6 +80,7 @@ export function App() {
           <Route path="/prices" element={<PricesPage />} />
           <Route path="/prices/:id" element={<AssetDetailPage />} />
           <Route path="/alerts" element={<AlertsPage />} />
+          <Route path="/imports/bank-csv" element={<BankCsvImportPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

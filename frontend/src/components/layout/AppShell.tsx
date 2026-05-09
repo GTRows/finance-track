@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   Search,
+  Upload,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -73,6 +74,7 @@ export function AppShell() {
     { path: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
     { path: '/prices', label: t('nav.prices'), icon: LineChart },
     { path: '/alerts', label: t('nav.alerts'), icon: Bell },
+    { path: '/imports/bank-csv', label: t('nav.imports'), icon: Upload },
   ];
 
   const handleLogout = async () => {

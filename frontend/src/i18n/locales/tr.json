@@ -35,6 +35,7 @@
     "analytics": "Analiz",
     "prices": "Fiyatlar",
     "alerts": "Uyarılar",
+    "imports": "Içe Aktar",
     "settings": "Ayarlar",
     "signOut": "Çıkış Yap"
   },
@@ -215,6 +216,58 @@
       "limitReached": "Hesap limiti doldu (en fazla 50)",
       "failedToLoad": "Hesaplar yüklenemedi",
       "failedToSave": "Hesap kaydedilemedi"
+    }
+  },
+  "bankCsv": {
+    "title": "Banka CSV Içe Aktar",
+    "subtitle": "Garanti, Is Bankasi veya Akbank ekstresini al, hesap bakiyesi otomatik guncellensin",
+    "setupTitle": "Yukleme",
+    "summaryTitle": "Sonuc",
+    "bank": "Banka",
+    "banks": {
+      "GARANTI": "Garanti BBVA",
+      "ISBANK": "Turkiye Is Bankasi",
+      "AKBANK": "Akbank"
+    },
+    "account": "Hedef hesap",
+    "file": "CSV dosyasi",
+    "chooseFile": "Dosya sec",
+    "preview": "Onizleme",
+    "commit": "Iceri Aktar",
+    "confirm": "{{count}} satir {{bank}} ekstresinden {{account}} hesabina aktarilacak. Devam edilsin mi?",
+    "confirmYes": "Evet, aktar",
+    "confirmNo": "Vazgec",
+    "previewFailed": "Onizleme basarisiz",
+    "commitFailed": "Iceri aktarma basarisiz",
+    "commitDone": "{{imported}} satir aktarildi, {{duplicates}} mukerrer, {{skipped}} atlandi",
+    "totalRows": "Toplam",
+    "importedRows": "Aktarilan",
+    "skippedRows": "Atlanan",
+    "duplicateRows": "Mukerrer",
+    "warningRows": "Uyarili",
+    "empty": "Henuz onizleme calistirilmadi",
+    "row": {
+      "warning": "Uyari",
+      "duplicate": "Mukerrer",
+      "ok": "Hazir"
+    },
+    "type": {
+      "INCOME": "Gelir",
+      "EXPENSE": "Gider"
+    },
+    "col": {
+      "date": "Tarih",
+      "type": "Tur",
+      "amount": "Tutar",
+      "description": "Aciklama",
+      "category": "Kategori",
+      "status": "Durum"
+    },
+    "errors": {
+      "ACCOUNT_NOT_OWNED": "Hesap bulunamadi veya arsivlenmis",
+      "BANK_CSV_INVALID": "Gecersiz CSV formati",
+      "BANK_CSV_FORMAT_MISMATCH": "Dosya secilen banka ile eslesmiyor",
+      "BANK_CSV_EMPTY": "Dosya bos"
     }
   },
   "emergencyFund": {

@@ -35,6 +35,7 @@
     "analytics": "Analytics",
     "prices": "Prices",
     "alerts": "Alerts",
+    "imports": "Imports",
     "settings": "Settings",
     "signOut": "Sign Out"
   },
@@ -215,6 +216,58 @@
       "limitReached": "Account limit reached (max 50)",
       "failedToLoad": "Failed to load accounts",
       "failedToSave": "Failed to save account"
+    }
+  },
+  "bankCsv": {
+    "title": "Bank CSV Import",
+    "subtitle": "Drop a Garanti, Is Bankasi, or Akbank statement; account balance refreshes automatically",
+    "setupTitle": "Upload",
+    "summaryTitle": "Result",
+    "bank": "Bank",
+    "banks": {
+      "GARANTI": "Garanti BBVA",
+      "ISBANK": "Turkiye Is Bankasi",
+      "AKBANK": "Akbank"
+    },
+    "account": "Target account",
+    "file": "CSV file",
+    "chooseFile": "Choose file",
+    "preview": "Preview",
+    "commit": "Import",
+    "confirm": "Import {{count}} rows from {{bank}} into {{account}}?",
+    "confirmYes": "Yes, import",
+    "confirmNo": "Cancel",
+    "previewFailed": "Preview failed",
+    "commitFailed": "Import failed",
+    "commitDone": "Imported {{imported}} rows, {{duplicates}} duplicates, {{skipped}} skipped",
+    "totalRows": "Total",
+    "importedRows": "Imported",
+    "skippedRows": "Skipped",
+    "duplicateRows": "Duplicates",
+    "warningRows": "Warnings",
+    "empty": "No preview yet",
+    "row": {
+      "warning": "Warning",
+      "duplicate": "Duplicate",
+      "ok": "Ready"
+    },
+    "type": {
+      "INCOME": "Income",
+      "EXPENSE": "Expense"
+    },
+    "col": {
+      "date": "Date",
+      "type": "Type",
+      "amount": "Amount",
+      "description": "Description",
+      "category": "Category",
+      "status": "Status"
+    },
+    "errors": {
+      "ACCOUNT_NOT_OWNED": "Account not found or archived",
+      "BANK_CSV_INVALID": "Invalid CSV format",
+      "BANK_CSV_FORMAT_MISMATCH": "File does not match the selected bank",
+      "BANK_CSV_EMPTY": "File is empty"
     }
   },
   "emergencyFund": {
