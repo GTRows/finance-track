@@ -29,6 +29,13 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), "NOT_FOUND", request);
     }
 
+    @ExceptionHandler(RebalanceConflictException.class)
+    public ResponseEntity<ErrorResponse> handleRebalanceConflict(
+            RebalanceConflictException ex, HttpServletRequest request) {
+        log.warn("Rebalance conflict: {} [{}]", ex.getMessage(), ex.getCode());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), ex.getCode(), request);
+    }
+
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ErrorResponse> handleBusinessRule(
             BusinessRuleException ex, HttpServletRequest request) {
