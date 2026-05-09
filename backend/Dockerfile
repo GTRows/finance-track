@@ -16,7 +16,7 @@ RUN mkdir -p /tessdata && \
     curl -fsSL -o /tessdata/tur.traineddata \
       https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/tur.traineddata
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN apk add --no-cache curl tesseract-ocr-data-eng leptonica
 WORKDIR /app
 RUN mkdir -p /var/log/fintrack /app/tessdata
