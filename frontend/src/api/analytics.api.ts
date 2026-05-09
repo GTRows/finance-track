@@ -102,6 +102,84 @@ export interface CorrelationMatrixParams {
   method?: CorrelationMethodLiteral;
 }
 
+/** Macro asset class enum literal mirroring server-side {@code AssetClass}. */
+export type AssetClassLiteral =
+  | 'STOCK'
+  | 'BOND'
+  | 'CASH'
+  | 'CRYPTO'
+  | 'GOLD'
+  | 'FUND'
+  | 'CURRENCY'
+  | 'OTHER';
+
+/** One row of the operator's allocation editor. Mean / stddev nullable -> server falls back to YAML default. */
+export interface AllocationClassInput {
+  assetClass: AssetClassLiteral;
+  weight: number;
+  annualMeanReturn?: number | null;
+  annualStdDev?: number | null;
+}
+
+/** Per-class default tuple as exposed by /defaults plus the resolved tuple echoed in /monte-carlo response. */
+export interface AllocationClassDefault {
+  assetClass: AssetClassLiteral;
+  defaultWeight: number;
+  annualMeanReturn: number;
+  annualStdDev: number;
+}
+
+/** One year boundary on the percentile fan chart. */
+export interface YearPercentilePoint {
+  year: number;
+  p10: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  p90: number;
+}
+
+/** Headline summary stats. {@code successProbability} is null when the request omits a target. */
+export interface MonteCarloSummary {
+  mean: number;
+  p10: number;
+  p50: number;
+  p90: number;
+  successProbability: number | null;
+}
+
+/** Request body for {@link analyticsApi.runMonteCarlo}. */
+export interface MonteCarloRequest {
+  horizonYears: number;
+  iterations: number;
+  currentNetWorth: number;
+  monthlyContribution: number;
+  targetNetWorth?: number | null;
+  allocations: AllocationClassInput[];
+}
+
+/** Response body for {@link analyticsApi.runMonteCarlo}. */
+export interface MonteCarloResponse {
+  horizonYears: number;
+  iterations: number;
+  currentNetWorth: number;
+  monthlyContribution: number;
+  targetNetWorth: number | null;
+  fan: YearPercentilePoint[];
+  summary: MonteCarloSummary;
+  defaultsApplied: AllocationClassDefault[];
+}
+
+/** Response body for {@link analyticsApi.fetchMonteCarloDefaults}. */
+export interface MonteCarloDefaultsResponse {
+  defaultIterations: number;
+  defaultHorizonYears: number;
+  defaultMonthlyContribution: number;
+  defaultCurrentNetWorth: number;
+  defaultTargetNetWorth: number | null;
+  classes: AllocationClassDefault[];
+}
+
 export const analyticsApi = {
   async projectCashFlow(months?: number, startingBalance?: number): Promise<CashFlowProjection> {
     const params: Record<string, string> = {};
@@ -143,6 +221,19 @@ export const analyticsApi = {
     const { data } = await client.get<CorrelationMatrixResponse>(
       '/analytics/correlations',
       { params },
+    );
+    return data;
+  },
+  async fetchMonteCarloDefaults(): Promise<MonteCarloDefaultsResponse> {
+    const { data } = await client.get<MonteCarloDefaultsResponse>(
+      '/analytics/monte-carlo/defaults',
+    );
+    return data;
+  },
+  async runMonteCarlo(request: MonteCarloRequest): Promise<MonteCarloResponse> {
+    const { data } = await client.post<MonteCarloResponse>(
+      '/analytics/monte-carlo',
+      request,
     );
     return data;
   },

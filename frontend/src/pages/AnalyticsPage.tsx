@@ -26,6 +26,7 @@ import { CashFlowProjectionChart } from '@/components/analytics/CashFlowProjecti
 import { BenchmarkOverlayChart } from '@/components/analytics/BenchmarkOverlayChart';
 import { PortfolioComparisonChart } from '@/components/analytics/PortfolioComparisonChart';
 import { AssetCorrelationMatrix } from '@/components/analytics/AssetCorrelationMatrix';
+import { MonteCarloProjection } from '@/components/analytics/MonteCarloProjection';
 import {
   formatCompactTRY,
   formatMonth,
@@ -41,7 +42,7 @@ import {
   type DateRange,
 } from '@/components/ui/date-range-picker';
 
-type AnalyticsTab = 'overview' | 'compare' | 'correlations';
+type AnalyticsTab = 'overview' | 'compare' | 'correlations' | 'monteCarlo';
 
 function yearsBetween(startIso: string, endIso: string): number {
   const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
@@ -134,6 +135,8 @@ export function AnalyticsPage() {
         <PortfolioComparisonChart />
       ) : activeTab === 'correlations' ? (
         <AssetCorrelationMatrix />
+      ) : activeTab === 'monteCarlo' ? (
+        <MonteCarloProjection />
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -499,6 +502,7 @@ function AnalyticsTabsBar({ value, onChange }: AnalyticsTabsBarProps) {
     { key: 'overview', labelKey: 'analytics.tabs.overview' },
     { key: 'compare', labelKey: 'analytics.tabs.compare' },
     { key: 'correlations', labelKey: 'analytics.tabs.correlations' },
+    { key: 'monteCarlo', labelKey: 'analytics.tabs.monteCarlo' },
   ];
   return (
     <div

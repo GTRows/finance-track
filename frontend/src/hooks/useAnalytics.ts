@@ -1,4 +1,9 @@
-import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+} from '@tanstack/react-query';
 import { snapshotApi } from '@/api/snapshot.api';
 import { holdingApi } from '@/api/holding.api';
 import {
@@ -7,6 +12,9 @@ import {
   type BenchmarkResponse,
   type CorrelationMatrixResponse,
   type CorrelationMethodLiteral,
+  type MonteCarloDefaultsResponse,
+  type MonteCarloRequest,
+  type MonteCarloResponse,
   type PortfolioComparisonResponse,
 } from '@/api/analytics.api';
 import type { Holding, Portfolio, PortfolioSnapshot } from '@/types/portfolio.types';
@@ -174,5 +182,27 @@ export function useCorrelationMatrix(
     enabled: assetIds.length >= 2,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Fetches the Monte Carlo editor defaults (per-class mean/stddev tuples + iteration / horizon /
+ * weight defaults). The YAML changes only at deploy time so the result is treated as never stale.
+ */
+export function useMonteCarloDefaults() {
+  return useQuery<MonteCarloDefaultsResponse>({
+    queryKey: ['analytics', 'monteCarlo', 'defaults'],
+    queryFn: () => analyticsApi.fetchMonteCarloDefaults(),
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Mutation hook for running the Monte Carlo simulation. Consumed via {@code mutation.mutate(req)};
+ * the response lives in {@code mutation.data} (or component-local state via {@code onSuccess}).
+ */
+export function useMonteCarloMutation() {
+  return useMutation<MonteCarloResponse, Error, MonteCarloRequest>({
+    mutationFn: (request) => analyticsApi.runMonteCarlo(request),
   });
 }
