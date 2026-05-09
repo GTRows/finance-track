@@ -6,6 +6,8 @@ import {
   useBenchmarks,
   useCashFlowProjection,
   useCorrelationMatrix,
+  useMonteCarloDefaults,
+  useMonteCarloMutation,
   usePortfolioComparison,
   usePortfolioSnapshotsAggregate,
 } from './useAnalytics';
@@ -20,6 +22,8 @@ vi.mock('@/api/analytics.api', () => ({
     fetchBenchmarks: vi.fn(),
     fetchPortfolioComparison: vi.fn(),
     fetchCorrelationMatrix: vi.fn(),
+    fetchMonteCarloDefaults: vi.fn(),
+    runMonteCarlo: vi.fn(),
   },
 }));
 
@@ -30,6 +34,8 @@ describe('useAnalytics hooks', () => {
     vi.mocked(analyticsApi.fetchBenchmarks).mockReset();
     vi.mocked(analyticsApi.fetchPortfolioComparison).mockReset();
     vi.mocked(analyticsApi.fetchCorrelationMatrix).mockReset();
+    vi.mocked(analyticsApi.fetchMonteCarloDefaults).mockReset();
+    vi.mocked(analyticsApi.runMonteCarlo).mockReset();
   });
 
   it('usePortfolioSnapshotsAggregate returns empty when no portfolios', () => {
@@ -159,6 +165,51 @@ describe('useAnalytics hooks', () => {
         method: 'PEARSON',
       }),
     );
+  });
+
+  it('useMonteCarloDefaults builds the analytics monte-carlo defaults query key', async () => {
+    vi.mocked(analyticsApi.fetchMonteCarloDefaults).mockResolvedValueOnce({
+      defaultIterations: 10000,
+      defaultHorizonYears: 20,
+      defaultMonthlyContribution: 0,
+      defaultCurrentNetWorth: 0,
+      defaultTargetNetWorth: null,
+      classes: [],
+    } as never);
+    const { Wrapper } = createWrapper();
+
+    renderHook(() => useMonteCarloDefaults(), { wrapper: Wrapper });
+    await waitFor(() => expect(analyticsApi.fetchMonteCarloDefaults).toHaveBeenCalled());
+  });
+
+  it('useMonteCarloMutation forwards the request body to runMonteCarlo', async () => {
+    vi.mocked(analyticsApi.runMonteCarlo).mockResolvedValueOnce({
+      horizonYears: 1,
+      iterations: 100,
+      currentNetWorth: 0,
+      monthlyContribution: 0,
+      targetNetWorth: null,
+      fan: [],
+      summary: { mean: 0, p10: 0, p50: 0, p90: 0, successProbability: null },
+      defaultsApplied: [],
+    } as never);
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useMonteCarloMutation(), { wrapper: Wrapper });
+    const request = {
+      horizonYears: 1,
+      iterations: 100,
+      currentNetWorth: 0,
+      monthlyContribution: 0,
+      targetNetWorth: null,
+      allocations: [
+        { assetClass: 'STOCK' as const, weight: 1.0, annualMeanReturn: 0.07, annualStdDev: 0.18 },
+      ],
+    };
+
+    result.current.mutate(request);
+
+    await waitFor(() => expect(analyticsApi.runMonteCarlo).toHaveBeenCalledWith(request));
   });
 
   it('useCorrelationMatrix triggers a separate fetch when method flips Pearson <-> Spearman', async () => {
