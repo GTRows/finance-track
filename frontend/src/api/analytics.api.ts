@@ -74,6 +74,34 @@ export interface PortfolioComparisonParams {
   to?: string;
 }
 
+/** Sample window metadata returned with a correlation matrix. */
+export interface CorrelationSamplePeriod {
+  from: string;
+  to: string;
+  alignedDays: number;
+}
+
+/** Method literal mirroring the server-side {@code CorrelationMethod} enum. */
+export type CorrelationMethodLiteral = 'PEARSON' | 'SPEARMAN';
+
+/** Response shape for {@link analyticsApi.fetchCorrelationMatrix}. */
+export interface CorrelationMatrixResponse {
+  assetIds: string[];
+  assetSymbols: string[];
+  assetNames: string[];
+  matrix: Array<Array<number | null>>;
+  dataPoints: number[][];
+  samplePeriod: CorrelationSamplePeriod;
+  method: CorrelationMethodLiteral;
+}
+
+export interface CorrelationMatrixParams {
+  assetIds: string[];
+  from?: string;
+  to?: string;
+  method?: CorrelationMethodLiteral;
+}
+
 export const analyticsApi = {
   async projectCashFlow(months?: number, startingBalance?: number): Promise<CashFlowProjection> {
     const params: Record<string, string> = {};
@@ -98,6 +126,22 @@ export const analyticsApi = {
     if (to) params.to = to;
     const { data } = await client.get<PortfolioComparisonResponse>(
       '/analytics/portfolios/compare',
+      { params },
+    );
+    return data;
+  },
+  async fetchCorrelationMatrix({
+    assetIds,
+    from,
+    to,
+    method,
+  }: CorrelationMatrixParams): Promise<CorrelationMatrixResponse> {
+    const params: Record<string, string> = { assetIds: assetIds.join(',') };
+    if (from) params.from = from;
+    if (to) params.to = to;
+    if (method) params.method = method;
+    const { data } = await client.get<CorrelationMatrixResponse>(
+      '/analytics/correlations',
       { params },
     );
     return data;

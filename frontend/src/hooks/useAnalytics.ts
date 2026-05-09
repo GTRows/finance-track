@@ -1,12 +1,15 @@
 import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { snapshotApi } from '@/api/snapshot.api';
+import { holdingApi } from '@/api/holding.api';
 import {
   analyticsApi,
   type CashFlowProjection,
   type BenchmarkResponse,
+  type CorrelationMatrixResponse,
+  type CorrelationMethodLiteral,
   type PortfolioComparisonResponse,
 } from '@/api/analytics.api';
-import type { Portfolio, PortfolioSnapshot } from '@/types/portfolio.types';
+import type { Holding, Portfolio, PortfolioSnapshot } from '@/types/portfolio.types';
 
 export interface AggregatedSnapshotPoint {
   date: string;
@@ -94,6 +97,81 @@ export function usePortfolioComparison(ids: string[], from?: string, to?: string
     queryKey: ['analytics', 'compare', sortedKey, from ?? null, to ?? null],
     queryFn: () => analyticsApi.fetchPortfolioComparison({ ids, from, to }),
     enabled: ids.length > 0,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Single asset entry as surfaced to the correlation picker. */
+export interface HeldAssetSummary {
+  assetId: string;
+  symbol: string;
+  name: string;
+  type: string;
+}
+
+interface UseHeldAssetsResult {
+  data: HeldAssetSummary[];
+  isLoading: boolean;
+  isError: boolean;
+}
+
+/**
+ * Aggregates the unique asset universe across the operator's active portfolios. Composed from
+ * {@link useQueries} over each portfolio's holdings endpoint so the correlation picker only shows
+ * assets the operator currently or recently held — not the entire global asset master.
+ */
+export function useHeldAssets(portfolios: Portfolio[] | undefined): UseHeldAssetsResult {
+  const list = portfolios ?? [];
+  const queries = useQueries({
+    queries: list.map((p) => ({
+      queryKey: ['holdings', p.id] as const,
+      queryFn: () => holdingApi.list(p.id),
+      staleTime: 60_000,
+    })),
+  });
+
+  const isLoading = queries.some((q) => q.isLoading);
+  const isError = queries.some((q) => q.isError);
+
+  if (isLoading || isError || list.length === 0) {
+    return { data: [], isLoading, isError };
+  }
+
+  const seen = new Map<string, HeldAssetSummary>();
+  queries.forEach((q) => {
+    const rows = (q.data ?? []) as Holding[];
+    for (const row of rows) {
+      if (seen.has(row.assetId)) continue;
+      seen.set(row.assetId, {
+        assetId: row.assetId,
+        symbol: row.assetSymbol,
+        name: row.assetName,
+        type: row.assetType,
+      });
+    }
+  });
+
+  const data = Array.from(seen.values()).sort((a, b) => a.symbol.localeCompare(b.symbol));
+  return { data, isLoading: false, isError: false };
+}
+
+/**
+ * Fetches an asset correlation matrix. Cache key sorts the asset ids so reordering the selection
+ * shares an entry with the prior fetch; flipping the method between Pearson and Spearman bumps
+ * the cache key (the server keys the same way).
+ */
+export function useCorrelationMatrix(
+  assetIds: string[],
+  from?: string,
+  to?: string,
+  method: CorrelationMethodLiteral = 'PEARSON',
+) {
+  const sortedKey = [...assetIds].sort().join(',');
+  return useQuery<CorrelationMatrixResponse>({
+    queryKey: ['analytics', 'correlations', sortedKey, from ?? null, to ?? null, method],
+    queryFn: () => analyticsApi.fetchCorrelationMatrix({ assetIds, from, to, method }),
+    enabled: assetIds.length >= 2,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
