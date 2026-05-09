@@ -122,7 +122,7 @@ Plans:
 
 Plans:
 - [ ] 30-01: F1 + per-asset delta — N+1 audit + `@EntityGraph`; WebSocket broadcaster sends delta of changed assets only
-- [ ] 30-02: F2 — `pg_stat_statements` EXPLAIN pass; missing indexes added via Flyway
+- [x] 30-02: F2 — `pg_stat_statements` EXPLAIN pass; missing indexes added via Flyway
 - [ ] 30-03: F3 — Virtualized transaction list (`@tanstack/react-virtual`) when row count exceeds ~1000
 
 ## Progress
@@ -139,4 +139,4 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
 | 28. Rebalance & Emergency Fund | 2/2 | Complete | 2026-05-09 |
 | 29. Portfolio Analytics | 3/3 | Complete | 2026-05-09 |
-| 30. Performance & Polish | 0/3 | Not started | - |
+| 30. Performance & Polish | 2/3 | In progress | - |
