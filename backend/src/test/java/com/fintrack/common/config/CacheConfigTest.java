@@ -26,7 +26,8 @@ class CacheConfigTest {
                         CacheConfig.USER_SETTINGS_CACHE,
                         CacheConfig.CATEGORY_LOOKUP_CACHE,
                         CacheConfig.ANALYTICS_PORTFOLIOS_COMPARE_CACHE,
-                        CacheConfig.ANALYTICS_CORRELATIONS_CACHE);
+                        CacheConfig.ANALYTICS_CORRELATIONS_CACHE,
+                        CacheConfig.ANALYTICS_MONTE_CARLO_CACHE);
     }
 
     @Test
@@ -40,6 +41,8 @@ class CacheConfigTest {
         assertThat(cacheManager.getCache(CacheConfig.ANALYTICS_PORTFOLIOS_COMPARE_CACHE))
                 .isInstanceOf(CaffeineCache.class);
         assertThat(cacheManager.getCache(CacheConfig.ANALYTICS_CORRELATIONS_CACHE))
+                .isInstanceOf(CaffeineCache.class);
+        assertThat(cacheManager.getCache(CacheConfig.ANALYTICS_MONTE_CARLO_CACHE))
                 .isInstanceOf(CaffeineCache.class);
     }
 }
