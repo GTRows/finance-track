@@ -71,6 +71,25 @@ vi.mock('@/api/push.api', () => ({
   pushApi: { getVapidPublicKey: vi.fn(), subscribe: vi.fn(), unsubscribe: vi.fn(), test: vi.fn() },
 }));
 
+vi.mock('@/api/dashboard.api', () => ({
+  dashboardApi: {
+    get: vi.fn().mockResolvedValue({}),
+    emergencyFund: vi.fn().mockResolvedValue({
+      currentReserve: '6000',
+      buckets: [{ currency: 'TRY', totalBalance: '6000' }],
+      monthlyAverageExpense: '1000',
+      monthsCovered: '6.0',
+      status: 'amber',
+      includedTypes: ['BANK_SAVINGS'],
+      sampleMonths: 12,
+      targetMonths: 6,
+      amberFloorMonths: 3,
+    }),
+    updateEmergencyFundTypes: vi.fn(),
+    updateEmergencyFundConfig: vi.fn(),
+  },
+}));
+
 function renderPage() {
   const { Wrapper } = createWrapper();
   return render(

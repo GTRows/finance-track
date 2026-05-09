@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, type Theme } from '@/store/theme.store';
 import { useSettingsStore } from '@/store/settings.store';
 import { useUpdateSettings } from '@/hooks/useSettings';
-import { User, Bell, Palette, Globe, Shield, Check, Sun, Moon, Monitor, FileSpreadsheet, ScrollText, Tag as TagIcon, Wand2, Database } from 'lucide-react';
+import { User, Bell, Palette, Globe, Shield, ShieldCheck, Check, Sun, Moon, Monitor, FileSpreadsheet, ScrollText, Tag as TagIcon, Wand2, Database } from 'lucide-react';
 import { ImportExcelSection } from '@/components/settings/ImportExcelSection';
 import { TotpSection } from '@/components/settings/TotpSection';
 import { PasskeySection } from '@/components/settings/PasskeySection';
@@ -18,6 +18,7 @@ import { TagsSection } from '@/components/settings/TagsSection';
 import { CategoryRulesSection } from '@/components/settings/CategoryRulesSection';
 import { BackupSection } from '@/components/settings/BackupSection';
 import { PushNotificationSection } from '@/components/settings/PushNotificationSection';
+import { EmergencyFundSection } from '@/components/settings/EmergencyFundSection';
 import { cn } from '@/lib/utils';
 
 const CURRENCY_OPTIONS = ['TRY', 'USD', 'EUR', 'GBP'];
@@ -200,6 +201,14 @@ export function SettingsPage() {
         description={t('settings.push.description')}
       >
         <PushNotificationSection />
+      </SettingsSection>
+
+      <SettingsSection
+        icon={ShieldCheck}
+        title={t('emergencyFund.settingsSectionTitle')}
+        description={t('emergencyFund.settingsSectionDescription')}
+      >
+        <EmergencyFundSection />
       </SettingsSection>
 
       <SettingsSection
