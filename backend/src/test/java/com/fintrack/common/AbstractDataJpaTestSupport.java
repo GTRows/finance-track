@@ -5,28 +5,33 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Shared base for {@code @DataJpaTest} suites that need a real Postgres so JSONB columns, partial
- * indexes, and Postgres-specific functions actually behave like production. The container starts
- * once per JVM.
+ * indexes, and Postgres-specific functions actually behave like production. Uses the Testcontainers
+ * <em>singleton container</em> pattern: the container is started once via a static initializer and
+ * reused across every subclass for the whole JVM lifetime, with Ryuk handling cleanup at exit.
+ * Avoids the per-class start/stop cost of {@code @Testcontainers}, which made CI runs hit the job
+ * timeout.
  *
  * <p>Subclasses must annotate themselves with
  * {@code @EnabledIf("com.fintrack.common.AbstractDataJpaTestSupport#dockerAvailable")} so the suite
  * stays green on hosts without Docker.
  */
-@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public abstract class AbstractDataJpaTestSupport {
 
-    @Container
     static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:16-alpine")
                     .withDatabaseName("fintrack")
                     .withUsername("fintrack")
                     .withPassword("fintrack");
+
+    static {
+        if (dockerAvailable()) {
+            postgres.start();
+        }
+    }
 
     @DynamicPropertySource
     static void datasourceProperties(DynamicPropertyRegistry registry) {
