@@ -3,6 +3,7 @@ package com.fintrack.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fintrack.common.AbstractDataJpaTestSupport;
+import com.fintrack.common.PostgresDataJpaTest;
 import com.fintrack.common.entity.TotpRecoveryCode;
 import com.fintrack.common.entity.User;
 import java.time.Instant;
@@ -10,9 +11,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
-@DataJpaTest
+@PostgresDataJpaTest
 @EnabledIf("com.fintrack.common.AbstractDataJpaTestSupport#dockerAvailable")
 class TotpRecoveryCodeRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 

@@ -3,6 +3,7 @@ package com.fintrack.perf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fintrack.common.AbstractDataJpaTestSupport;
+import com.fintrack.common.PostgresDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,14 +12,13 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 /**
  * Pins the FK-index coverage contract on the public schema. A regression here surfaces a future
  * migration that adds a foreign-key column without an accompanying supporting index. Sentinel test
  * for Phase 30 sub-plan 02.
  */
-@DataJpaTest
+@PostgresDataJpaTest
 @EnabledIf("com.fintrack.common.AbstractDataJpaTestSupport#dockerAvailable")
 class IndexCoverageRegressionTest extends AbstractDataJpaTestSupport {
 

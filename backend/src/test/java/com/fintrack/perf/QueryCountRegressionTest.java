@@ -7,6 +7,7 @@ import com.fintrack.auth.UserRepository;
 import com.fintrack.bills.BillPaymentRepository;
 import com.fintrack.bills.BillRepository;
 import com.fintrack.common.AbstractDataJpaTestSupport;
+import com.fintrack.common.PostgresDataJpaTest;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Bill;
 import com.fintrack.common.entity.BillPayment;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.TestPropertySource;
 
 /**
@@ -38,7 +38,7 @@ import org.springframework.test.context.TestPropertySource;
  * service-layer beans; the service-layer "did the loop go away?" assertion lives as Mockito
  * verification on each refactored {@code *ServiceTest}.
  */
-@DataJpaTest
+@PostgresDataJpaTest
 @TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @EnabledIf("com.fintrack.common.AbstractDataJpaTestSupport#dockerAvailable")
 class QueryCountRegressionTest extends AbstractDataJpaTestSupport {
