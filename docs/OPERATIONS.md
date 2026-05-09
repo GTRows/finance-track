@@ -770,6 +770,90 @@ the v1 parsers — those formats carry FX-rate columns and per-row
 fee splits the parser does not model. They are deferred to a
 future plan.
 
+## Rebalancing a portfolio
+
+Use the **Rebalance** card on a portfolio detail page to convert
+allocation drift into one-click trades. The card mounts after the
+**Allocation Targets** card and is hidden until both (a) at least one
+allocation target is configured for the portfolio and (b) the portfolio
+has at least one holding.
+
+**Workflow**:
+
+1. **Drift threshold** — adjust the slider at the top of the card
+   (range `0.10`..`10.00`, step `0.10`, default `1.00`). Buckets whose
+   absolute drift falls below the threshold are excluded from the
+   suggestion list. The slider writes to `user_settings.rebalance_drift_threshold_percent`
+   with a 400 ms debounce, so rapid keyboard arrow presses coalesce
+   into one PUT.
+2. **Funding account** — pick a live (non-archived) account from the
+   dropdown. Every BUY suggestion's cash comes from this account; every
+   SELL suggestion's proceeds land in it. The 27-03 `AccountBalanceListener`
+   recomputes the account's `current_balance` AFTER COMMIT of the
+   rebalance batch.
+3. **Generate suggestions** — posts to `POST /api/v1/portfolios/{id}/rebalance/preview`.
+   The server computes per-bucket drift via `AllocationService.summarize`
+   semantics, projects the deltas onto individual holdings (pro-rata
+   SELL across an overweight bucket; single-holding BUY on the highest-
+   value existing holding within an underweight bucket; alphabetical
+   tiebreak by symbol), applies cash scaling, applies STOCK/FUND
+   integer-quantity truncation, hashes the canonical tuple `(portfolioId,
+   accountId, suggestions[])` via SHA-256, and stores the hash in Redis
+   under `rebalance:proposal:<userId>:<proposalId>` with a 30-minute TTL.
+4. **Tick rows** — every suggestion comes with a checkbox. Rows with no
+   warning are ticked by default; rows with `NO_HOLDING_TO_BUY` or
+   `QUANTITY_BELOW_LOT` warnings are unticked by default.
+5. **Commit selected** — posts to `POST /api/v1/portfolios/{id}/rebalance/commit`
+   with the cached `proposalId`, the same `accountId`, and the ticked
+   indices. The server recomputes the canonical hash from the live
+   state, compares against the cached value, and rejects on mismatch
+   (`409 REBALANCE_PROPOSAL_STALE`). On a successful match, every ticked
+   row is materialised through `InvestmentTransactionService.record(...)`
+   so the existing audit emission, the 25-01 holding projection
+   listener, and the 27-03 account-balance listener all fire normally.
+   The Redis proposal key is replaced by a 24-hour `rebalance:committed:<userId>:<proposalId>`
+   sentinel so a duplicate-commit attempt within that window returns
+   `409 REBALANCE_PROPOSAL_ALREADY_COMMITTED` rather than re-running.
+
+**Cash-scaling behaviour** — when the SUM of suggested BUY amounts
+exceeds the funding account's `current_balance`, every BUY row is
+proportionally scaled by `availableCash / requiredCash`, truncated to
+the asset's quantity scale. The preview surfaces a `CASH_PARTIAL_SCALEDOWN`
+summary warning. SELL rows are NEVER scaled because they replenish cash.
+When `availableCash <= 0`, every BUY row is zeroed and the preview
+surfaces `INSUFFICIENT_CASH`.
+
+**Integer-quantity quirk** — `STOCK` and `FUND` rows are truncated to
+integer quantities via `RoundingMode.DOWN`. When truncation drops the
+row to zero, the row keeps `quantity = 0` and gains a `QUANTITY_BELOW_LOT`
+warning so the operator knows the bucket is too close to target for the
+integer-lot constraint to act. `CRYPTO`, `GOLD`, `CURRENCY`, and `OTHER`
+rows keep the asset's full `quantity_scale` (8) — fractional satoshi /
+gram quantities are preserved.
+
+**Empty underweight bucket warning** — when an underweight bucket has
+ZERO existing holdings (e.g. the operator targets `30% GOLD` but has
+no gold holding yet), the preview surfaces a single informational row
+with `assetId = null`, `quantity = 0`, and warning `NO_HOLDING_TO_BUY`.
+The executor is corrective, not a stock-picker: the operator must add
+the asset manually (via the existing **Add holding** dialog) before
+re-previewing.
+
+**Proposal expiry / stale-preview reasoning** — the 30-minute TTL gives
+the operator time to step away, eat lunch, and come back. Beyond 30
+minutes the proposal is gone and the commit returns `404 REBALANCE_PROPOSAL_NOT_FOUND`;
+the operator simply re-previews. Within the 30 minutes, if prices moved
+or another transaction shifted the holding state, the recomputed hash
+will differ from the cached value and the commit returns `409 REBALANCE_PROPOSAL_STALE`.
+The operator re-previews and the new state reflects the change.
+
+**Forensic queries** — to find every commit a given proposal made,
+search the audit log: `SELECT * FROM audit_log WHERE action = 'REBALANCE_COMMITTED' AND detail LIKE '%proposalId=<id>%'`.
+The materialised investment transactions also carry a `notes` prefix
+of `rebalance:<proposalId>` so a portfolio-level query
+`SELECT * FROM investment_transactions WHERE portfolio_id = <id> AND notes LIKE 'rebalance:%'`
+returns every row a rebalance batch ever produced.
+
 ## Process recipes
 
 - **Stop everything**: `docker compose down`

@@ -19,7 +19,7 @@ None — full-stack Spring Boot + React + Postgres + Redis is already encoded in
 - [ ] **Phase 25: Architecture Cleanup** — Decouple services and de-block the reactive price clients
 - [ ] **Phase 26: Observability** — End-to-end traces, errors, and SLO burn alerts
 - [ ] **Phase 27: Tax & Accounts (TR)** — Tax helper, bank account entity, TR bank CSV import
-- [ ] **Phase 28: Rebalance & Emergency Fund** — Turn drift into one-click trades; emergency-fund tile
+- [x] **Phase 28: Rebalance & Emergency Fund** — Complete (2026-05-09)
 - [ ] **Phase 29: Portfolio Analytics** — Comparison, correlation matrix, Monte Carlo
 - [ ] **Phase 30: Performance & Polish** — N+1 audit, index pass, virtualized lists
 
@@ -99,8 +99,8 @@ Plans:
 **Plans**: TBD (estimate 2 plans)
 
 Plans:
-- [ ] 28-01: G11 — Emergency-fund coverage tile (red/amber/green based on average expense × N months)
-- [ ] 28-02: G12 — Rebalance executor (drift → buy/sell suggestions → one-click transaction commit)
+- [x] 28-01: G11 — Emergency-fund coverage tile (red/amber/green based on average expense × N months)
+- [x] 28-02: G12 — Rebalance executor (drift → buy/sell suggestions → one-click transaction commit)
 
 ### Phase 29: Portfolio Analytics
 **Goal**: Track G4 + G5 + G6. Side-by-side portfolio comparison across selected portfolios and ranges, asset correlation matrix on daily returns, and Monte Carlo net-worth projection with configurable per-asset-class mean and stddev.
@@ -137,6 +137,6 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 | 25. Architecture Cleanup | 0/3 | Not started | - |
 | 26. Observability | 0/3 | Not started | - |
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
-| 28. Rebalance & Emergency Fund | 0/2 | Not started | - |
+| 28. Rebalance & Emergency Fund | 2/2 | Complete | 2026-05-09 |
 | 29. Portfolio Analytics | 0/3 | Not started | - |
 | 30. Performance & Polish | 0/3 | Not started | - |
