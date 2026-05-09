@@ -5,6 +5,7 @@ import { analyticsApi } from '@/api/analytics.api';
 import {
   useBenchmarks,
   useCashFlowProjection,
+  usePortfolioComparison,
   usePortfolioSnapshotsAggregate,
 } from './useAnalytics';
 import { createWrapper } from '@/test-utils/queryWrapper';
@@ -13,7 +14,11 @@ vi.mock('@/api/snapshot.api', () => ({
   snapshotApi: { list: vi.fn() },
 }));
 vi.mock('@/api/analytics.api', () => ({
-  analyticsApi: { projectCashFlow: vi.fn(), fetchBenchmarks: vi.fn() },
+  analyticsApi: {
+    projectCashFlow: vi.fn(),
+    fetchBenchmarks: vi.fn(),
+    fetchPortfolioComparison: vi.fn(),
+  },
 }));
 
 describe('useAnalytics hooks', () => {
@@ -21,6 +26,7 @@ describe('useAnalytics hooks', () => {
     vi.mocked(snapshotApi.list).mockReset();
     vi.mocked(analyticsApi.projectCashFlow).mockReset();
     vi.mocked(analyticsApi.fetchBenchmarks).mockReset();
+    vi.mocked(analyticsApi.fetchPortfolioComparison).mockReset();
   });
 
   it('usePortfolioSnapshotsAggregate returns empty when no portfolios', () => {
@@ -74,5 +80,48 @@ describe('useAnalytics hooks', () => {
 
     renderHook(() => useBenchmarks(90), { wrapper: Wrapper });
     await waitFor(() => expect(analyticsApi.fetchBenchmarks).toHaveBeenCalledWith(90));
+  });
+
+  it('usePortfolioComparison forwards ids and date params', async () => {
+    vi.mocked(analyticsApi.fetchPortfolioComparison).mockResolvedValueOnce({
+      currency: 'TRY',
+      series: [],
+    } as never);
+    const { Wrapper } = createWrapper();
+
+    renderHook(
+      () => usePortfolioComparison(['p1', 'p2'], '2026-01-01', '2026-04-01'),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() =>
+      expect(analyticsApi.fetchPortfolioComparison).toHaveBeenCalledWith({
+        ids: ['p1', 'p2'],
+        from: '2026-01-01',
+        to: '2026-04-01',
+      }),
+    );
+  });
+
+  it('usePortfolioComparison cache key sort dedupes reordered selections', async () => {
+    vi.mocked(analyticsApi.fetchPortfolioComparison).mockResolvedValue({
+      currency: 'TRY',
+      series: [],
+    } as never);
+    const { Wrapper, client } = createWrapper();
+
+    const first = renderHook(() => usePortfolioComparison(['b', 'a']), { wrapper: Wrapper });
+    await waitFor(() => expect(first.result.current.isSuccess).toBe(true));
+
+    // Re-rendering with reversed order should hit the same cache entry inside the same
+    // QueryClient — sortedKey makes both orderings share a queryKey.
+    renderHook(() => usePortfolioComparison(['a', 'b']), { wrapper: Wrapper });
+
+    const cachedKeys = client
+      .getQueryCache()
+      .getAll()
+      .filter((q) => q.queryKey[0] === 'analytics' && q.queryKey[1] === 'compare');
+    expect(cachedKeys).toHaveLength(1);
+    expect(cachedKeys[0].queryKey).toEqual(['analytics', 'compare', 'a,b', null, null]);
   });
 });
