@@ -880,7 +880,33 @@
     },
     "tabs": {
       "overview": "Overview",
-      "compare": "Compare"
+      "compare": "Compare",
+      "correlations": "Correlations"
+    },
+    "correlations": {
+      "title": "Asset correlations",
+      "description": "Pairwise log-return correlation across the assets you currently hold. Pair-wise date intersection — sparse days are dropped, not forward-filled.",
+      "selectAssets": "{{count}} selected",
+      "selectAssetsPlaceholder": "Select assets",
+      "noAssetsHeld": "Hold at least 2 different assets across your portfolios to compute correlations.",
+      "methodPearson": "Pearson",
+      "methodSpearman": "Spearman",
+      "range1M": "1M",
+      "range3M": "3M",
+      "range6M": "6M",
+      "rangeYTD": "YTD",
+      "range90D": "90D",
+      "tooltipPair": "Pair",
+      "tooltipValue": "Correlation",
+      "tooltipDataPoints": "Data points",
+      "tooltipMethod": "Method",
+      "emptyTitle": "Pick at least 2 assets",
+      "emptyDesc": "Select two or more assets above to compute their pairwise log-return correlation.",
+      "loadingError": "Could not load correlations",
+      "naLabel": "n/a",
+      "naTooltip": "Insufficient data: stddev = 0 over the selected window",
+      "retentionFootnote": "Correlation history is capped at the last 90 days due to local price-history retention. Run the price sync regularly to keep the window populated.",
+      "matrixAriaLabel": "Asset correlation matrix"
     },
     "compare": {
       "title": "Portfolio comparison",

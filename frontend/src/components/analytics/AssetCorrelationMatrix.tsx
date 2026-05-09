@@ -9,7 +9,10 @@ import {
   useHeldAssets,
   type HeldAssetSummary,
 } from '@/hooks/useAnalytics';
-import type { CorrelationMethodLiteral } from '@/api/analytics.api';
+import type {
+  CorrelationMatrixResponse,
+  CorrelationMethodLiteral,
+} from '@/api/analytics.api';
 import { cn } from '@/lib/utils';
 
 const MAX_ASSETS = 25;
@@ -166,7 +169,7 @@ export function AssetCorrelationMatrix() {
 }
 
 interface HeatmapProps {
-  data: import('@/api/analytics.api').CorrelationMatrixResponse;
+  data: CorrelationMatrixResponse;
   method: CorrelationMethodLiteral;
   onCellHover: (cell: HoveredCell | null) => void;
   hovered: HoveredCell | null;
@@ -340,7 +343,7 @@ function Cell({ i, j, value, onHover }: CellProps) {
 }
 
 interface CorrelationTooltipProps {
-  data: import('@/api/analytics.api').CorrelationMatrixResponse;
+  data: CorrelationMatrixResponse;
   method: CorrelationMethodLiteral;
   i: number;
   j: number;

@@ -5,6 +5,7 @@ import { analyticsApi } from '@/api/analytics.api';
 import {
   useBenchmarks,
   useCashFlowProjection,
+  useCorrelationMatrix,
   usePortfolioComparison,
   usePortfolioSnapshotsAggregate,
 } from './useAnalytics';
@@ -18,6 +19,7 @@ vi.mock('@/api/analytics.api', () => ({
     projectCashFlow: vi.fn(),
     fetchBenchmarks: vi.fn(),
     fetchPortfolioComparison: vi.fn(),
+    fetchCorrelationMatrix: vi.fn(),
   },
 }));
 
@@ -27,6 +29,7 @@ describe('useAnalytics hooks', () => {
     vi.mocked(analyticsApi.projectCashFlow).mockReset();
     vi.mocked(analyticsApi.fetchBenchmarks).mockReset();
     vi.mocked(analyticsApi.fetchPortfolioComparison).mockReset();
+    vi.mocked(analyticsApi.fetchCorrelationMatrix).mockReset();
   });
 
   it('usePortfolioSnapshotsAggregate returns empty when no portfolios', () => {
@@ -123,5 +126,80 @@ describe('useAnalytics hooks', () => {
       .filter((q) => q.queryKey[0] === 'analytics' && q.queryKey[1] === 'compare');
     expect(cachedKeys).toHaveLength(1);
     expect(cachedKeys[0].queryKey).toEqual(['analytics', 'compare', 'a,b', null, null]);
+  });
+
+  it('useCorrelationMatrix forwards assetIds, range, and method', async () => {
+    vi.mocked(analyticsApi.fetchCorrelationMatrix).mockResolvedValueOnce({
+      assetIds: ['a', 'b'],
+      assetSymbols: ['A', 'B'],
+      assetNames: ['A', 'B'],
+      matrix: [
+        [1, 0.5],
+        [0.5, 1],
+      ],
+      dataPoints: [
+        [10, 9],
+        [9, 10],
+      ],
+      samplePeriod: { from: '2026-01-01', to: '2026-04-01', alignedDays: 9 },
+      method: 'PEARSON',
+    } as never);
+    const { Wrapper } = createWrapper();
+
+    renderHook(
+      () => useCorrelationMatrix(['a', 'b'], '2026-01-01', '2026-04-01', 'PEARSON'),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() =>
+      expect(analyticsApi.fetchCorrelationMatrix).toHaveBeenCalledWith({
+        assetIds: ['a', 'b'],
+        from: '2026-01-01',
+        to: '2026-04-01',
+        method: 'PEARSON',
+      }),
+    );
+  });
+
+  it('useCorrelationMatrix triggers a separate fetch when method flips Pearson <-> Spearman', async () => {
+    vi.mocked(analyticsApi.fetchCorrelationMatrix).mockResolvedValue({
+      assetIds: ['a', 'b'],
+      assetSymbols: ['A', 'B'],
+      assetNames: ['A', 'B'],
+      matrix: [
+        [1, 0.5],
+        [0.5, 1],
+      ],
+      dataPoints: [
+        [10, 9],
+        [9, 10],
+      ],
+      samplePeriod: { from: '2026-01-01', to: '2026-04-01', alignedDays: 9 },
+      method: 'PEARSON',
+    } as never);
+    const { Wrapper, client } = createWrapper();
+
+    const pearson = renderHook(
+      () => useCorrelationMatrix(['a', 'b'], undefined, undefined, 'PEARSON'),
+      { wrapper: Wrapper },
+    );
+    await waitFor(() => expect(pearson.result.current.isSuccess).toBe(true));
+
+    renderHook(
+      () => useCorrelationMatrix(['a', 'b'], undefined, undefined, 'SPEARMAN'),
+      { wrapper: Wrapper },
+    );
+    await waitFor(() => {
+      expect(analyticsApi.fetchCorrelationMatrix).toHaveBeenCalledTimes(2);
+    });
+
+    const cachedKeys = client
+      .getQueryCache()
+      .getAll()
+      .filter((q) => q.queryKey[0] === 'analytics' && q.queryKey[1] === 'correlations');
+    expect(cachedKeys).toHaveLength(2);
+    const methodTokens = cachedKeys.map((q) => q.queryKey[5]);
+    expect(methodTokens).toContain('PEARSON');
+    expect(methodTokens).toContain('SPEARMAN');
   });
 });

@@ -881,7 +881,33 @@
     },
     "tabs": {
       "overview": "Genel bakış",
-      "compare": "Karşılaştır"
+      "compare": "Karşılaştır",
+      "correlations": "Korelasyon"
+    },
+    "correlations": {
+      "title": "Varlık korelasyonları",
+      "description": "Tuttuğun varlıklar arasında ikili log-getiri korelasyonu. Eksik günler ileri-doldurulmaz, kesişim kullanılır.",
+      "selectAssets": "{{count}} seçili",
+      "selectAssetsPlaceholder": "Varlık seç",
+      "noAssetsHeld": "Korelasyon hesabı için portföylerinde en az 2 farklı varlık tut.",
+      "methodPearson": "Pearson",
+      "methodSpearman": "Spearman",
+      "range1M": "1A",
+      "range3M": "3A",
+      "range6M": "6A",
+      "rangeYTD": "YBA",
+      "range90D": "90G",
+      "tooltipPair": "Çift",
+      "tooltipValue": "Korelasyon",
+      "tooltipDataPoints": "Veri noktası",
+      "tooltipMethod": "Yöntem",
+      "emptyTitle": "En az 2 varlık seç",
+      "emptyDesc": "İkili log-getiri korelasyonunu hesaplamak için yukarıdan iki veya daha fazla varlık seç.",
+      "loadingError": "Korelasyonlar yüklenemedi",
+      "naLabel": "n/a",
+      "naTooltip": "Yetersiz veri: seçilen pencerede stddev = 0",
+      "retentionFootnote": "Korelasyon geçmişi yerel fiyat saklaması nedeniyle son 90 gün ile sınırlıdır. Pencerenin dolu kalması için fiyat senkronunu düzenli çalıştır.",
+      "matrixAriaLabel": "Varlık korelasyon matrisi"
     },
     "compare": {
       "title": "Portföy karşılaştırma",
