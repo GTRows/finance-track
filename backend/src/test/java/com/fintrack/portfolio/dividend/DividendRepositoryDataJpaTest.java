@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fintrack.asset.AssetRepository;
 import com.fintrack.auth.UserRepository;
 import com.fintrack.common.AbstractDataJpaTestSupport;
-import com.fintrack.common.PostgresDataJpaTest;
 import com.fintrack.common.entity.Asset;
 import com.fintrack.common.entity.Dividend;
 import com.fintrack.common.entity.Portfolio;
@@ -20,8 +19,11 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
-@PostgresDataJpaTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnabledIf("com.fintrack.common.AbstractDataJpaTestSupport#dockerAvailable")
 class DividendRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 

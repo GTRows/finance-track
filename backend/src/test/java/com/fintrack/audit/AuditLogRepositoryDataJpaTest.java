@@ -3,7 +3,6 @@ package com.fintrack.audit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fintrack.common.AbstractDataJpaTestSupport;
-import com.fintrack.common.PostgresDataJpaTest;
 import com.fintrack.common.entity.AuditLog;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
@@ -12,9 +11,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
 
-@PostgresDataJpaTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnabledIf("com.fintrack.common.AbstractDataJpaTestSupport#dockerAvailable")
 class AuditLogRepositoryDataJpaTest extends AbstractDataJpaTestSupport {
 
