@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +45,19 @@ class PriceBroadcasterTest {
                 .build();
     }
 
+    private Asset withId(Asset src, UUID id) {
+        return Asset.builder()
+                .id(id)
+                .symbol(src.getSymbol())
+                .name(src.getName())
+                .assetType(src.getAssetType())
+                .currency(src.getCurrency())
+                .price(src.getPrice())
+                .priceUsd(src.getPriceUsd())
+                .priceUpdatedAt(src.getPriceUpdatedAt())
+                .build();
+    }
+
     @Test
     void doesNothingWhenNoPricedAssets() {
         when(assetRepository.findAllByOrderBySymbolAsc()).thenReturn(List.of());
@@ -54,7 +68,7 @@ class PriceBroadcasterTest {
     }
 
     @Test
-    void skipsAssetsWithNullPrice() {
+    void firstTickSkipsAssetsWithNullPrice() {
         when(assetRepository.findAllByOrderBySymbolAsc())
                 .thenReturn(List.of(asset("NP", AssetType.CRYPTO, null, null)));
 
@@ -64,7 +78,7 @@ class PriceBroadcasterTest {
     }
 
     @Test
-    void broadcastsBatchOfPricedAssetsToPricesTopic() {
+    void firstTickBroadcastsAllPricedAssetsWithDeltaOnlyFalse() {
         when(assetRepository.findAllByOrderBySymbolAsc())
                 .thenReturn(
                         List.of(
@@ -77,12 +91,91 @@ class PriceBroadcasterTest {
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(messagingTemplate).convertAndSend(eq("/topic/prices"), captor.capture());
         PriceBroadcaster.PriceBatch batch = (PriceBroadcaster.PriceBatch) captor.getValue();
+        assertThat(batch.deltaOnly()).isFalse();
         assertThat(batch.count()).isEqualTo(2);
+        assertThat(batch.totalAssets()).isEqualTo(2);
         assertThat(batch.prices())
                 .extracting(PriceBroadcaster.PriceUpdate::symbol)
-                .containsExactly("BTC", "ETH");
-        assertThat(batch.prices().get(0).price()).isEqualByComparingTo("100");
-        assertThat(batch.prices().get(0).assetType()).isEqualTo("CRYPTO");
+                .containsExactlyInAnyOrder("BTC", "ETH");
+    }
+
+    @Test
+    void secondTickWithNoPriceChangesSuppressesBroadcast() {
+        Asset btc = asset("BTC", AssetType.CRYPTO, "100", "3");
+        Asset eth = asset("ETH", AssetType.CRYPTO, "50", null);
+        when(assetRepository.findAllByOrderBySymbolAsc()).thenReturn(List.of(btc, eth));
+
+        broadcaster.broadcastAll();
+        broadcaster.broadcastAll();
+
+        verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/prices"), any(Object.class));
+    }
+
+    @Test
+    void secondTickWithOneChangedPriceEmitsDeltaOfOneWithDeltaOnlyTrue() {
+        UUID btcId = UUID.randomUUID();
+        UUID ethId = UUID.randomUUID();
+        Asset btc1 = withId(asset("BTC", AssetType.CRYPTO, "100", "3"), btcId);
+        Asset eth1 = withId(asset("ETH", AssetType.CRYPTO, "50", null), ethId);
+        Asset btc2 = withId(asset("BTC", AssetType.CRYPTO, "110", "3"), btcId);
+        Asset eth2 = withId(asset("ETH", AssetType.CRYPTO, "50", null), ethId);
+        when(assetRepository.findAllByOrderBySymbolAsc())
+                .thenReturn(List.of(btc1, eth1))
+                .thenReturn(List.of(btc2, eth2));
+
+        broadcaster.broadcastAll();
+        broadcaster.broadcastAll();
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(messagingTemplate, times(2)).convertAndSend(eq("/topic/prices"), captor.capture());
+        PriceBroadcaster.PriceBatch second =
+                (PriceBroadcaster.PriceBatch) captor.getAllValues().get(1);
+        assertThat(second.deltaOnly()).isTrue();
+        assertThat(second.totalAssets()).isEqualTo(2);
+        assertThat(second.count()).isEqualTo(1);
+        assertThat(second.prices()).hasSize(1);
+        assertThat(second.prices().get(0).symbol()).isEqualTo("BTC");
+        assertThat(second.prices().get(0).price()).isEqualByComparingTo("110");
+    }
+
+    @Test
+    void secondTickWithSubToleranceChangeSuppressesBroadcast() {
+        UUID btcId = UUID.randomUUID();
+        Asset btc1 = withId(asset("BTC", AssetType.CRYPTO, "100.00000", null), btcId);
+        Asset btc2 = withId(asset("BTC", AssetType.CRYPTO, "100.00001", null), btcId);
+        when(assetRepository.findAllByOrderBySymbolAsc())
+                .thenReturn(List.of(btc1))
+                .thenReturn(List.of(btc2));
+
+        broadcaster.broadcastAll();
+        broadcaster.broadcastAll();
+
+        verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/prices"), any(Object.class));
+    }
+
+    @Test
+    void assetAddedBetweenTicksEmitsTheNewAssetOnly() {
+        UUID btcId = UUID.randomUUID();
+        UUID ethId = UUID.randomUUID();
+        Asset btc1 = withId(asset("BTC", AssetType.CRYPTO, "100", "3"), btcId);
+        Asset btc2 = withId(asset("BTC", AssetType.CRYPTO, "100", "3"), btcId);
+        Asset eth = withId(asset("ETH", AssetType.CRYPTO, "50", null), ethId);
+        when(assetRepository.findAllByOrderBySymbolAsc())
+                .thenReturn(List.of(btc1))
+                .thenReturn(List.of(btc2, eth));
+
+        broadcaster.broadcastAll();
+        broadcaster.broadcastAll();
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(messagingTemplate, times(2)).convertAndSend(eq("/topic/prices"), captor.capture());
+        PriceBroadcaster.PriceBatch second =
+                (PriceBroadcaster.PriceBatch) captor.getAllValues().get(1);
+        assertThat(second.deltaOnly()).isTrue();
+        assertThat(second.totalAssets()).isEqualTo(2);
+        assertThat(second.count()).isEqualTo(1);
+        assertThat(second.prices()).hasSize(1);
+        assertThat(second.prices().get(0).symbol()).isEqualTo("ETH");
     }
 
     @Test
