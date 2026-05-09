@@ -41,12 +41,21 @@ class ReceiptUrlSignerTest {
         UUID txnId = UUID.randomUUID();
 
         String token = s.sign(userId, txnId);
-        // flip last character
-        char last = token.charAt(token.length() - 1);
-        char flipped = (last == 'A') ? 'B' : 'A';
-        String tampered = token.substring(0, token.length() - 1) + flipped;
+        // Tamper the first character of the signature segment. Flipping the LAST
+        // character of an unpadded base64url string is unreliable because the
+        // trailing 2 bits in a 43-char encoding of 32 bytes are unused, so some
+        // last-char flips decode to identical bytes.
+        String tampered = flipFirstSignatureChar(token);
 
         assertThat(s.verify(userId, txnId, tampered)).isFalse();
+    }
+
+    private static String flipFirstSignatureChar(String token) {
+        int dot = token.indexOf('.');
+        int idx = dot >= 0 ? dot + 1 : 0;
+        char ch = token.charAt(idx);
+        char flipped = (ch == 'A') ? 'B' : 'A';
+        return token.substring(0, idx) + flipped + token.substring(idx + 1);
     }
 
     @Test
@@ -125,9 +134,7 @@ class ReceiptUrlSignerTest {
         UUID txnId = UUID.randomUUID();
 
         String token = s.sign(userId, txnId);
-        char last = token.charAt(token.length() - 1);
-        char flipped = (last == 'A') ? 'B' : 'A';
-        String tampered = token.substring(0, token.length() - 1) + flipped;
+        String tampered = flipFirstSignatureChar(token);
 
         assertThatThrownBy(() -> s.verifyAndExtractUserId(txnId, tampered))
                 .isInstanceOf(BusinessRuleException.class)
