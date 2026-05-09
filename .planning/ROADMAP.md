@@ -21,7 +21,7 @@ None — full-stack Spring Boot + React + Postgres + Redis is already encoded in
 - [ ] **Phase 27: Tax & Accounts (TR)** — Tax helper, bank account entity, TR bank CSV import
 - [x] **Phase 28: Rebalance & Emergency Fund** — Complete (2026-05-09)
 - [x] **Phase 29: Portfolio Analytics** — Complete (2026-05-09)
-- [ ] **Phase 30: Performance & Polish** — N+1 audit, index pass, virtualized lists
+- [x] **Phase 30: Performance & Polish** — Complete (2026-05-09)
 
 ## Phase Details
 
@@ -123,7 +123,7 @@ Plans:
 Plans:
 - [ ] 30-01: F1 + per-asset delta — N+1 audit + `@EntityGraph`; WebSocket broadcaster sends delta of changed assets only
 - [x] 30-02: F2 — `pg_stat_statements` EXPLAIN pass; missing indexes added via Flyway
-- [ ] 30-03: F3 — Virtualized transaction list (`@tanstack/react-virtual`) when row count exceeds ~1000
+- [x] 30-03: F3 — Virtualized transaction list (`@tanstack/react-virtual`) when row count exceeds ~1000
 
 ## Progress
 
@@ -139,4 +139,4 @@ Phases execute in numeric order: 23 → 24 → 25 → 26 → 27 → 28 → 29 �
 | 27. Tax & Accounts (TR) | 0/4 | Not started | - |
 | 28. Rebalance & Emergency Fund | 2/2 | Complete | 2026-05-09 |
 | 29. Portfolio Analytics | 3/3 | Complete | 2026-05-09 |
-| 30. Performance & Polish | 2/3 | In progress | - |
+| 30. Performance & Polish | 3/3 | Complete | 2026-05-09 |
