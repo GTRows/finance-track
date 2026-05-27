@@ -20,7 +20,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-toast": "^1.1.5",
     "@stomp/stompjs": "^7.3.0",
-    "@tanstack/react-query": "^5.100.11",
+    "@tanstack/react-query": "^5.100.14",
     "@tanstack/react-virtual": "^3.13.12",
     "axios": "^1.16.1",
     "class-variance-authority": "^0.7.0",
